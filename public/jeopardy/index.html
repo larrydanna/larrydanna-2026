@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header with game title and round indicator -->
+        <header>
+            <h1>Jeopardy!</h1>
+            <div id="round-indicator">Round 1</div>
+        </header>
+
+        <!-- Player Score Panel -->
+        <div id="players-panel">
+            <div class="player-card" id="player1">
+                <input type="text" class="player-name" placeholder="Player 1" maxlength="20">
+                <div class="player-score">$0</div>
+            </div>
+            <div class="player-card" id="player2">
+                <input type="text" class="player-name" placeholder="Player 2" maxlength="20">
+                <div class="player-score">$0</div>
+            </div>
+            <div class="player-card" id="player3">
+                <input type="text" class="player-name" placeholder="Player 3" maxlength="20">
+                <div class="player-score">$0</div>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div id="game-board">
+            <!-- Categories and questions will be dynamically generated here -->
+        </div>
+
+        <!-- Control Panel -->
+        <div id="control-panel">
+            <div class="controls-group">
+                <button id="load-game-btn" class="control-btn">Load Game JSON</button>
+                <input type="file" id="game-file-input" accept=".json" style="display: none;">
+                
+                <button id="load-theme-btn" class="control-btn">Load Theme JSON</button>
+                <input type="file" id="theme-file-input" accept=".json" style="display: none;">
+                
+                <button id="reset-game-btn" class="control-btn">Reset Game</button>
+            </div>
+            <div class="controls-group">
+                <button id="next-round-btn" class="control-btn">Next Round</button>
+                <button id="final-jeopardy-btn" class="control-btn">Final Jeopardy</button>
+            </div>
+        </div>
+
+        <!-- Question Modal -->
+        <div id="question-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="category-name"></span>
+                    <span class="question-value"></span>
+                </div>
+                <div class="modal-body">
+                    <div id="question-text"></div>
+                    <div id="answer-section" style="display: none;">
+                        <hr>
+                        <div id="answer-text"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="show-answer-btn" class="modal-btn">Show Answer</button>
+                    <div id="player-response-controls" style="display: none;">
+                        <div class="response-buttons">
+                            <button class="response-btn correct-btn" data-player="1">Player 1 ✓</button>
+                            <button class="response-btn correct-btn" data-player="2">Player 2 ✓</button>
+                            <button class="response-btn correct-btn" data-player="3">Player 3 ✓</button>
+                        </div>
+                        <div class="response-buttons">
+                            <button class="response-btn incorrect-btn" data-player="1">Player 1 ✗</button>
+                            <button class="response-btn incorrect-btn" data-player="2">Player 2 ✗</button>
+                            <button class="response-btn incorrect-btn" data-player="3">Player 3 ✗</button>
+                        </div>
+                    </div>
+                    <button id="close-modal-btn" class="modal-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Jeopardy Modal -->
+        <div id="final-jeopardy-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="category-name">Final Jeopardy</span>
+                </div>
+                <div class="modal-body">
+                    <div id="final-category"></div>
+                    <div id="final-question-text" style="display: none;"></div>
+                    <div id="final-answer-section" style="display: none;">
+                        <hr>
+                        <div id="final-answer-text"></div>
+                    </div>
+                    <div id="final-wagers" style="display: none;">
+                        <div class="wager-input">
+                            <label>Player 1 Wager:</label>
+                            <input type="number" id="wager1" min="0" value="0">
+                        </div>
+                        <div class="wager-input">
+                            <label>Player 2 Wager:</label>
+                            <input type="number" id="wager2" min="0" value="0">
+                        </div>
+                        <div class="wager-input">
+                            <label>Player 3 Wager:</label>
+                            <input type="number" id="wager3" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="show-final-question-btn" class="modal-btn">Show Question</button>
+                    <button id="show-final-answer-btn" class="modal-btn" style="display: none;">Show Answer</button>
+                    <div id="final-response-controls" style="display: none;">
+                        <div class="response-buttons">
+                            <button class="response-btn correct-btn" data-player="1">Player 1 ✓</button>
+                            <button class="response-btn correct-btn" data-player="2">Player 2 ✓</button>
+                            <button class="response-btn correct-btn" data-player="3">Player 3 ✓</button>
+                        </div>
+                        <div class="response-buttons">
+                            <button class="response-btn incorrect-btn" data-player="1">Player 1 ✗</button>
+                            <button class="response-btn incorrect-btn" data-player="2">Player 2 ✗</button>
+                            <button class="response-btn incorrect-btn" data-player="3">Player 3 ✗</button>
+                        </div>
+                    </div>
+                    <button id="close-final-modal-btn" class="modal-btn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

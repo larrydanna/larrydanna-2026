@@ -25,55 +25,42 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
   </div>
 
-  <div class="tool-embed" id="jeopardy-root">
-    <div id="jeopardy-loading" class="loading-state">Loading game...</div>
-    <div id="jeopardy-error" class="error-state" style="display:none">
-      Could not load game data. <button id="retry-btn" class="btn btn-ghost">Try again</button>
-    </div>
+  <div class="game-frame-wrapper">
+    <iframe
+      src="/jeopardy/index.html"
+      title="JeopardyJs game"
+      id="jeopardy-frame"
+      scrolling="no"
+    ></iframe>
+    <p class="frame-error" id="frame-error" style="display:none">
+      Could not load game. <a href="/jeopardy/index.html" target="_blank">Open in new tab</a>
+    </p>
   </div>
 </BaseLayout>
 
 <script>
-  // Load JeopardyJs as a client-side island
-  // The game's index.html, app.js, and assets need to be in public/jeopardy/
-  const root = document.getElementById('jeopardy-root') as HTMLElement;
-  const loading = document.getElementById('jeopardy-loading') as HTMLElement;
-  const errorState = document.getElementById('jeopardy-error') as HTMLElement;
-  const retryBtn = document.getElementById('retry-btn') as HTMLButtonElement;
+  const frame = document.getElementById('jeopardy-frame') as HTMLIFrameElement;
+  const error = document.getElementById('frame-error') as HTMLElement;
 
-  async function loadGame() {
-    loading.style.display = 'block';
-    errorState.style.display = 'none';
-
+  // Auto-resize iframe to fit game content
+  function resizeFrame() {
     try {
-      // Verify game data is reachable before loading the script
-      const response = await fetch('/jeopardy/default-game.json');
-      if (!response.ok) throw new Error(`Game data returned ${response.status}`);
-
-      loading.style.display = 'none';
-
-      // Load the stylesheet
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/jeopardy/styles.css';
-      document.head.appendChild(link);
-
-      // Load the game script
-      const script = document.createElement('script');
-      script.src = '/jeopardy/app.js';
-      script.onerror = () => {
-        loading.style.display = 'none';
-        errorState.style.display = 'block';
-      };
-      document.body.appendChild(script);
-    } catch {
-      loading.style.display = 'none';
-      errorState.style.display = 'block';
-    }
+      const h = frame.contentWindow?.document?.body?.scrollHeight;
+      if (h && h > 100) frame.style.height = h + 'px';
+    } catch { /* cross-origin guard */ }
   }
 
-  retryBtn?.addEventListener('click', loadGame);
-  loadGame();
+  frame.addEventListener('load', () => {
+    resizeFrame();
+    // Re-check after game JS has rendered the board
+    setTimeout(resizeFrame, 500);
+    setTimeout(resizeFrame, 1500);
+  });
+
+  frame.addEventListener('error', () => {
+    frame.style.display = 'none';
+    error.style.display = 'block';
+  });
 </script>
 
 <style>
@@ -85,7 +72,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     font-size: 0.875rem;
     margin-bottom: var(--space-xl);
   }
-
   .breadcrumb a { color: var(--muted); }
   .breadcrumb a:hover { color: var(--accent); }
 
@@ -100,9 +86,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     margin-bottom: var(--space-sm);
   }
 
-  h1 {
-    margin-bottom: var(--space-sm);
-  }
+  h1 { margin-bottom: var(--space-sm); }
 
   .tool-description {
     color: var(--muted);
@@ -110,22 +94,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     margin: 0;
   }
 
-  .tool-embed {
+  .game-frame-wrapper {
     width: 100%;
-    min-height: 400px;
+    padding-bottom: var(--space-2xl);
   }
 
-  .loading-state, .error-state {
+  iframe {
+    width: 100%;
+    min-height: 700px;
+    border: none;
+    display: block;
+  }
+
+  .frame-error {
     padding: var(--space-xl);
     text-align: center;
     color: var(--muted);
-    font-size: 1rem;
-  }
-
-  .error-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm);
   }
 </style>
