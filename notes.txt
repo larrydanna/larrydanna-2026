@@ -1,0 +1,7 @@
+
+
+https://dash.cloudflare.com/1de60acd5978c41cb12a033c2d1e7083/larrydanna.com/dns/records
+
+NS	adele.ns.cloudflare.com
+NS	zahir.ns.cloudflare.com
+

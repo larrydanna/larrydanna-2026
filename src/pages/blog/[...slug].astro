@@ -1,5 +1,5 @@
 ---
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
@@ -11,7 +11,7 @@ const { slug } = Astro.params;
 const post = await getEntry('blog', slug);
 if (!post) return Astro.redirect('/blog');
 
-const { Content } = await post.render();
+const { Content } = await render(post);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>

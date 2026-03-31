@@ -25,3 +25,4 @@ pnpm-debug.log*
 
 # gstack skills (local tooling, not part of the site)
 .claude/
+.gstack/
