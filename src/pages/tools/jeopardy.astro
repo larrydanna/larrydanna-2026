@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="JeopardyJs" description="A fully playable Jeopardy game in the browser. Built in vanilla JavaScript.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>JeopardyJs</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Game</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>JeopardyJs</h1>
+        <p class="tool-description">
+          A fully playable Jeopardy game in the browser. Multiple game files, multiple themes,
+          Final Jeopardy, player management, and scoring. Zero external dependencies.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tool-embed" id="jeopardy-root">
+    <div id="jeopardy-loading" class="loading-state">Loading game...</div>
+    <div id="jeopardy-error" class="error-state" style="display:none">
+      Could not load game data. <button id="retry-btn" class="btn btn-ghost">Try again</button>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  // Load JeopardyJs as a client-side island
+  // The game's index.html, app.js, and assets need to be in public/jeopardy/
+  const root = document.getElementById('jeopardy-root') as HTMLElement;
+  const loading = document.getElementById('jeopardy-loading') as HTMLElement;
+  const errorState = document.getElementById('jeopardy-error') as HTMLElement;
+  const retryBtn = document.getElementById('retry-btn') as HTMLButtonElement;
+
+  async function loadGame() {
+    loading.style.display = 'block';
+    errorState.style.display = 'none';
+
+    try {
+      // Verify game data is reachable before loading the script
+      const response = await fetch('/jeopardy/default-game.json');
+      if (!response.ok) throw new Error(`Game data returned ${response.status}`);
+
+      loading.style.display = 'none';
+
+      // Load the stylesheet
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/jeopardy/styles.css';
+      document.head.appendChild(link);
+
+      // Load the game script
+      const script = document.createElement('script');
+      script.src = '/jeopardy/app.js';
+      script.onerror = () => {
+        loading.style.display = 'none';
+        errorState.style.display = 'block';
+      };
+      document.body.appendChild(script);
+    } catch {
+      loading.style.display = 'none';
+      errorState.style.display = 'block';
+    }
+  }
+
+  retryBtn?.addEventListener('click', loadGame);
+  loadGame();
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header {
+    max-width: var(--content-width);
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  h1 {
+    margin-bottom: var(--space-sm);
+  }
+
+  .tool-description {
+    color: var(--muted);
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .tool-embed {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  .loading-state, .error-state {
+    padding: var(--space-xl);
+    text-align: center;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+</style>

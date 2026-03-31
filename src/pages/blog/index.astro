@@ -1,0 +1,94 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date));
+---
+
+<BaseLayout title="Blog" description="Long-form writing by Larry Danna on software, music, and vintage computing.">
+  <div class="section">
+    <div class="container">
+      <h1>Blog</h1>
+      <p class="page-sub">Writing on software, music, vintage computing, and whatever else is on my mind.</p>
+
+      {posts.length === 0 ? (
+        <p class="empty-state">Posts coming soon.</p>
+      ) : (
+        <div class="post-list">
+          {posts.map(post => (
+            <article class="post-item">
+              <div class="post-meta">
+                <time>{post.data.date}</time>
+                {post.data.tags.map(tag => <span class="tag">{tag}</span>)}
+              </div>
+              <h3><a href={`/blog/${post.id}`}>{post.data.title}</a></h3>
+              {post.data.description && <p>{post.data.description}</p>}
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  h1 { margin-bottom: var(--space-sm); }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 1.125rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  .post-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-item {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-item:last-child {
+    border-bottom: none;
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+  }
+
+  .post-meta time {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .post-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-xs);
+  }
+
+  .post-item h3 a {
+    color: var(--text);
+  }
+
+  .post-item h3 a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .post-item p {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    margin: 0;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    padding: var(--space-xl) 0;
+  }
+</style>

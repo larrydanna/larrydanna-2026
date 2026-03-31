@@ -1,0 +1,379 @@
+{
+  "rounds": [
+    {
+      "name": "Round 1",
+      "categories": [
+        {
+          "name": "Science",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This planet is known as the Red Planet.",
+              "answer": "What is Mars?"
+            },
+            {
+              "value": 400,
+              "question": "The chemical symbol for gold is this two-letter abbreviation.",
+              "answer": "What is Au?"
+            },
+            {
+              "value": 600,
+              "question": "This is the powerhouse of the cell.",
+              "answer": "What is the mitochondria?"
+            },
+            {
+              "value": 800,
+              "question": "At sea level, water boils at this temperature in Celsius.",
+              "answer": "What is 100 degrees?"
+            },
+            {
+              "value": 1000,
+              "question": "This scientist developed the theory of general relativity.",
+              "answer": "Who is Albert Einstein?"
+            }
+          ]
+        },
+        {
+          "name": "History",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This wall fell in 1989, reuniting a divided city.",
+              "answer": "What is the Berlin Wall?"
+            },
+            {
+              "value": 400,
+              "question": "The first person to walk on the moon in 1969.",
+              "answer": "Who is Neil Armstrong?"
+            },
+            {
+              "value": 600,
+              "question": "This ship sank in 1912 after hitting an iceberg.",
+              "answer": "What is the Titanic?"
+            },
+            {
+              "value": 800,
+              "question": "The year Christopher Columbus sailed to the Americas.",
+              "answer": "What is 1492?"
+            },
+            {
+              "value": 1000,
+              "question": "This ancient wonder is the only one still standing today.",
+              "answer": "What is the Great Pyramid of Giza?"
+            }
+          ]
+        },
+        {
+          "name": "Geography",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This country is home to the kangaroo.",
+              "answer": "What is Australia?"
+            },
+            {
+              "value": 400,
+              "question": "The longest river in the world.",
+              "answer": "What is the Nile?"
+            },
+            {
+              "value": 600,
+              "question": "This city is known as the City of Light.",
+              "answer": "What is Paris?"
+            },
+            {
+              "value": 800,
+              "question": "The number of continents on Earth.",
+              "answer": "What is seven?"
+            },
+            {
+              "value": 1000,
+              "question": "The world's largest desert by area.",
+              "answer": "What is Antarctica (or the Sahara for hot deserts)?"
+            }
+          ]
+        },
+        {
+          "name": "Movies",
+          "questions": [
+            {
+              "value": 200,
+              "question": "In this 1997 film, a ship sinks on its maiden voyage.",
+              "answer": "What is Titanic?"
+            },
+            {
+              "value": 400,
+              "question": "This wizard boy attends Hogwarts School.",
+              "answer": "Who is Harry Potter?"
+            },
+            {
+              "value": 600,
+              "question": "He said 'I'll be back' in The Terminator.",
+              "answer": "Who is Arnold Schwarzenegger?"
+            },
+            {
+              "value": 800,
+              "question": "The year the first Star Wars movie was released.",
+              "answer": "What is 1977?"
+            },
+            {
+              "value": 1000,
+              "question": "This director is known for Inception and The Dark Knight.",
+              "answer": "Who is Christopher Nolan?"
+            }
+          ]
+        },
+        {
+          "name": "Sports",
+          "questions": [
+            {
+              "value": 200,
+              "question": "The number of players on a basketball team on the court.",
+              "answer": "What is five?"
+            },
+            {
+              "value": 400,
+              "question": "This event is held every four years and features athletes from around the world.",
+              "answer": "What are the Olympics?"
+            },
+            {
+              "value": 600,
+              "question": "The only sport to be played on the moon.",
+              "answer": "What is golf?"
+            },
+            {
+              "value": 800,
+              "question": "This boxer was known as 'The Greatest.'",
+              "answer": "Who is Muhammad Ali?"
+            },
+            {
+              "value": 1000,
+              "question": "The number of Super Bowl rings Tom Brady has won.",
+              "answer": "What is seven?"
+            }
+          ]
+        },
+        {
+          "name": "Literature",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This boy never grows up and lives in Neverland.",
+              "answer": "Who is Peter Pan?"
+            },
+            {
+              "value": 400,
+              "question": "Shakespeare wrote this tragedy about star-crossed lovers.",
+              "answer": "What is Romeo and Juliet?"
+            },
+            {
+              "value": 600,
+              "question": "This author created the detective Sherlock Holmes.",
+              "answer": "Who is Arthur Conan Doyle?"
+            },
+            {
+              "value": 800,
+              "question": "The first book in the Harry Potter series.",
+              "answer": "What is Harry Potter and the Philosopher's Stone (or Sorcerer's Stone)?"
+            },
+            {
+              "value": 1000,
+              "question": "This epic poem by Homer tells of Odysseus's journey home.",
+              "answer": "What is The Odyssey?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Round 2",
+      "categories": [
+        {
+          "name": "Music",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This British band sang 'Hey Jude' and 'Let It Be.'",
+              "answer": "Who are The Beatles?"
+            },
+            {
+              "value": 800,
+              "question": "The King of Pop is this legendary performer.",
+              "answer": "Who is Michael Jackson?"
+            },
+            {
+              "value": 1200,
+              "question": "This instrument has 88 keys.",
+              "answer": "What is a piano?"
+            },
+            {
+              "value": 1600,
+              "question": "This composer wrote The Four Seasons.",
+              "answer": "Who is Antonio Vivaldi?"
+            },
+            {
+              "value": 2000,
+              "question": "The year Woodstock music festival took place.",
+              "answer": "What is 1969?"
+            }
+          ]
+        },
+        {
+          "name": "Technology",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This company created the iPhone.",
+              "answer": "What is Apple?"
+            },
+            {
+              "value": 800,
+              "question": "The 'www' in a website URL stands for this.",
+              "answer": "What is World Wide Web?"
+            },
+            {
+              "value": 1200,
+              "question": "This social media platform uses a blue bird as its logo.",
+              "answer": "What is Twitter (or X)?"
+            },
+            {
+              "value": 1600,
+              "question": "The founder of Microsoft.",
+              "answer": "Who is Bill Gates?"
+            },
+            {
+              "value": 2000,
+              "question": "The programming language named after a type of coffee.",
+              "answer": "What is Java?"
+            }
+          ]
+        },
+        {
+          "name": "Food & Drink",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This Italian dish consists of dough topped with sauce and cheese.",
+              "answer": "What is pizza?"
+            },
+            {
+              "value": 800,
+              "question": "The main ingredient in guacamole.",
+              "answer": "What is avocado?"
+            },
+            {
+              "value": 1200,
+              "question": "This French pastry is crescent-shaped.",
+              "answer": "What is a croissant?"
+            },
+            {
+              "value": 1600,
+              "question": "The country where sushi originated.",
+              "answer": "What is Japan?"
+            },
+            {
+              "value": 2000,
+              "question": "This spice is the most expensive by weight.",
+              "answer": "What is saffron?"
+            }
+          ]
+        },
+        {
+          "name": "Animals",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This is the fastest land animal.",
+              "answer": "What is a cheetah?"
+            },
+            {
+              "value": 800,
+              "question": "The largest mammal in the world.",
+              "answer": "What is a blue whale?"
+            },
+            {
+              "value": 1200,
+              "question": "This bird can fly backwards.",
+              "answer": "What is a hummingbird?"
+            },
+            {
+              "value": 1600,
+              "question": "The only mammal capable of true flight.",
+              "answer": "What is a bat?"
+            },
+            {
+              "value": 2000,
+              "question": "This animal has three hearts.",
+              "answer": "What is an octopus?"
+            }
+          ]
+        },
+        {
+          "name": "Art",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This artist painted the Mona Lisa.",
+              "answer": "Who is Leonardo da Vinci?"
+            },
+            {
+              "value": 800,
+              "question": "This Dutch artist cut off part of his own ear.",
+              "answer": "Who is Vincent van Gogh?"
+            },
+            {
+              "value": 1200,
+              "question": "The ceiling of this chapel was painted by Michelangelo.",
+              "answer": "What is the Sistine Chapel?"
+            },
+            {
+              "value": 1600,
+              "question": "This Spanish artist co-founded the Cubist movement.",
+              "answer": "Who is Pablo Picasso?"
+            },
+            {
+              "value": 2000,
+              "question": "The art movement associated with Salvador Dalí.",
+              "answer": "What is Surrealism?"
+            }
+          ]
+        },
+        {
+          "name": "Miscellaneous",
+          "questions": [
+            {
+              "value": 400,
+              "question": "The number of sides on a hexagon.",
+              "answer": "What is six?"
+            },
+            {
+              "value": 800,
+              "question": "This color is made by mixing red and blue.",
+              "answer": "What is purple?"
+            },
+            {
+              "value": 1200,
+              "question": "The fear of spiders is called this.",
+              "answer": "What is arachnophobia?"
+            },
+            {
+              "value": 1600,
+              "question": "The Roman numeral for 1000.",
+              "answer": "What is M?"
+            },
+            {
+              "value": 2000,
+              "question": "This gas makes up about 78% of Earth's atmosphere.",
+              "answer": "What is nitrogen?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "finalJeopardy": {
+    "category": "U.S. Presidents",
+    "question": "This president served the shortest term in office, just 31 days, after catching pneumonia at his inauguration in 1841.",
+    "answer": "Who is William Henry Harrison?"
+  }
+}

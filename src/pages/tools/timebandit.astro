@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Time Bandit" description="Log interruptions and time diversions with this quick-entry form.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Time Bandit</span>
+      </nav>
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Productivity</span>
+          <span class="tag">Print</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Time Bandit</h1>
+        <p class="tool-description">Log interruptions and time diversions. Fill in the fields and print.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container tool-body">
+    <div class="box">
+      <h2>Time Bandit</h2>
+      <label>Duration
+        <input type="text" id="duration" value=".5 hour(s)" />
+      </label>
+      <label>Date
+        <input type="text" id="timestamp" />
+      </label>
+      <label>People involved
+        <input type="text" id="devs" value="Larry C, Fred F." />
+      </label>
+      <label>Title
+        <input type="text" id="title" value="Order Processing Question" />
+      </label>
+      <label>Description
+        <textarea id="description" rows="4">Our teammates needed help finding our orders type table.</textarea>
+      </label>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  (document.getElementById('timestamp') as HTMLInputElement).value = new Date().toLocaleDateString();
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { max-width: var(--content-width); margin-bottom: var(--space-xl); }
+  .tool-tags { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+  h1 { margin-bottom: var(--space-xs); }
+  .tool-description { color: var(--muted); margin: 0; }
+
+  .tool-body { padding-bottom: var(--space-2xl); }
+
+  .box {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: var(--space-lg);
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-xs);
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input, textarea {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    width: 100%;
+  }
+
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  textarea { resize: vertical; }
+</style>

@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Music" description="Larry Danna — live bluegrass musician and AI-assisted songwriter.">
+  <div class="section">
+    <div class="container">
+      <h1>Music</h1>
+
+      <div class="music-layout">
+        <div class="bio-section">
+          <p class="lead">
+            I play live bluegrass with a group of friends — acoustic, traditional, the kind that gets
+            people tapping their feet. It's not a career, it's just something I love.
+          </p>
+          <p>
+            I've also started exploring AI-assisted songwriting through
+            <a href="https://suno.com" target="_blank" rel="noopener">Suno</a>, which turns out to be
+            a genuinely interesting creative tool. Writing lyrics, picking styles, iterating on tracks.
+            The results surprise me.
+          </p>
+        </div>
+
+        <section class="videos-section">
+          <h2>Videos</h2>
+          <p class="section-note">Check back here for live performance clips and recordings.</p>
+          <!-- YouTube embeds go here as content becomes available -->
+          <!-- Example:
+          <div class="video-embed">
+            <iframe
+              src="https://www.youtube.com/embed/VIDEO_ID"
+              title="Video title"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+          -->
+        </section>
+
+        <section class="suno-section">
+          <h2>Suno tracks</h2>
+          <p class="section-note">AI-assisted compositions. Links and embeds coming as tracks develop.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  h1 {
+    margin-bottom: var(--space-xl);
+  }
+
+  .music-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+    max-width: var(--content-width);
+  }
+
+  .lead {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: var(--space-md);
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-note {
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  .video-embed {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--surface);
+    margin-top: var(--space-md);
+  }
+
+  .video-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>

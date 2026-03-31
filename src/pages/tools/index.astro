@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const tools = [
+  {
+    slug: 'jeopardy',
+    name: 'JeopardyJs',
+    description: 'A fully playable Jeopardy game. Custom game files, multiple themes, Final Jeopardy. Pure vanilla JS.',
+    tags: ['Game', 'Vanilla JS'],
+  },
+  {
+    slug: 'month',
+    name: 'Month Calendar',
+    description: 'Single-month calendar with previous/next navigation. Today highlighted. Printable.',
+    tags: ['Calendar', 'Print', 'Vanilla JS'],
+  },
+  {
+    slug: 'year',
+    name: 'Year at a Glance',
+    description: 'All 12 months on one page. Navigate between years. Prints cleanly.',
+    tags: ['Calendar', 'Print', 'Vanilla JS'],
+  },
+  {
+    slug: 'timebandit',
+    name: 'Time Bandit',
+    description: 'Log interruptions and time diversions. Quick-entry form, printable.',
+    tags: ['Productivity', 'Print', 'Vanilla JS'],
+  },
+  {
+    slug: 'retroitem',
+    name: 'Retro Item',
+    description: 'Fill in a retrospective action item card and print it for the wall.',
+    tags: ['Productivity', 'Print', 'Vanilla JS'],
+  },
+  {
+    slug: 'envelope',
+    name: 'Envelope Printer',
+    description: 'Editable from/to address fields, formatted for a standard envelope. Print it out.',
+    tags: ['Print', 'Vanilla JS'],
+  },
+];
+---
+
+<BaseLayout title="Tools" description="Interactive web tools and demos built by Larry Danna.">
+  <div class="section">
+    <div class="container">
+      <h1>Tools</h1>
+      <p class="page-sub">Interactive demos I actually use. Built with vanilla JavaScript, no frameworks.</p>
+
+      <div class="tool-grid">
+        {tools.map(tool => (
+          <a href={`/tools/${tool.slug}`} class="card tool-card">
+            <div class="tool-tags">
+              {tool.tags.map(tag => <span class="tag">{tag}</span>)}
+            </div>
+            <h3>{tool.name}</h3>
+            <p>{tool.description}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  h1 {
+    margin-bottom: var(--space-sm);
+  }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 1.125rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-card {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .tool-card:hover {
+    text-decoration: none;
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .tool-card h3 {
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .tool-card p {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    margin: 0;
+  }
+</style>

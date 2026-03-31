@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Month Calendar" description="Single-month calendar viewer with previous/next navigation.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Month Calendar</span>
+      </nav>
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Calendar</span>
+          <span class="tag">Print</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Month Calendar</h1>
+        <p class="tool-description">Single-month calendar with previous/next navigation. Today is highlighted.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container tool-body">
+    <div id="cal-outer">
+      <div id="cal-nav">
+        <button id="btn-prev" class="btn btn-ghost">&larr; Prev</button>
+        <button id="btn-next" class="btn btn-ghost">Next &rarr;</button>
+      </div>
+      <div id="divMain"></div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  let current = new Date();
+  let year  = current.getFullYear();
+  let month = current.getMonth();
+
+  function isToday(d: Date): boolean {
+    const t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+  }
+
+  function getDaysInMonth(y: number, m: number): number {
+    return new Date(y, m + 1, 0).getDate();
+  }
+
+  function getStartDay(y: number, m: number): number {
+    return new Date(y, m, 1).getDay();
+  }
+
+  function renderMonth(y: number, m: number): string {
+    const startDay  = getStartDay(y, m);
+    const daysCount = getDaysInMonth(y, m);
+    let html = `<h2>${months[m]} ${y}</h2><table><thead><tr>`;
+    days.forEach(d => html += `<th>${d}</th>`);
+    html += '</tr></thead><tbody>';
+
+    let day = 1;
+    for (let w = 0; w < 6; w++) {
+      html += '<tr>';
+      for (let col = 0; col < 7; col++) {
+        const cellIndex = w * 7 + col;
+        if (cellIndex < startDay || day > daysCount) {
+          html += '<td class="out"></td>';
+        } else {
+          const cellDate = new Date(y, m, day);
+          const cls = isToday(cellDate) ? 'today' : '';
+          html += `<td class="${cls}">${day}</td>`;
+          day++;
+        }
+      }
+      html += '</tr>';
+      if (day > daysCount) break;
+    }
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function render() {
+    const el = document.getElementById('divMain');
+    if (el) el.innerHTML = renderMonth(year, month);
+  }
+
+  document.getElementById('btn-prev')?.addEventListener('click', () => {
+    month--;
+    if (month < 0) { month = 11; year--; }
+    render();
+  });
+
+  document.getElementById('btn-next')?.addEventListener('click', () => {
+    month++;
+    if (month > 11) { month = 0; year++; }
+    render();
+  });
+
+  render();
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { max-width: var(--content-width); margin-bottom: var(--space-xl); }
+  .tool-tags { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+  h1 { margin-bottom: var(--space-xs); }
+  .tool-description { color: var(--muted); margin: 0; }
+
+  .tool-body { padding-bottom: var(--space-2xl); }
+
+  #cal-outer { max-width: 680px; }
+
+  #cal-nav {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+  }
+
+  :global(#divMain h2) {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    margin-bottom: var(--space-md);
+    color: var(--text);
+  }
+
+  :global(#divMain table) {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  :global(#divMain th) {
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--space-xs);
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  :global(#divMain td) {
+    height: 72px;
+    width: 14.28%;
+    vertical-align: top;
+    padding: 6px 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  :global(#divMain td.out) { color: var(--border); }
+
+  :global(#divMain td.today) {
+    background: rgba(212, 134, 58, 0.15);
+    color: var(--accent);
+  }
+
+  @media print {
+    #cal-nav { display: none; }
+  }
+</style>

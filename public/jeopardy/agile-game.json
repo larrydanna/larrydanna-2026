@@ -1,0 +1,379 @@
+{
+  "rounds": [
+    {
+      "name": "Round 1",
+      "categories": [
+        {
+          "name": "Agile Foundations",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This 2001 document defines the core values and principles of Agile development.",
+              "answer": "What is the Agile Manifesto?"
+            },
+            {
+              "value": 400,
+              "question": "Agile emphasizes responding to this rather than following a rigid plan.",
+              "answer": "What is change?"
+            },
+            {
+              "value": 600,
+              "question": "Agile teams aim to deliver this type of software frequently.",
+              "answer": "What is working software?"
+            },
+            {
+              "value": 800,
+              "question": "This Agile value prioritizes people and collaboration over processes and tools.",
+              "answer": "What are individuals and interactions?"
+            },
+            {
+              "value": 1000,
+              "question": "There are this many core values in the Agile Manifesto.",
+              "answer": "What is four?"
+            }
+          ]
+        },
+        {
+          "name": "Scrum Basics",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This role is responsible for maximizing the value of the product.",
+              "answer": "Who is the Product Owner?"
+            },
+            {
+              "value": 400,
+              "question": "This time-boxed iteration in Scrum typically lasts 1–4 weeks.",
+              "answer": "What is a Sprint?"
+            },
+            {
+              "value": 600,
+              "question": "This Scrum event is a daily 15-minute synchronization meeting.",
+              "answer": "What is the Daily Scrum (or Daily Stand-up)?"
+            },
+            {
+              "value": 800,
+              "question": "This artifact contains an ordered list of everything needed in the product.",
+              "answer": "What is the Product Backlog?"
+            },
+            {
+              "value": 1000,
+              "question": "This Scrum role focuses on coaching the team and removing impediments.",
+              "answer": "Who is the Scrum Master?"
+            }
+          ]
+        },
+        {
+          "name": "Agile Principles",
+          "questions": [
+            {
+              "value": 200,
+              "question": "The highest priority in Agile is to satisfy the customer through this.",
+              "answer": "What is early and continuous delivery of valuable software?"
+            },
+            {
+              "value": 400,
+              "question": "Agile promotes delivering working software at this kind of interval.",
+              "answer": "What is a frequent or regular interval?"
+            },
+            {
+              "value": 600,
+              "question": "Agile teams should maintain this over the long term.",
+              "answer": "What is a sustainable pace?"
+            },
+            {
+              "value": 800,
+              "question": "This principle encourages teams to reflect and adjust regularly.",
+              "answer": "What is continuous improvement (inspect and adapt)?"
+            },
+            {
+              "value": 1000,
+              "question": "This concept emphasizes simplicity and maximizing the amount of work not done.",
+              "answer": "What is simplicity?"
+            }
+          ]
+        },
+        {
+          "name": "Agile Artifacts",
+          "questions": [
+            {
+              "value": 200,
+              "question": "This visual tool shows work items moving through different stages.",
+              "answer": "What is a Kanban board?"
+            },
+            {
+              "value": 400,
+              "question": "This chart tracks remaining work over time during a sprint.",
+              "answer": "What is a burndown chart?"
+            },
+            {
+              "value": 600,
+              "question": "This backlog contains items selected for the current sprint.",
+              "answer": "What is the Sprint Backlog?"
+            },
+            {
+              "value": 800,
+              "question": "User stories often follow this simple format involving a role, goal, and benefit.",
+              "answer": "What is 'As a [user], I want [goal], so that [benefit]'?"
+            },
+            {
+              "value": 1000,
+              "question": "This shared understanding defines when work is considered complete.",
+              "answer": "What is the Definition of Done?"
+            }
+          ]
+        },
+        {
+          "name": "Team & Culture",
+          "questions": [
+            {
+              "value": 200,
+              "question": "Agile teams are ideally this, containing all skills needed to deliver value.",
+              "answer": "What are cross-functional?"
+            },
+            {
+              "value": 400,
+              "question": "Agile favors this leadership style that supports rather than commands.",
+              "answer": "What is servant leadership?"
+            },
+            {
+              "value": 600,
+              "question": "This practice encourages close, daily collaboration between business and developers.",
+              "answer": "What is collaboration?"
+            },
+            {
+              "value": 800,
+              "question": "Agile relies heavily on this to build effective teams.",
+              "answer": "What is trust?"
+            },
+            {
+              "value": 1000,
+              "question": "This retrospective goal focuses on improving people, process, and tools.",
+              "answer": "What is continuous improvement?"
+            }
+          ]
+        },
+        {
+          "name": "Agile Myths",
+          "questions": [
+            {
+              "value": 200,
+              "question": "False belief: Agile means this level of documentation.",
+              "answer": "What is no documentation?"
+            },
+            {
+              "value": 400,
+              "question": "False belief: Agile teams do not need this activity at all.",
+              "answer": "What is planning?"
+            },
+            {
+              "value": 600,
+              "question": "This misconception assumes Agile lacks discipline or structure.",
+              "answer": "What is 'Agile is chaotic'?"
+            },
+            {
+              "value": 800,
+              "question": "Agile does not eliminate this role, but changes how it is performed.",
+              "answer": "What is project management?"
+            },
+            {
+              "value": 1000,
+              "question": "This myth assumes Agile only works for small teams.",
+              "answer": "What is 'Agile doesn't scale'?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Round 2",
+      "categories": [
+        {
+          "name": "Advanced Scrum",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This Scrum event reviews the increment with stakeholders.",
+              "answer": "What is the Sprint Review?"
+            },
+            {
+              "value": 800,
+              "question": "This event focuses on team reflection and improvement.",
+              "answer": "What is the Sprint Retrospective?"
+            },
+            {
+              "value": 1200,
+              "question": "This metric measures how much work a team completes per sprint.",
+              "answer": "What is velocity?"
+            },
+            {
+              "value": 1600,
+              "question": "This scaling framework uses roles like Release Train Engineer.",
+              "answer": "What is SAFe?"
+            },
+            {
+              "value": 2000,
+              "question": "This concept ensures backlog items are ready before sprint planning.",
+              "answer": "What is Definition of Ready?"
+            }
+          ]
+        },
+        {
+          "name": "Kanban & Flow",
+          "questions": [
+            {
+              "value": 400,
+              "question": "Kanban emphasizes limiting this to improve flow.",
+              "answer": "What is work in progress (WIP)?"
+            },
+            {
+              "value": 800,
+              "question": "This metric measures how long work takes from start to finish.",
+              "answer": "What is lead time?"
+            },
+            {
+              "value": 1200,
+              "question": "This diagram shows cumulative work in different states.",
+              "answer": "What is a cumulative flow diagram?"
+            },
+            {
+              "value": 1600,
+              "question": "Kanban originated from this manufacturing philosophy.",
+              "answer": "What is Lean?"
+            },
+            {
+              "value": 2000,
+              "question": "This principle focuses on optimizing the whole system, not just parts.",
+              "answer": "What is systems thinking?"
+            }
+          ]
+        },
+        {
+          "name": "Lean & XP",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This Lean concept focuses on eliminating non-value-added work.",
+              "answer": "What is waste?"
+            },
+            {
+              "value": 800,
+              "question": "This XP practice involves writing tests before code.",
+              "answer": "What is Test-Driven Development?"
+            },
+            {
+              "value": 1200,
+              "question": "This XP practice has two developers working at one workstation.",
+              "answer": "What is pair programming?"
+            },
+            {
+              "value": 1600,
+              "question": "Lean encourages decisions to be made as this.",
+              "answer": "What is as late as responsibly possible?"
+            },
+            {
+              "value": 2000,
+              "question": "XP stands for this.",
+              "answer": "What is Extreme Programming?"
+            }
+          ]
+        },
+        {
+          "name": "Product & Value",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This role represents the voice of the customer in Scrum.",
+              "answer": "Who is the Product Owner?"
+            },
+            {
+              "value": 800,
+              "question": "This technique helps prioritize features based on value and effort.",
+              "answer": "What is backlog prioritization?"
+            },
+            {
+              "value": 1200,
+              "question": "This artifact represents a usable slice of the product.",
+              "answer": "What is an increment?"
+            },
+            {
+              "value": 1600,
+              "question": "This term describes the smallest piece of value delivered to users.",
+              "answer": "What is a Minimum Viable Product (MVP)?"
+            },
+            {
+              "value": 2000,
+              "question": "This mindset focuses on outcomes rather than outputs.",
+              "answer": "What is value-driven development?"
+            }
+          ]
+        },
+        {
+          "name": "Scaling Agile",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This framework uses Scrum of Scrums for coordination.",
+              "answer": "What is Scrum@Scale?"
+            },
+            {
+              "value": 800,
+              "question": "This model scales Scrum using Nexus Integration Teams.",
+              "answer": "What is Nexus?"
+            },
+            {
+              "value": 1200,
+              "question": "This framework emphasizes minimal viable bureaucracy.",
+              "answer": "What is LeSS (Large-Scale Scrum)?"
+            },
+            {
+              "value": 1600,
+              "question": "This challenge commonly arises when scaling Agile.",
+              "answer": "What is coordination across teams?"
+            },
+            {
+              "value": 2000,
+              "question": "Scaling Agile still requires alignment to this core concept.",
+              "answer": "What is Agile values and principles?"
+            }
+          ]
+        },
+        {
+          "name": "Agile Metrics",
+          "questions": [
+            {
+              "value": 400,
+              "question": "This metric measures how consistently a team delivers work.",
+              "answer": "What is predictability?"
+            },
+            {
+              "value": 800,
+              "question": "This metric shows how fast work items are completed.",
+              "answer": "What is cycle time?"
+            },
+            {
+              "value": 1200,
+              "question": "This concept warns against measuring individual productivity in Agile.",
+              "answer": "What is team-based performance?"
+            },
+            {
+              "value": 1600,
+              "question": "This type of metric focuses on customer impact.",
+              "answer": "What are outcome-based metrics?"
+            },
+            {
+              "value": 2000,
+              "question": "This anti-pattern involves misusing metrics to control teams.",
+              "answer": "What is weaponizing metrics?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "finalJeopardy": {
+    "category": "Agile History",
+    "question": "In 2001, 17 software practitioners gathered at this Utah ski resort to create the Agile Manifesto.",
+    "answer": "What is Snowbird?"
+  }
+}

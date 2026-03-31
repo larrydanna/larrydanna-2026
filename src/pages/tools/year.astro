@@ -1,0 +1,191 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Year at a Glance" description="Full-year calendar showing all 12 months at once. Today highlighted.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Year at a Glance</span>
+      </nav>
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Calendar</span>
+          <span class="tag">Print</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Year at a Glance</h1>
+        <p class="tool-description">All 12 months on one page. Today is highlighted. Print it out and stick it on the wall.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container tool-body">
+    <div id="cal-nav">
+      <button id="btn-prev" class="btn btn-ghost">&larr; {new Date().getFullYear() - 1}</button>
+      <span id="year-label" class="year-label"></span>
+      <button id="btn-next" class="btn btn-ghost">{new Date().getFullYear() + 1} &rarr;</button>
+    </div>
+    <div id="divMain"></div>
+  </div>
+</BaseLayout>
+
+<script>
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  let year = new Date().getFullYear();
+
+  function isToday(d: Date): boolean {
+    const t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+  }
+
+  function getDaysInMonth(y: number, m: number): number {
+    return new Date(y, m + 1, 0).getDate();
+  }
+
+  function renderMonth(y: number, m: number): string {
+    const startDay = new Date(y, m, 1).getDay();
+    const total    = getDaysInMonth(y, m);
+    let html = `<div class="month-block"><div class="month-title">${MONTHS[m]}</div><table><thead><tr>`;
+    DAYS.forEach(d => html += `<th>${d}</th>`);
+    html += '</tr></thead><tbody>';
+
+    let day = 1;
+    for (let w = 0; w < 6; w++) {
+      html += '<tr>';
+      for (let col = 0; col < 7; col++) {
+        const idx = w * 7 + col;
+        if (idx < startDay || day > total) {
+          html += '<td></td>';
+        } else {
+          const cls = isToday(new Date(y, m, day)) ? ' class="today"' : '';
+          html += `<td${cls}>${day}</td>`;
+          day++;
+        }
+      }
+      html += '</tr>';
+      if (day > total) break;
+    }
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  function render() {
+    const label = document.getElementById('year-label');
+    if (label) label.textContent = String(year);
+
+    const prev = document.getElementById('btn-prev');
+    const next = document.getElementById('btn-next');
+    if (prev) prev.textContent = `\u2190 ${year - 1}`;
+    if (next) next.textContent = `${year + 1} \u2192`;
+
+    const el = document.getElementById('divMain');
+    if (el) el.innerHTML = MONTHS.map((_, i) => renderMonth(year, i)).join('');
+  }
+
+  document.getElementById('btn-prev')?.addEventListener('click', () => { year--; render(); });
+  document.getElementById('btn-next')?.addEventListener('click', () => { year++; render(); });
+
+  render();
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { max-width: var(--content-width); margin-bottom: var(--space-xl); }
+  .tool-tags { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+  h1 { margin-bottom: var(--space-xs); }
+  .tool-description { color: var(--muted); margin: 0; }
+
+  .tool-body { padding-bottom: var(--space-2xl); }
+
+  #cal-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .year-label {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--text);
+  }
+
+  :global(#divMain) {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+  }
+
+  :global(.month-block) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: var(--space-sm);
+  }
+
+  :global(.month-title) {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: var(--space-xs);
+    color: var(--accent);
+  }
+
+  :global(.month-block table) {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  :global(.month-block th) {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    padding: 2px;
+    text-transform: uppercase;
+  }
+
+  :global(.month-block td) {
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 3px 2px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  :global(.month-block td:empty) { color: transparent; }
+
+  :global(.month-block td.today) {
+    background: var(--accent);
+    color: #0F0D0A;
+    font-weight: 700;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 900px) {
+    :global(#divMain) { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    :global(#divMain) { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media print {
+    #cal-nav { display: none; }
+    :global(#divMain) { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>

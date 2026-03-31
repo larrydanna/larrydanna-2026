@@ -1,0 +1,201 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const allTips = (await getCollection('tips', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date));
+
+const allTags = [...new Set(allTips.flatMap(t => t.data.tags))].sort();
+const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
+---
+
+<BaseLayout title="Tips" description="Pro tips in C#, SQL, JavaScript, and more. Personal knowledge base by Larry Danna.">
+  <div class="section">
+    <div class="container">
+      <h1>Tips</h1>
+      <p class="page-sub">Pro tips I keep coming back to. C#, SQL, JavaScript, 6502 assembly.</p>
+
+      {allTags.length > 0 && (
+        <div class="filters" id="filters">
+          <div class="filter-group">
+            {allTags.map(tag => (
+              <button class="tag filter-tag" data-filter={tag}>{tag}</button>
+            ))}
+          </div>
+          <button class="clear-btn" id="clear-filters" style="display:none">Clear filter</button>
+        </div>
+      )}
+
+      <div class="tips-list" id="tips-list">
+        {allTips.length === 0 ? (
+          <p class="empty-state">No tips yet. Check back soon.</p>
+        ) : (
+          allTips.map(tip => (
+            <article
+              class="tip-item"
+              data-tags={tip.data.tags.join(',')}
+              data-language={tip.data.language}
+            >
+              <div class="tip-meta">
+                <span class="tip-lang">{tip.data.language}</span>
+                <span class="tip-date">{tip.data.date}</span>
+              </div>
+              <h3><a href={`/tips/${tip.id}`}>{tip.data.title}</a></h3>
+              <div class="tip-tags">
+                {tip.data.tags.map(tag => <span class="tag">{tag}</span>)}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <p class="empty-state" id="no-results" style="display:none">
+        No tips match that filter. <button class="link-btn" id="clear-inline">Clear it</button> to see all.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const filterTags = document.querySelectorAll<HTMLButtonElement>('.filter-tag');
+  const tipItems = document.querySelectorAll<HTMLElement>('.tip-item');
+  const clearBtn = document.getElementById('clear-filters') as HTMLButtonElement;
+  const noResults = document.getElementById('no-results') as HTMLElement;
+  const clearInline = document.getElementById('clear-inline') as HTMLButtonElement;
+
+  let activeFilter: string | null = null;
+
+  function applyFilter(tag: string | null) {
+    activeFilter = tag;
+    let visibleCount = 0;
+
+    tipItems.forEach(item => {
+      const tags = item.dataset.tags?.split(',') ?? [];
+      const visible = tag === null || tags.includes(tag);
+      item.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
+    });
+
+    filterTags.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === tag);
+    });
+
+    clearBtn.style.display = tag ? 'inline-block' : 'none';
+    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+
+  filterTags.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.filter ?? null;
+      applyFilter(activeFilter === tag ? null : tag);
+    });
+  });
+
+  clearBtn.addEventListener('click', () => applyFilter(null));
+  clearInline?.addEventListener('click', () => applyFilter(null));
+</script>
+
+<style>
+  h1 { margin-bottom: var(--space-sm); }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 1.125rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-xl);
+  }
+
+  .filter-group {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .filter-tag.active {
+    background: var(--accent);
+    color: #0F0D0A;
+  }
+
+  .clear-btn, .link-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  .clear-btn:hover, .link-btn:hover {
+    color: var(--text);
+  }
+
+  .tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tip-item {
+    border-left: 3px solid var(--accent);
+    padding: var(--space-md) 0 var(--space-md) var(--space-md);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tip-item:last-child {
+    border-bottom: none;
+  }
+
+  .tip-meta {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xs);
+  }
+
+  .tip-lang {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+
+  .tip-date {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .tip-item h3 {
+    font-size: 1.125rem;
+    margin-bottom: var(--space-xs);
+  }
+
+  .tip-item h3 a {
+    color: var(--text);
+  }
+
+  .tip-item h3 a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .tip-tags {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    font-size: 1rem;
+    padding: var(--space-xl) 0;
+  }
+</style>

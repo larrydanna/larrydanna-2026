@@ -1,0 +1,17 @@
+{
+  "name": "Windows XP Classic",
+  "primaryColor": "#0054E3",
+  "secondaryColor": "#3F8CF3",
+  "backgroundColor": "#ECE9D8",
+  "textColor": "#000000",
+  "boardBackground": "#003399",
+  "categoryBackground": "#0054E3",
+  "categoryText": "#FFFFFF",
+  "questionBackground": "#0054E3",
+  "questionText": "#FFD700",
+  "modalBackground": "#ECE9D8",
+  "buttonBackground": "#0054E3",
+  "buttonHover": "#3F8CF3",
+  "correctColor": "#2E8B57",
+  "incorrectColor": "#DC143C"
+}

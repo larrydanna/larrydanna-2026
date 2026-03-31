@@ -1,0 +1,22 @@
+[params]
+# Exclude domains that block automated link checkers
+exclude = [
+  "youtube\\.com",
+  "youtu\\.be",
+  "suno\\.com",
+  "suno\\.ai",
+  "facebook\\.com",
+  "linkedin\\.com",
+  "fonts\\.googleapis\\.com",
+  "fonts\\.gstatic\\.com",
+]
+
+# Treat these HTTP status codes as success
+accept = [200, 206, 429]
+
+# Timeout per request
+timeout = 20
+
+# Don't fail the build on link errors — warn only
+# Remove this line to make link failures block deploy
+max_retries = 3

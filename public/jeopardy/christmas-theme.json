@@ -1,0 +1,17 @@
+{
+  "name": "Christmas Cheer",
+  "primaryColor": "#1F6F43",
+  "secondaryColor": "#B23A48",
+  "backgroundColor": "#F6F2EA",
+  "textColor": "#2B2B2B",
+  "boardBackground": "#163E2A",
+  "categoryBackground": "#1F6F43",
+  "categoryText": "#FFFFFF",
+  "questionBackground": "#245C3A",
+  "questionText": "#F2C94C",
+  "modalBackground": "#F6F2EA",
+  "buttonBackground": "#B23A48",
+  "buttonHover": "#C94A59",
+  "correctColor": "#2E8B57",
+  "incorrectColor": "#C0392B"
+}

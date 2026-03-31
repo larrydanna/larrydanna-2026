@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Retro Item" description="Fill in a retrospective action item card and print it.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Retro Item</span>
+      </nav>
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Productivity</span>
+          <span class="tag">Print</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Retro Item</h1>
+        <p class="tool-description">Fill in a retrospective action item card and print it for the wall.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container tool-body">
+    <div class="card retro-card">
+      <input class="field-category" type="text" id="heading" value="Retro Item" />
+      <input class="field-title" type="text" id="title" value="Logging Improvements" />
+      <input class="field-description" type="text" id="description" value="We need a team plan for production triage." />
+      <div class="field-footer">
+        <input class="field-date" type="text" id="timestamp" />
+        <input class="field-owner" type="text" id="owner" value="Larry C" />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  (document.getElementById('timestamp') as HTMLInputElement).value = new Date().toLocaleDateString();
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { max-width: var(--content-width); margin-bottom: var(--space-xl); }
+  .tool-tags { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+  h1 { margin-bottom: var(--space-xs); }
+  .tool-description { color: var(--muted); margin: 0; }
+
+  .tool-body { padding-bottom: var(--space-2xl); }
+
+  .retro-card {
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+  }
+
+  input {
+    font-family: var(--font-body);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    width: 100%;
+    padding: 6px 0;
+  }
+
+  input:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+  }
+
+  .field-category {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  .field-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  .field-description {
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  .field-footer {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .field-date {
+    width: 33%;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .field-owner {
+    width: 67%;
+    font-size: 0.875rem;
+  }
+
+  @media print {
+    input { border-bottom-color: black; color: black; }
+    .retro-card { background: white; border: 2px solid black; }
+  }
+</style>

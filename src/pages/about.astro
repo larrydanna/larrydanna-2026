@@ -1,0 +1,120 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About" description="About Larry Danna — software developer, bluegrass musician, vintage computer collector.">
+  <div class="section">
+    <div class="content-container">
+      <h1>About</h1>
+
+      <div class="about-layout">
+        <section class="bio-section">
+          <p class="lead">
+            I'm Larry Danna. I've been writing software professionally since the Visual Basic 3 days —
+            C#, SQL, .NET across three decades of business software. I build things that solve real
+            problems, ship without drama, and still work five years later.
+          </p>
+          <p>
+            Outside the day job: I play live bluegrass with friends (acoustic, traditional, no
+            amplification required), collect vintage computers (the Commodore 64 is the prize),
+            and have started using AI tools for creative work — Suno for songwriting, Claude for
+            everything else.
+          </p>
+          <p>
+            This site exists because I needed a place to put the tools I keep building for myself,
+            the tips I keep writing down, and the projects I'm actually proud of. One place, no
+            "coming soon" pages, no corporate template.
+          </p>
+        </section>
+
+        <section class="links-section">
+          <h2>Find me</h2>
+          <ul class="social-links">
+            <li>
+              <a href="https://github.com/larrydanna" target="_blank" rel="noopener">
+                GitHub — larrydanna
+              </a>
+            </li>
+            <li>
+              <a href="https://www.linkedin.com/in/larry-danna" target="_blank" rel="noopener">
+                LinkedIn
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@larrydanna" target="_blank" rel="noopener">
+                YouTube
+              </a>
+            </li>
+            <li>
+              <a href="https://www.facebook.com/larry.collins.9026" target="_blank" rel="noopener">
+                Facebook
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="stack-section">
+          <h2>Tech stack I know well</h2>
+          <div class="stack-grid">
+            <div class="stack-item">
+              <span class="tag">C#</span>
+              <span class="tag">.NET</span>
+              <span class="tag">SQL Server</span>
+              <span class="tag">Visual Basic</span>
+              <span class="tag">ASP.NET MVC</span>
+              <span class="tag">JavaScript</span>
+              <span class="tag">TypeScript</span>
+              <span class="tag">6502 Assembly</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  h1 {
+    margin-bottom: var(--space-xl);
+  }
+
+  .about-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+  }
+
+  .lead {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: var(--space-md);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .social-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .social-links a {
+    color: var(--text);
+    font-size: 1rem;
+  }
+
+  .social-links a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .stack-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+</style>

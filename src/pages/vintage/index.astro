@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Vintage" description="Larry Danna's vintage computer collection — Commodore 64 and more.">
+  <div class="section">
+    <div class="container">
+      <h1>Vintage Computing</h1>
+
+      <div class="collection-layout">
+        <div class="intro">
+          <p class="lead">
+            I collect vintage computers. The Commodore 64 is the centerpiece — a machine with more
+            character than most software I've shipped in thirty years of professional development.
+          </p>
+          <p>
+            The collection is small and growing. Each machine has a story. This section will too.
+          </p>
+        </div>
+
+        <section class="machine-section">
+          <div class="card machine-card">
+            <div class="machine-header">
+              <span class="tag">Centerpiece</span>
+            </div>
+            <h2>Commodore 64</h2>
+            <p>
+              Released in 1982. 64KB of RAM, a SID chip that still sounds incredible, and a BASIC
+              interpreter that introduced an entire generation to programming. Mine does too.
+            </p>
+            <p>
+              I'm writing 6502 assembly on it now — slowly, carefully. The projects live in
+              <a href="https://github.com/larrydanna" target="_blank" rel="noopener">GitHub</a>.
+              This page will grow as they do.
+            </p>
+            <div class="machine-projects">
+              <h3>Projects in progress</h3>
+              <ul>
+                <li><strong>modbasic</strong> — A label-based BASIC interpreter written in 6502 assembly</li>
+                <li><strong>ed64</strong> — A full-screen text editor (DOS Edit-style) for the C64</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="coming-section">
+          <h2>More machines</h2>
+          <p class="muted-text">
+            Photos, machine histories, and acquisition stories coming as the collection is documented.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  h1 {
+    margin-bottom: var(--space-xl);
+  }
+
+  .collection-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+    max-width: var(--content-width);
+  }
+
+  .lead {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: var(--space-md);
+  }
+
+  .machine-header {
+    margin-bottom: var(--space-sm);
+  }
+
+  .machine-card h2 {
+    font-size: 2rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .machine-card p {
+    color: var(--muted);
+    margin-bottom: var(--space-md);
+  }
+
+  .machine-projects {
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-md);
+    margin-top: var(--space-md);
+  }
+
+  .machine-projects h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  .machine-projects ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .machine-projects li {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    padding-left: var(--space-sm);
+    border-left: 2px solid var(--border);
+  }
+
+  .machine-projects li strong {
+    color: var(--text);
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .muted-text {
+    color: var(--muted);
+  }
+</style>
