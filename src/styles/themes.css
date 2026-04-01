@@ -1,0 +1,272 @@
+/*
+ * Seasonal Theme System — larrydanna.com
+ * 16 themes across 4 seasons, 4 per season.
+ * Applied via html[data-theme="..."] — set by ThemePicker.astro.
+ *
+ * Brightness tiers per season:
+ *   DARK  — near-black to warm-brown backgrounds
+ *   MID   — medium-depth / dusk tones (noticeably lighter than dark)
+ *   LIGHT — airy / full-daylight tones
+ *
+ * !! FORBIDDEN COMBINATION !!
+ * Never pair a warm-orange accent (approx hue 20°–45°, high saturation)
+ * with a near-black or pure-black background (#000–#1C1C1C).
+ * That specific combo is a well-known commercial brand palette and reads
+ * as unintentionally branded. When in doubt:
+ *   → Shift the accent toward golden-amber (more yellow, lower saturation)
+ *   → OR ensure the background reads as "warm dark brown," not black
+ *   → OR shift the accent to rust/brick (cooler, more red)
+ */
+
+/* ============================================================
+   SPRING  (Mar 20 – Jun 20)
+   Distribution: LIGHT · LIGHT · DARK · LIGHT
+   ============================================================ */
+
+/* Peach Blossom Dawn — LIGHT — morning garden, warm cream and dusty rose */
+html[data-theme="peach-blossom-dawn"] {
+  color-scheme: light;
+  --bg:         #FAF5F5;
+  --surface:    #F0E8EC;
+  --surface-2:  #E8DDE3;
+  --text:       #2A1A20;
+  --muted:      #806070;
+  --accent:     #C84870;
+  --accent-alt: #4A8840;
+  --success:    #4A8840;
+  --border:     #DDD0D5;
+}
+
+/* April Rain Studio — LIGHT — overcast daylight, cool pale sky and rain-blue */
+html[data-theme="april-rain-studio"] {
+  color-scheme: light;
+  --bg:         #EEF4F8;
+  --surface:    #E0ECF4;
+  --surface-2:  #D4E4EE;
+  --text:       #101C28;
+  --muted:      #507090;
+  --accent:     #2878A8;
+  --accent-alt: #3A9060;
+  --success:    #3A9060;
+  --border:     #C0D4E0;
+}
+
+/* Clover & Copper — DARK — deep Irish green meets warm hammered copper */
+html[data-theme="clover-copper"] {
+  color-scheme: dark;
+  --bg:         #080D09;
+  --surface:    #0F1A10;
+  --surface-2:  #172319;
+  --text:       #E8F0E9;
+  --muted:      #7A9080;
+  --accent:     #C67A3C;
+  --accent-alt: #4EA85C;
+  --success:    #4EA85C;
+  --border:     #1A2E1C;
+}
+
+/* Wildflower Afternoon — LIGHT — sunlit field, lavender sky and poppy red */
+html[data-theme="wildflower-afternoon"] {
+  color-scheme: light;
+  --bg:         #F8F5FF;
+  --surface:    #EDE8F8;
+  --surface-2:  #E4DCF2;
+  --text:       #1E1828;
+  --muted:      #6A6080;
+  --accent:     #6840C8;
+  --accent-alt: #C84840;
+  --success:    #3A8060;
+  --border:     #D8D0F0;
+}
+
+/* ============================================================
+   SUMMER  (Jun 21 – Sep 22)
+   Distribution: MID · DARK · LIGHT · DARK
+   ============================================================ */
+
+/* Heron Cove Dusk — MID — coastal twilight, gold sun on deep water */
+html[data-theme="heron-cove-dusk"] {
+  color-scheme: dark;
+  --bg:         #263848;
+  --surface:    #324858;
+  --surface-2:  #3E5870;
+  --text:       #D8ECF8;
+  --muted:      #7898B0;
+  --accent:     #F0C050;
+  --accent-alt: #58A0D0;
+  --success:    #58A870;
+  --border:     #405870;
+}
+
+/* Firefly Hollow — DARK — deep summer woods at night, bioluminescent gold-green */
+html[data-theme="firefly-hollow"] {
+  color-scheme: dark;
+  --bg:         #070D08;
+  --surface:    #0E1A0F;
+  --surface-2:  #15241A;
+  --text:       #E5F0E6;
+  --muted:      #7A9A7C;
+  --accent:     #C8E040;
+  --accent-alt: #4EB870;
+  --success:    #4EB870;
+  --border:     #1A2E1C;
+}
+
+/* Salt & Sunburn — LIGHT — beach at high noon, bleached sand and terracotta */
+html[data-theme="salt-sunburn"] {
+  color-scheme: light;
+  --bg:         #FFF8F0;
+  --surface:    #FFF0E0;
+  --surface-2:  #FFE8D0;
+  --text:       #2A1808;
+  --muted:      #806050;
+  --accent:     #C84018;
+  --accent-alt: #1878A0;
+  --success:    #3A7840;
+  --border:     #E8D8C0;
+}
+
+/* Thunderhead Indigo — DARK — pre-storm sky, electric purple tension */
+html[data-theme="thunderhead-indigo"] {
+  color-scheme: dark;
+  --bg:         #07070F;
+  --surface:    #100F1E;
+  --surface-2:  #18172A;
+  --text:       #E8E6F5;
+  --muted:      #8886B0;
+  --accent:     #8A6AE8;
+  --accent-alt: #C84B31;
+  --success:    #6DB884;
+  --border:     #202035;
+}
+
+/* ============================================================
+   FALL  (Sep 23 – Dec 20)
+   Distribution: DARK · MID · LIGHT · LIGHT
+   ============================================================ */
+
+/*
+ * Ember & Birch — DARK — the studio's signature warm dark.
+ * Background is warm brown (#1A1208), not near-black — this is intentional.
+ * Accent is golden amber (#C89040), not orange — also intentional.
+ * See the forbidden-combination note at the top of this file.
+ */
+html[data-theme="ember-birch"] {
+  color-scheme: dark;
+  --bg:         #1A1208;
+  --surface:    #241A10;
+  --surface-2:  #2E2218;
+  --text:       #F2EDE2;
+  --muted:      #9E9080;
+  --accent:     #C89040;
+  --accent-alt: #B83828;
+  --success:    #6DB884;
+  --border:     #382C20;
+}
+
+/* Harvest Moon — MID — full moon over cornfields, harvest gold and warm earth */
+html[data-theme="harvest-moon"] {
+  color-scheme: dark;
+  --bg:         #342818;
+  --surface:    #403020;
+  --surface-2:  #4C3A28;
+  --text:       #F0E0C8;
+  --muted:      #9A7860;
+  --accent:     #D4A828;
+  --accent-alt: #B84028;
+  --success:    #60A060;
+  --border:     #503828;
+}
+
+/* Ciderhouse Dusk — LIGHT — apple orchards, warm golden afternoon light */
+html[data-theme="ciderhouse-dusk"] {
+  color-scheme: light;
+  --bg:         #FFF4E8;
+  --surface:    #FEEBD8;
+  --surface-2:  #FAE0C8;
+  --text:       #2A1408;
+  --muted:      #806050;
+  --accent:     #B85020;
+  --accent-alt: #4A7830;
+  --success:    #4A7830;
+  --border:     #E8D0B8;
+}
+
+/* Frost Before Frost — LIGHT — bare branches, first cold, ice-silver sky */
+html[data-theme="frost-before-frost"] {
+  color-scheme: light;
+  --bg:         #F4F8FA;
+  --surface:    #E8F0F4;
+  --surface-2:  #DDE8EE;
+  --text:       #141C20;
+  --muted:      #607080;
+  --accent:     #2878A8;
+  --accent-alt: #C85820;
+  --success:    #3A7850;
+  --border:     #C8D8E0;
+}
+
+/* ============================================================
+   WINTER  (Dec 21 – Mar 19)
+   Distribution: DARK · DARK · MID · LIGHT
+   ============================================================ */
+
+/*
+ * Midnight Hearthside — DARK — fireplace glow in the darkest hour.
+ * Background is warm dark brown, not near-black.
+ * Accent is golden firelight, not orange. (See forbidden-combination note.)
+ */
+html[data-theme="midnight-hearthside"] {
+  color-scheme: dark;
+  --bg:         #180E06;
+  --surface:    #241608;
+  --surface-2:  #301E10;
+  --text:       #F5ECD8;
+  --muted:      #9E8870;
+  --accent:     #DEB050;
+  --accent-alt: #C04028;
+  --success:    #6DB884;
+  --border:     #382818;
+}
+
+/* Frozen Pines — DARK — ice on evergreens, crystalline winter night */
+html[data-theme="frozen-pines"] {
+  color-scheme: dark;
+  --bg:         #070C10;
+  --surface:    #0D1820;
+  --surface-2:  #14222E;
+  --text:       #E0EEF8;
+  --muted:      #6E90A8;
+  --accent:     #78C8E8;
+  --accent-alt: #3A7848;
+  --success:    #3A7848;
+  --border:     #18303C;
+}
+
+/* Candlelit Library — MID — mahogany shelves, warm candlelight reading glow */
+html[data-theme="candlelit-library"] {
+  color-scheme: dark;
+  --bg:         #302010;
+  --surface:    #3C2A18;
+  --surface-2:  #483420;
+  --text:       #F0E0C0;
+  --muted:      #987858;
+  --accent:     #D0A830;
+  --accent-alt: #983020;
+  --success:    #608850;
+  --border:     #50382A;
+}
+
+/* Ironclad Overcast — LIGHT — steel sky, bare concrete, cold indifference */
+html[data-theme="ironclad-overcast"] {
+  color-scheme: light;
+  --bg:         #F2F2F2;
+  --surface:    #E8E8E8;
+  --surface-2:  #DEDEDE;
+  --text:       #141414;
+  --muted:      #686868;
+  --accent:     #304858;
+  --accent-alt: #C04028;
+  --success:    #3A7048;
+  --border:     #D0D0D0;
+}

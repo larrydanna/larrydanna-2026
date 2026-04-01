@@ -27,11 +27,24 @@ Not the cold blue-black of every other developer portfolio. This palette pulls f
 
 ### Usage Rules
 
-- `--accent` (#D4863A): primary buttons, active nav links, hover underlines, left borders on tip items, tag backgrounds
-- `--accent-alt` (#C84B31): danger/destructive actions only; secondary accent when amber needs company
+- `--accent` (#C89040): primary buttons, active nav links, hover underlines, left borders on tip items, tag backgrounds
+- `--accent-alt` (#B83828): danger/destructive actions only; secondary accent when amber needs company
 - `--success` (#6DB884): success messages, "vanilla ✓" badges in toy audit, positive status indicators
-- `--muted` (#9E9485): dates, word counts, tag counts, placeholder text — never for anything interactive
-- `--border` (#2E2A24): card outlines, horizontal rules, input borders — should barely register
+- `--muted` (#9E9080): dates, word counts, tag counts, placeholder text — never for anything interactive
+- `--border` (#382C20): card outlines, horizontal rules, input borders — should barely register
+
+### Forbidden combination
+
+**Never pair a warm-orange accent with a near-black background.**
+
+Specifically: avoid hue ~20°–45° at high saturation (anything in the `#C85000`–`#FF8000` range) on backgrounds darker than `#1C1C1C`. That exact combination is a widely-recognised commercial brand palette and will read as unintentionally associated with it.
+
+When a warm accent is needed on a dark background, do one of:
+- Shift the accent toward **golden amber** (more yellow, lower orange saturation) — e.g. `#C89040`, `#D0A830`
+- Ensure the background reads as **warm dark brown**, not black — e.g. `#1A1208`, `#180E06`
+- Shift the accent to **rust or brick** (cooler, more red) — e.g. `#B83828`, `#983020`
+
+This rule applies to all 16 themes and any future additions.
 
 ## Typography
 

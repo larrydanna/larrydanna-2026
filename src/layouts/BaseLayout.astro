@@ -1,4 +1,6 @@
 ---
+import ThemePicker from '../components/ThemePicker.astro';
+
 interface Props {
   title: string;
   description?: string;
@@ -20,6 +22,46 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!--
+      Theme init — runs synchronously before first paint to prevent a flash of
+      the wrong theme. Mirrors the logic in ThemePicker.astro's <script>.
+    -->
+    <script is:inline>
+      (function () {
+        var stored = localStorage.getItem('ld-theme');
+        if (!stored) {
+          // Compute the season-aware auto theme
+          var now     = new Date();
+          var m       = now.getMonth() + 1;
+          var d       = now.getDate();
+          var jan1    = new Date(now.getFullYear(), 0, 1);
+          var doy     = Math.ceil((now - jan1) / 86400000) + 1;
+          var week    = Math.ceil(doy / 7);
+          var season, ww;
+
+          if ((m === 3 && d >= 20) || m === 4 || m === 5 || (m === 6 && d <= 20)) {
+            season = 'spring'; ww = week - 12;
+          } else if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22)) {
+            season = 'summer'; ww = week - 26;
+          } else if ((m === 9 && d >= 23) || m === 10 || m === 11 || (m === 12 && d <= 20)) {
+            season = 'fall'; ww = week - 39;
+          } else {
+            season = 'winter'; ww = week >= 52 ? week - 52 : week + 1;
+          }
+
+          var idx = Math.min(3, Math.max(0, Math.floor(ww / 3.5)));
+          var themes = {
+            spring: ['peach-blossom-dawn', 'april-rain-studio', 'clover-copper', 'wildflower-afternoon'],
+            summer: ['heron-cove-dusk',    'firefly-hollow',    'salt-sunburn',  'thunderhead-indigo'],
+            fall:   ['ember-birch',        'harvest-moon',      'ciderhouse-dusk','frost-before-frost'],
+            winter: ['midnight-hearthside','frozen-pines',      'candlelit-library','ironclad-overcast'],
+          };
+          stored = themes[season][idx];
+        }
+        document.documentElement.dataset.theme = stored;
+      })();
+    </script>
   </head>
   <body>
     <header class="site-header">
@@ -33,6 +75,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
           <a href="/blog">Blog</a>
           <a href="/about">About</a>
         </nav>
+        <ThemePicker />
       </div>
     </header>
 

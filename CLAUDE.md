@@ -17,6 +17,7 @@ The approved design system (Warm Dark / Studio Amber) is documented in `DESIGN.m
 - Fonts: Instrument Serif for display/hero only; IBM Plex Sans for all UI and body; JetBrains Mono for code
 - Motion: none. No transitions, animations, or hover effects beyond instant color/border changes
 - Border radius: 4px for buttons/inputs, 8px for cards — consistent, not pill-shaped
+- **Forbidden combo:** Never pair a warm-orange accent (hue ~20°–45°, high saturation) with a near-black background (darker than #1C1C1C). Shift orange accents to golden-amber, or ensure the background reads as warm dark brown. Full rule in `DESIGN.md`.
 
 Preview: `start "" "C:/Users/larry/.gstack/projects/larrydanna-2026/designs/design-system-20260330/preview.html"`
 

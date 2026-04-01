@@ -1,0 +1,407 @@
+---
+/**
+ * ThemePicker.astro
+ *
+ * Renders a small palette button in the header that opens a season-grouped
+ * theme panel. Automatically selects a theme based on the current month and
+ * week of the year; persists the user's manual choice in localStorage.
+ *
+ * 16 themes across 4 seasons (4 per season), spanning dark / mid / light
+ * brightness tiers. Theme CSS lives in src/styles/themes.css and is applied
+ * via html[data-theme="..."].
+ *
+ * Swatch bg/accent values here are the literal hex from themes.css so the
+ * preview chips look accurate regardless of the active theme.
+ */
+
+const SEASONS = [
+  {
+    id: 'spring',
+    label: 'Spring',
+    themes: [
+      { id: 'peach-blossom-dawn',   name: 'Peach Blossom Dawn',   bg: '#FAF5F5', accent: '#C84870', light: true },
+      { id: 'april-rain-studio',    name: 'April Rain Studio',    bg: '#EEF4F8', accent: '#2878A8', light: true },
+      { id: 'clover-copper',        name: 'Clover & Copper',      bg: '#080D09', accent: '#C67A3C' },
+      { id: 'wildflower-afternoon', name: 'Wildflower Afternoon', bg: '#F8F5FF', accent: '#6840C8', light: true },
+    ],
+  },
+  {
+    id: 'summer',
+    label: 'Summer',
+    themes: [
+      { id: 'heron-cove-dusk',    name: 'Heron Cove Dusk',    bg: '#263848', accent: '#F0C050' },
+      { id: 'firefly-hollow',     name: 'Firefly Hollow',     bg: '#070D08', accent: '#C8E040' },
+      { id: 'salt-sunburn',       name: 'Salt & Sunburn',     bg: '#FFF8F0', accent: '#C84018', light: true },
+      { id: 'thunderhead-indigo', name: 'Thunderhead Indigo', bg: '#07070F', accent: '#8A6AE8' },
+    ],
+  },
+  {
+    id: 'fall',
+    label: 'Fall',
+    themes: [
+      { id: 'ember-birch',        name: 'Ember & Birch',       bg: '#1A1208', accent: '#C89040' },
+      { id: 'harvest-moon',       name: 'Harvest Moon',        bg: '#342818', accent: '#D4A828' },
+      { id: 'ciderhouse-dusk',    name: 'Ciderhouse Dusk',     bg: '#FFF4E8', accent: '#B85020', light: true },
+      { id: 'frost-before-frost', name: 'Frost Before Frost',  bg: '#F4F8FA', accent: '#2878A8', light: true },
+    ],
+  },
+  {
+    id: 'winter',
+    label: 'Winter',
+    themes: [
+      { id: 'midnight-hearthside', name: 'Midnight Hearthside', bg: '#180E06', accent: '#DEB050' },
+      { id: 'frozen-pines',        name: 'Frozen Pines',        bg: '#070C10', accent: '#78C8E8' },
+      { id: 'candlelit-library',   name: 'Candlelit Library',   bg: '#302010', accent: '#D0A830' },
+      { id: 'ironclad-overcast',   name: 'Ironclad Overcast',   bg: '#F2F2F2', accent: '#304858', light: true },
+    ],
+  },
+];
+---
+
+<div class="theme-picker" id="themePicker">
+  <!-- Toggle button — dot colour is updated by JS to match active accent -->
+  <button
+    class="theme-toggle"
+    id="themeToggle"
+    aria-label="Open theme picker"
+    aria-expanded="false"
+    aria-controls="themePanel"
+    title="Change theme"
+  >
+    <span class="toggle-dot" id="toggleDot"></span>
+  </button>
+
+  <!-- Panel -->
+  <div class="theme-panel" id="themePanel" role="dialog" aria-label="Theme picker" hidden>
+    <div class="panel-head">
+      <span class="panel-title">Theme</span>
+      <button class="auto-btn" id="themeAutoBtn" title="Switch to the season-matched theme">
+        Auto
+      </button>
+    </div>
+
+    {SEASONS.map((season) => (
+      <div class="season-group">
+        <div class="season-label">{season.label}</div>
+        <div class="season-swatches">
+          {season.themes.map((theme) => (
+            <button
+              class="swatch"
+              data-theme-id={theme.id}
+              data-light={theme.light ? 'true' : undefined}
+              aria-label={theme.name}
+              title={theme.name}
+            >
+              <span class="swatch-preview" style={`background:${theme.bg}`}>
+                <span class="swatch-dot" style={`background:${theme.accent}`}></span>
+              </span>
+              <span class="swatch-label">{theme.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<!-- ─── Client-side logic ──────────────────────────────────────────────────── -->
+<script>
+  // ── Theme registry ────────────────────────────────────────────────────────
+  const SEASON_THEMES: Record<string, string[]> = {
+    spring: ['peach-blossom-dawn', 'april-rain-studio', 'clover-copper', 'wildflower-afternoon'],
+    summer: ['heron-cove-dusk',    'firefly-hollow',    'salt-sunburn',  'thunderhead-indigo'],
+    fall:   ['ember-birch',        'harvest-moon',      'ciderhouse-dusk','frost-before-frost'],
+    winter: ['midnight-hearthside','frozen-pines',      'candlelit-library','ironclad-overcast'],
+  };
+
+  const ACCENT_COLORS: Record<string, string> = {
+    'peach-blossom-dawn':   '#C84870',
+    'april-rain-studio':    '#2878A8',
+    'clover-copper':        '#C67A3C',
+    'wildflower-afternoon': '#6840C8',
+    'heron-cove-dusk':      '#F0C050',
+    'firefly-hollow':       '#C8E040',
+    'salt-sunburn':         '#C84018',
+    'thunderhead-indigo':   '#8A6AE8',
+    'ember-birch':          '#C89040',
+    'harvest-moon':         '#D4A828',
+    'ciderhouse-dusk':      '#B85020',
+    'frost-before-frost':   '#2878A8',
+    'midnight-hearthside':  '#DEB050',
+    'frozen-pines':         '#78C8E8',
+    'candlelit-library':    '#D0A830',
+    'ironclad-overcast':    '#304858',
+  };
+
+  // ── Auto-theme logic ──────────────────────────────────────────────────────
+  /**
+   * Returns the week number (1–53) for a given date.
+   */
+  function weekOfYear(d: Date): number {
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const dayOfYear = Math.ceil((d.getTime() - jan1.getTime()) / 86_400_000) + 1;
+    return Math.ceil(dayOfYear / 7);
+  }
+
+  /**
+   * Selects one of the 16 theme IDs based on the current date.
+   * Each season holds 4 themes; themes rotate every ~3 weeks within the season.
+   */
+  function computeAutoTheme(): string {
+    const now   = new Date();
+    const m     = now.getMonth() + 1; // 1–12
+    const d     = now.getDate();
+    const week  = weekOfYear(now);
+
+    let season: string;
+    let weekWithin: number;
+
+    if ((m === 3 && d >= 20) || m === 4 || m === 5 || (m === 6 && d <= 20)) {
+      season     = 'spring';
+      weekWithin = week - 12;
+    } else if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22)) {
+      season     = 'summer';
+      weekWithin = week - 26;
+    } else if ((m === 9 && d >= 23) || m === 10 || m === 11 || (m === 12 && d <= 20)) {
+      season     = 'fall';
+      weekWithin = week - 39;
+    } else {
+      season     = 'winter';
+      weekWithin = week >= 52 ? week - 52 : week + 1;
+    }
+
+    const idx = Math.min(3, Math.max(0, Math.floor(weekWithin / 3.5)));
+    return SEASON_THEMES[season][idx];
+  }
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const picker   = document.getElementById('themePicker')!;
+  const toggle   = document.getElementById('themeToggle')!;
+  const panel    = document.getElementById('themePanel')!;
+  const dot      = document.getElementById('toggleDot')!;
+  const autoBtn  = document.getElementById('themeAutoBtn')!;
+  const swatches = document.querySelectorAll<HTMLElement>('.swatch');
+
+  // ── Apply a theme ─────────────────────────────────────────────────────────
+  function applyTheme(id: string) {
+    document.documentElement.dataset.theme = id;
+    dot.style.background = ACCENT_COLORS[id] ?? '#D4863A';
+    swatches.forEach((s) => s.classList.toggle('active', s.dataset.themeId === id));
+  }
+
+  function setTheme(id: string, persist = true) {
+    if (persist) localStorage.setItem('ld-theme', id);
+    applyTheme(id);
+  }
+
+  // ── Initialise from storage or auto-compute ───────────────────────────────
+  const storedTheme = localStorage.getItem('ld-theme');
+  applyTheme(storedTheme ?? computeAutoTheme());
+
+  // ── Panel open / close ────────────────────────────────────────────────────
+  function openPanel() {
+    panel.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function closePanel() {
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    panel.hidden ? openPanel() : closePanel();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!picker.contains(e.target as Node)) closePanel();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePanel();
+  });
+
+  // ── Swatch clicks ─────────────────────────────────────────────────────────
+  swatches.forEach((swatch) => {
+    swatch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setTheme(swatch.dataset.themeId!);
+    });
+  });
+
+  // ── Auto button ───────────────────────────────────────────────────────────
+  autoBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    localStorage.removeItem('ld-theme');
+    applyTheme(computeAutoTheme());
+    closePanel();
+  });
+</script>
+
+<style>
+  /* ── Wrapper ─────────────────────────────────────────────── */
+  .theme-picker {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* ── Toggle button ───────────────────────────────────────── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--accent);
+  }
+
+  .toggle-dot {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ── Panel ───────────────────────────────────────────────── */
+  .theme-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    width: 360px;
+    z-index: 200;
+  }
+
+  /* ── Panel header ────────────────────────────────────────── */
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .panel-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .auto-btn {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .auto-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ── Season group ────────────────────────────────────────── */
+  .season-group {
+    margin-bottom: 14px;
+  }
+
+  .season-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .season-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .season-swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  /* ── Individual swatch ───────────────────────────────────── */
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .swatch-preview {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    width: 100%;
+    aspect-ratio: 5 / 3;
+    border-radius: 4px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    padding: 5px;
+    box-sizing: border-box;
+  }
+
+  .swatch.active .swatch-preview {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .swatch-dot {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .swatch-label {
+    font-family: var(--font-body);
+    font-size: 0.5625rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .swatch.active .swatch-label {
+    color: var(--accent);
+  }
+
+  .swatch:hover .swatch-preview {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .swatch:hover .swatch-label {
+    color: var(--text);
+  }
+</style>

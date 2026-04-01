@@ -1,15 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './themes.css';
 
 :root {
-  --bg:         #0F0D0A;
-  --surface:    #1B1915;
-  --surface-2:  #252118;
+  /* Ember & Birch defaults — warm dark brown, golden amber accent.
+     Background is intentionally warm brown, not near-black.
+     Accent is golden amber, not orange. See themes.css for the
+     forbidden-combination rule that governs both choices. */
+  --bg:         #1A1208;
+  --surface:    #241A10;
+  --surface-2:  #2E2218;
   --text:       #F2EDE2;
-  --muted:      #9E9485;
-  --accent:     #D4863A;
-  --accent-alt: #C84B31;
+  --muted:      #9E9080;
+  --accent:     #C89040;
+  --accent-alt: #B83828;
   --success:    #6DB884;
-  --border:     #2E2A24;
+  --border:     #382C20;
 
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-body:    'IBM Plex Sans', system-ui, sans-serif;
@@ -177,7 +182,7 @@ hr {
 /* Tags */
 .tag {
   display: inline-block;
-  background: rgba(212, 134, 58, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
   font-size: 0.75rem;
   font-weight: 500;
@@ -188,7 +193,7 @@ hr {
 }
 
 .tag.tag-success {
-  background: rgba(109, 184, 132, 0.15);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
   color: var(--success);
 }
 
@@ -201,7 +206,7 @@ hr {
 }
 
 .card:hover {
-  border-color: rgba(212, 134, 58, 0.4);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 /* Tool grid */
