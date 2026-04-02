@@ -24,15 +24,27 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
 
   <section class="featured section-sm">
     <div class="container">
-      <p class="section-label">Featured tool</p>
-      <div class="card featured-tool">
-        <div class="tool-meta">
-          <span class="tag">Game</span>
-          <span class="tag">Vanilla JS</span>
+      <p class="section-label">Featured tools</p>
+      <div class="featured-grid">
+        <div class="card featured-tool">
+          <div class="tool-meta">
+            <span class="tag">Wallpaper</span>
+            <span class="tag">Canvas</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <h3>Blotter</h3>
+          <p>Generate a desktop or phone wallpaper from your active theme. Add a calendar overlay, pick a size, download the PNG.</p>
+          <a href="/tools/blotter" class="btn btn-secondary">Try it</a>
         </div>
-        <h3>JeopardyJs</h3>
-        <p>A fully playable Jeopardy game in the browser. Custom game files, multiple themes, Final Jeopardy. Built entirely in vanilla JavaScript.</p>
-        <a href="/tools/jeopardy" class="btn btn-secondary">Play it</a>
+        <div class="card featured-tool">
+          <div class="tool-meta">
+            <span class="tag">Game</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <h3>JeopardyJs</h3>
+          <p>A fully playable Jeopardy game in the browser. Custom game files, multiple themes, Final Jeopardy. Built entirely in vanilla JavaScript.</p>
+          <a href="/tools/jeopardy" class="btn btn-secondary">Play it</a>
+        </div>
       </div>
     </div>
   </section>
@@ -120,8 +132,10 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
     margin-bottom: var(--space-md);
   }
 
-  .featured-tool {
-    max-width: 480px;
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-md);
   }
 
   .tool-meta {

@@ -1,3 +1,8 @@
+# Best Practices
+
+If the user hasn't already requested a blog post for a sessions updates, be sure to ask.  This way we keep the web site fresh, and that's a virtue.
+
+
 # gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools directly.

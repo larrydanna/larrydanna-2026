@@ -1,0 +1,906 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+---
+
+<BaseLayout title="Blotter" description="Generate a desktop or mobile wallpaper from your active theme with an optional calendar overlay.">
+
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Blotter</span>
+      </nav>
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Wallpaper</span>
+          <span class="tag">Calendar</span>
+          <span class="tag">Canvas</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Blotter</h1>
+        <p class="tool-description">Generate a wallpaper image from your active site theme. Optionally overlay a Month or Year at a Glance calendar. Pick a standard size and download the full-resolution PNG.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container tool-body">
+    <div class="blotter-layout">
+
+      <!-- ── Controls sidebar ──────────────────────────────── -->
+      <aside class="blotter-sidebar">
+
+        <!-- Size -->
+        <fieldset>
+          <legend>Canvas Size</legend>
+          <select id="sel-size" class="ctrl-select">
+            <optgroup label="Desktop">
+              <option value="1920x1080" selected>1920 × 1080 — Full HD</option>
+              <option value="2560x1440">2560 × 1440 — QHD</option>
+              <option value="3840x2160">3840 × 2160 — 4K UHD</option>
+              <option value="1366x768">1366 × 768 — Laptop HD</option>
+              <option value="1280x800">1280 × 800 — Laptop</option>
+            </optgroup>
+            <optgroup label="Mobile Portrait">
+              <option value="1080x1920">1080 × 1920 — Android HD</option>
+              <option value="1170x2532">1170 × 2532 — iPhone 12/13/14</option>
+              <option value="1290x2796">1290 × 2796 — iPhone Pro Max</option>
+              <option value="1440x3120">1440 × 3120 — Android QHD+</option>
+            </optgroup>
+          </select>
+        </fieldset>
+
+        <!-- Colors -->
+        <fieldset>
+          <legend>Colors</legend>
+          <div class="radio-stack">
+            <label class="ctrl-radio">
+              <input type="radio" name="colorSource" value="theme" checked />
+              Use current theme
+            </label>
+            <label class="ctrl-radio">
+              <input type="radio" name="colorSource" value="custom" />
+              Custom
+            </label>
+          </div>
+          <div id="custom-colors" class="custom-colors hidden">
+            <div class="color-row">
+              <label for="cp-bg">Background</label>
+              <input type="color" id="cp-bg" class="ctrl-color" />
+            </div>
+            <div class="color-row">
+              <label for="cp-text">Text</label>
+              <input type="color" id="cp-text" class="ctrl-color" />
+            </div>
+            <div class="color-row">
+              <label for="cp-accent">Accent</label>
+              <input type="color" id="cp-accent" class="ctrl-color" />
+            </div>
+            <div class="color-row">
+              <label for="cp-surface">Calendar panel</label>
+              <input type="color" id="cp-surface" class="ctrl-color" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Calendar Overlay -->
+        <fieldset>
+          <legend>Calendar Overlay</legend>
+          <div class="radio-stack">
+            <label class="ctrl-radio">
+              <input type="radio" name="overlay" value="none" checked />
+              None
+            </label>
+            <label class="ctrl-radio">
+              <input type="radio" name="overlay" value="month" />
+              Month at a Glance
+            </label>
+            <label class="ctrl-radio">
+              <input type="radio" name="overlay" value="year" />
+              Year at a Glance
+            </label>
+          </div>
+
+          <!-- Month sub-controls -->
+          <div id="month-opts" class="sub-opts hidden">
+            <select id="sel-month" class="ctrl-select-sm">
+              {MONTH_NAMES.map((m, i) => <option value={i}>{m}</option>)}
+            </select>
+            <select id="sel-year-m" class="ctrl-select-sm"></select>
+          </div>
+
+          <!-- Year sub-controls -->
+          <div id="year-opts" class="sub-opts hidden">
+            <select id="sel-year-y" class="ctrl-select-sm"></select>
+          </div>
+        </fieldset>
+
+        <!-- Overlay Size -->
+        <fieldset id="fs-overlay-size" class="hidden">
+          <legend>Overlay Size</legend>
+          <div class="scale-row">
+            <input type="range" id="overlay-scale" class="ctrl-range"
+              min="40" max="200" value="100" step="5" />
+            <span id="overlay-scale-val" class="scale-val">100%</span>
+          </div>
+        </fieldset>
+
+        <!-- Position -->
+        <fieldset id="fs-position" class="hidden">
+          <legend>Position</legend>
+          <div class="pos-grid">
+            <button class="pos-btn" data-pos="tl" title="Top left">↖</button>
+            <button class="pos-btn" data-pos="tc" title="Top center">↑</button>
+            <button class="pos-btn" data-pos="tr" title="Top right">↗</button>
+            <button class="pos-btn" data-pos="ml" title="Middle left">←</button>
+            <button class="pos-btn" data-pos="mc" title="Center">·</button>
+            <button class="pos-btn" data-pos="mr" title="Middle right">→</button>
+            <button class="pos-btn active" data-pos="bl" title="Bottom left">↙</button>
+            <button class="pos-btn" data-pos="bc" title="Bottom center">↓</button>
+            <button class="pos-btn" data-pos="br" title="Bottom right">↘</button>
+          </div>
+        </fieldset>
+
+        <!-- Download -->
+        <div class="download-area">
+          <button id="btn-download" class="btn btn-primary" style="width:100%">
+            Download PNG
+          </button>
+          <p class="dl-note" id="dl-note"></p>
+        </div>
+
+      </aside>
+
+      <!-- ── Preview ───────────────────────────────────────── -->
+      <div class="blotter-preview-area">
+        <div class="preview-frame">
+          <canvas id="preview-canvas"></canvas>
+        </div>
+        <p class="preview-dim" id="preview-dim">1920 × 1080</p>
+      </div>
+
+    </div>
+  </div>
+
+</BaseLayout>
+
+<script>
+  // ── Types ──────────────────────────────────────────────────────────────────
+
+  interface Colors {
+    bg: string;
+    text: string;
+    accent: string;
+    muted: string;
+    surface: string;
+  }
+
+  interface State {
+    w: number;
+    h: number;
+    colorSource: 'theme' | 'custom';
+    customColors: Colors;
+    overlay: 'none' | 'month' | 'year';
+    overlayMonth: number;
+    overlayYearM: number;
+    overlayYearY: number;
+    overlayScale: number;
+    position: string;
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+
+  const now = new Date();
+  const state: State = {
+    w: 1920, h: 1080,
+    colorSource: 'theme',
+    customColors: { bg: '#1a1208', text: '#f2ede2', accent: '#c89040', muted: '#9e9080', surface: '#241a10' },
+    overlay: 'none',
+    overlayMonth: now.getMonth(),
+    overlayYearM: now.getFullYear(),
+    overlayYearY: now.getFullYear(),
+    overlayScale: 1.0,
+    position: 'bl',
+  };
+
+  const fullCanvas = document.createElement('canvas');
+
+  // ── Populate year dropdowns ────────────────────────────────────────────────
+
+  const CY = now.getFullYear();
+  (['sel-year-m', 'sel-year-y'] as const).forEach(id => {
+    const sel = document.getElementById(id) as HTMLSelectElement;
+    for (let y = CY - 5; y <= CY + 5; y++) {
+      const o = document.createElement('option');
+      o.value = String(y);
+      o.textContent = String(y);
+      if (y === CY) o.selected = true;
+      sel.appendChild(o);
+    }
+  });
+  (document.getElementById('sel-month') as HTMLSelectElement).value = String(state.overlayMonth);
+
+  // ── CSS var helpers ────────────────────────────────────────────────────────
+
+  function cssVar(name: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function getColors(): Colors {
+    if (state.colorSource === 'theme') {
+      return {
+        bg:      cssVar('--bg'),
+        text:    cssVar('--text'),
+        accent:  cssVar('--accent'),
+        muted:   cssVar('--muted'),
+        surface: cssVar('--surface'),
+      };
+    }
+    return { ...state.customColors };
+  }
+
+  function hexToRgba(hex: string, a: number): string {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // ── Canvas helpers ─────────────────────────────────────────────────────────
+
+  function addRoundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number, y: number, w: number, h: number, r: number
+  ): void {
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(x, y, w, h, r);
+      return;
+    }
+    const safe = Math.min(r, w / 2, h / 2);
+    ctx.moveTo(x + safe, y);
+    ctx.lineTo(x + w - safe, y);
+    ctx.arcTo(x + w, y,     x + w, y + safe,     safe);
+    ctx.lineTo(x + w, y + h - safe);
+    ctx.arcTo(x + w, y + h, x + w - safe, y + h, safe);
+    ctx.lineTo(x + safe, y + h);
+    ctx.arcTo(x,     y + h, x,     y + h - safe, safe);
+    ctx.lineTo(x, y + safe);
+    ctx.arcTo(x,     y,     x + safe, y,          safe);
+    ctx.closePath();
+  }
+
+  // ── Calendar math ──────────────────────────────────────────────────────────
+
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function daysInMonth(y: number, m: number): number { return new Date(y, m + 1, 0).getDate(); }
+  function startDay(y: number, m: number): number    { return new Date(y, m, 1).getDay(); }
+
+  function isToday(y: number, m: number, d: number): boolean {
+    const t = new Date();
+    return t.getFullYear() === y && t.getMonth() === m && t.getDate() === d;
+  }
+
+  function monthCalH(calW: number, year: number, month: number): number {
+    const cw   = calW / 7;
+    const rows = Math.ceil((startDay(year, month) + daysInMonth(year, month)) / 7);
+    return cw * 1.2 + cw * 0.8 + rows * (cw * 1.1);
+  }
+
+  function yearCalH(calW: number, cols: number): number {
+    const rows  = Math.ceil(12 / cols);
+    const gapX  = calW * 0.04;
+    const mw    = (calW - gapX * (cols - 1)) / cols;
+    const cw    = mw / 7;
+    const mh    = cw * 1.0 + cw * 0.8 + 6 * (cw * 1.1);
+    const gapY  = mh * 0.12;
+    return rows * mh + (rows - 1) * gapY;
+  }
+
+  // ── Draw month calendar ────────────────────────────────────────────────────
+
+  function drawMonth(
+    ctx: CanvasRenderingContext2D,
+    ox: number, oy: number, calW: number,
+    year: number, month: number,
+    colors: Colors, pad: number
+  ): void {
+    const cw    = calW / 7;
+    const ch    = cw * 1.1;
+    const titleH = cw * 1.2;
+    const hdrH  = cw * 0.8;
+    const rows  = Math.ceil((startDay(year, month) + daysInMonth(year, month)) / 7);
+    const calH  = titleH + hdrH + rows * ch;
+
+    // Panel
+    ctx.fillStyle = hexToRgba(colors.surface, 0.92);
+    ctx.beginPath();
+    addRoundRect(ctx, ox - pad, oy - pad, calW + pad * 2, calH + pad * 2, pad * 0.5);
+    ctx.fill();
+
+    // Title
+    ctx.fillStyle = colors.accent;
+    ctx.font = `600 ${cw * 0.42}px "IBM Plex Sans",system-ui,sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${MONTHS[month].toUpperCase()}  ${year}`, ox, oy + titleH * 0.5);
+
+    // Day headers
+    ctx.fillStyle = colors.muted;
+    ctx.font = `600 ${cw * 0.3}px "IBM Plex Sans",system-ui,sans-serif`;
+    ctx.textAlign = 'center';
+    DAYS.forEach((d, i) => ctx.fillText(d, ox + i * cw + cw * 0.5, oy + titleH + hdrH * 0.5));
+
+    // Dates
+    ctx.font = `400 ${cw * 0.38}px "IBM Plex Sans",system-ui,sans-serif`;
+    const sd = startDay(year, month);
+    const total = daysInMonth(year, month);
+    let day = 1;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < 7; col++) {
+        if (row * 7 + col < sd || day > total) continue;
+        const cx = ox + col * cw + cw * 0.5;
+        const cy = oy + titleH + hdrH + row * ch + ch * 0.5;
+        if (isToday(year, month, day)) {
+          ctx.fillStyle = colors.accent;
+          ctx.beginPath();
+          ctx.arc(cx, cy, cw * 0.36, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = colors.bg;
+        } else {
+          ctx.fillStyle = colors.text;
+        }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(day), cx, cy);
+        day++;
+      }
+    }
+  }
+
+  // ── Draw year calendar ─────────────────────────────────────────────────────
+
+  function drawYear(
+    ctx: CanvasRenderingContext2D,
+    ox: number, oy: number, calW: number,
+    year: number, cols: number,
+    colors: Colors, pad: number
+  ): void {
+    const rows  = Math.ceil(12 / cols);
+    const gapX  = calW * 0.04;
+    const mw    = (calW - gapX * (cols - 1)) / cols;
+    const cw    = mw / 7;
+    const ch    = cw * 1.1;
+    const titleH = cw * 1.0;
+    const hdrH  = cw * 0.8;
+    const mh    = titleH + hdrH + 6 * ch;
+    const gapY  = mh * 0.12;
+    const totalH = rows * mh + (rows - 1) * gapY;
+
+    // Panel
+    ctx.fillStyle = hexToRgba(colors.surface, 0.92);
+    ctx.beginPath();
+    addRoundRect(ctx, ox - pad, oy - pad, calW + pad * 2, totalH + pad * 2, pad * 0.5);
+    ctx.fill();
+
+    for (let m = 0; m < 12; m++) {
+      const col = m % cols;
+      const row = Math.floor(m / cols);
+      const mx  = ox + col * (mw + gapX);
+      const my  = oy + row * (mh + gapY);
+
+      // Month name
+      ctx.fillStyle = colors.accent;
+      ctx.font = `600 ${cw * 0.4}px "IBM Plex Sans",system-ui,sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(MONTHS[m].slice(0, 3).toUpperCase(), mx, my + titleH * 0.5);
+
+      // Day headers
+      ctx.fillStyle = colors.muted;
+      ctx.font = `600 ${cw * 0.28}px "IBM Plex Sans",system-ui,sans-serif`;
+      ctx.textAlign = 'center';
+      DAYS.forEach((d, i) => ctx.fillText(d, mx + i * cw + cw * 0.5, my + titleH + hdrH * 0.5));
+
+      // Dates
+      ctx.font = `400 ${cw * 0.32}px "IBM Plex Sans",system-ui,sans-serif`;
+      const sd    = startDay(year, m);
+      const total = daysInMonth(year, m);
+      const numRows = Math.ceil((sd + total) / 7);
+      let day = 1;
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < 7; c++) {
+          if (r * 7 + c < sd || day > total) continue;
+          const cx = mx + c * cw + cw * 0.5;
+          const cy = my + titleH + hdrH + r * ch + ch * 0.5;
+          if (isToday(year, m, day)) {
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cw * 0.33, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = colors.bg;
+          } else {
+            ctx.fillStyle = colors.text;
+          }
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(day), cx, cy);
+          day++;
+        }
+      }
+    }
+  }
+
+  // ── Main draw ──────────────────────────────────────────────────────────────
+
+  function getPos(pos: string, cw: number, ch: number, ow: number, oh: number, m: number) {
+    const map: Record<string, [number, number]> = {
+      tl: [m, m],
+      tc: [(cw - ow) / 2, m],
+      tr: [cw - ow - m, m],
+      ml: [m, (ch - oh) / 2],
+      mc: [(cw - ow) / 2, (ch - oh) / 2],
+      mr: [cw - ow - m, (ch - oh) / 2],
+      bl: [m, ch - oh - m],
+      bc: [(cw - ow) / 2, ch - oh - m],
+      br: [cw - ow - m, ch - oh - m],
+    };
+    return map[pos] ?? map['bl'];
+  }
+
+  function drawWallpaper(): void {
+    const { w, h } = state;
+    fullCanvas.width  = w;
+    fullCanvas.height = h;
+    const ctx     = fullCanvas.getContext('2d')!;
+    const colors  = getColors();
+    const portrait = h > w;
+
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    if (state.overlay === 'none') return;
+
+    const margin = Math.min(w, h) * 0.05;
+    const pad    = Math.min(w, h) * 0.025;
+
+    let calW: number, calH: number, year: number, month: number, cols: number;
+
+    if (state.overlay === 'month') {
+      calW   = (portrait ? w * 0.78 : w * 0.30) * state.overlayScale;
+      year   = state.overlayYearM;
+      month  = state.overlayMonth;
+      cols   = 1;
+      calH   = monthCalH(calW, year, month);
+    } else {
+      cols   = portrait ? 3 : 4;
+      calW   = (portrait ? w * 0.88 : w * 0.68) * state.overlayScale;
+      year   = state.overlayYearY;
+      month  = 0;
+      calH   = yearCalH(calW, cols);
+    }
+
+    const boxW = calW + pad * 2;
+    const boxH = calH + pad * 2;
+    const [bx, by] = getPos(state.position, w, h, boxW, boxH, margin);
+    const ox = bx + pad;
+    const oy = by + pad;
+
+    if (state.overlay === 'month') {
+      drawMonth(ctx, ox, oy, calW, year, month, colors, pad);
+    } else {
+      drawYear(ctx, ox, oy, calW, year, cols, colors, pad);
+    }
+  }
+
+  // ── Preview ────────────────────────────────────────────────────────────────
+
+  const previewCanvas = document.getElementById('preview-canvas') as HTMLCanvasElement;
+  const dimLabel      = document.getElementById('preview-dim') as HTMLElement;
+  const PREV_MAX_W = 560;
+  const PREV_MAX_H = 420;
+
+  function renderPreview(): void {
+    const { w, h } = state;
+    drawWallpaper();
+
+    const scale = Math.min(PREV_MAX_W / w, PREV_MAX_H / h);
+    const dw = Math.round(w * scale);
+    const dh = Math.round(h * scale);
+
+    previewCanvas.width  = dw;
+    previewCanvas.height = dh;
+    previewCanvas.style.width  = `${dw}px`;
+    previewCanvas.style.height = `${dh}px`;
+
+    const ctx = previewCanvas.getContext('2d')!;
+    ctx.drawImage(fullCanvas, 0, 0, dw, dh);
+
+    dimLabel.textContent = `${w} × ${h}`;
+  }
+
+  // ── Visibility ─────────────────────────────────────────────────────────────
+
+  function updateVisibility(): void {
+    const isCustom  = state.colorSource === 'custom';
+    const isMonth   = state.overlay === 'month';
+    const isYear    = state.overlay === 'year';
+    const hasOverlay = isMonth || isYear;
+
+    document.getElementById('custom-colors')!.classList.toggle('hidden', !isCustom);
+    document.getElementById('month-opts')!.classList.toggle('hidden', !isMonth);
+    document.getElementById('year-opts')!.classList.toggle('hidden', !isYear);
+    document.getElementById('fs-overlay-size')!.classList.toggle('hidden', !hasOverlay);
+    document.getElementById('fs-position')!.classList.toggle('hidden', !hasOverlay);
+  }
+
+  // ── Event wiring ───────────────────────────────────────────────────────────
+
+  document.getElementById('sel-size')!.addEventListener('change', e => {
+    const [w, h] = (e.target as HTMLSelectElement).value.split('x').map(Number);
+    state.w = w;
+    state.h = h;
+    renderPreview();
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="colorSource"]').forEach(el => {
+    el.addEventListener('change', () => {
+      state.colorSource = el.value as 'theme' | 'custom';
+      if (state.colorSource === 'custom') {
+        const cols = getColors();
+        state.customColors = { ...cols };
+        (document.getElementById('cp-bg')      as HTMLInputElement).value = cols.bg;
+        (document.getElementById('cp-text')    as HTMLInputElement).value = cols.text;
+        (document.getElementById('cp-accent')  as HTMLInputElement).value = cols.accent;
+        (document.getElementById('cp-surface') as HTMLInputElement).value = cols.surface;
+      }
+      updateVisibility();
+      renderPreview();
+    });
+  });
+
+  const colorInputIds = ['cp-bg', 'cp-text', 'cp-accent', 'cp-surface'] as const;
+  colorInputIds.forEach(id => {
+    document.getElementById(id)!.addEventListener('input', e => {
+      const v = (e.target as HTMLInputElement).value;
+      if      (id === 'cp-bg')      state.customColors.bg      = v;
+      else if (id === 'cp-text')    state.customColors.text    = v;
+      else if (id === 'cp-accent')  state.customColors.accent  = v;
+      else if (id === 'cp-surface') state.customColors.surface = v;
+      renderPreview();
+    });
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="overlay"]').forEach(el => {
+    el.addEventListener('change', () => {
+      state.overlay = el.value as 'none' | 'month' | 'year';
+      updateVisibility();
+      renderPreview();
+    });
+  });
+
+  document.getElementById('sel-month')!.addEventListener('change', e => {
+    state.overlayMonth = parseInt((e.target as HTMLSelectElement).value);
+    renderPreview();
+  });
+  document.getElementById('sel-year-m')!.addEventListener('change', e => {
+    state.overlayYearM = parseInt((e.target as HTMLSelectElement).value);
+    renderPreview();
+  });
+  document.getElementById('sel-year-y')!.addEventListener('change', e => {
+    state.overlayYearY = parseInt((e.target as HTMLSelectElement).value);
+    renderPreview();
+  });
+
+  document.getElementById('overlay-scale')!.addEventListener('input', e => {
+    const v = parseInt((e.target as HTMLInputElement).value);
+    state.overlayScale = v / 100;
+    (document.getElementById('overlay-scale-val') as HTMLElement).textContent = `${v}%`;
+    renderPreview();
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.pos-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.position = btn.dataset.pos!;
+      renderPreview();
+    });
+  });
+
+  // ── Download ───────────────────────────────────────────────────────────────
+
+  const dlNote = document.getElementById('dl-note') as HTMLElement;
+
+  document.getElementById('btn-download')!.addEventListener('click', async () => {
+    await document.fonts.ready;
+    drawWallpaper();
+    fullCanvas.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = `wallpaper-${state.w}x${state.h}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      dlNote.textContent = `Saved ${state.w} × ${state.h} PNG.`;
+      setTimeout(() => { dlNote.textContent = ''; }, 4000);
+    }, 'image/png');
+  });
+
+  // ── Theme sync via MutationObserver ───────────────────────────────────────
+
+  new MutationObserver(() => {
+    if (state.colorSource === 'theme') renderPreview();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
+  document.fonts.ready.then(() => renderPreview());
+</script>
+
+<style>
+  /* ── Breadcrumb + tool header ────────────────────────────── */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { max-width: var(--content-width); margin-bottom: var(--space-xl); }
+  .tool-tags { display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+  h1 { margin-bottom: var(--space-xs); }
+  .tool-description { color: var(--muted); margin: 0; }
+
+  .tool-body { padding-bottom: var(--space-2xl); }
+
+  /* ── Two-column layout ───────────────────────────────────── */
+  .blotter-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  @media (max-width: 760px) {
+    .blotter-layout {
+      grid-template-columns: 1fr;
+    }
+    .blotter-preview-area {
+      order: -1;
+    }
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  .blotter-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  legend {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+    padding: 0;
+    float: left;
+    width: 100%;
+  }
+
+  /* ── Form controls ───────────────────────────────────────── */
+  .ctrl-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    padding: 7px 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .ctrl-select:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .ctrl-select-sm {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    padding: 5px 8px;
+    cursor: pointer;
+    flex: 1;
+  }
+  .ctrl-select-sm:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .radio-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ctrl-radio {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .ctrl-radio input[type="radio"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* ── Custom color pickers ────────────────────────────────── */
+  .custom-colors {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-xs);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    font-size: 0.8125rem;
+    color: var(--text);
+  }
+
+  .ctrl-color {
+    width: 40px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px;
+    background: var(--surface);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── Overlay sub-options ─────────────────────────────────── */
+  .sub-opts {
+    display: flex;
+    gap: var(--space-xs);
+    padding-top: 2px;
+  }
+
+  /* ── Overlay size slider ─────────────────────────────────── */
+  .scale-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .ctrl-range {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+
+  .scale-val {
+    font-size: 0.8125rem;
+    color: var(--text);
+    width: 3ch;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── Position picker grid ────────────────────────────────── */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 36px);
+    gap: 4px;
+  }
+
+  .pos-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .pos-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .pos-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ── Download area ───────────────────────────────────────── */
+  .download-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .dl-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin: 0;
+    min-height: 1.2em;
+  }
+
+  /* ── Preview area ────────────────────────────────────────── */
+  .blotter-preview-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    align-items: center;
+  }
+
+  .preview-frame {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 200px;
+  }
+
+  #preview-canvas {
+    display: block;
+    max-width: 100%;
+    border-radius: 4px;
+  }
+
+  .preview-dim {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ── Utility ─────────────────────────────────────────────── */
+  .hidden {
+    display: none !important;
+  }
+</style>
