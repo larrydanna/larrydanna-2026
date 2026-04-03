@@ -1,6 +1,10 @@
+# LarryDanna.com - Project Notes
 
+Built with #gstack - https://github.com/garrytan/gstack
 
-Cloudflare
+## Cloudflare - Hosting Service
+
+https://dash.cloudflare.com/1de60acd5978c41cb12a033c2d1e7083/home/overview
 
 https://dash.cloudflare.com/1de60acd5978c41cb12a033c2d1e7083/larrydanna.com/dns/records
 

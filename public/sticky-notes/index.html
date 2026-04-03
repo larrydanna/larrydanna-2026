@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sticky Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Caveat:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --desk:         #A89A86;
+      --desk-grain:   0.10;
+      --toolbar-bg:   #221A10;
+      --toolbar-text: #F2EDE2;
+      --toolbar-muted:#9E9485;
+      --tab-active:   #C89040;
+      --tab-bar:      #1A1208;
+      --tab-inactive: #2E2418;
+      --tab-border:   #3A2E1C;
+      --btn-bg:       #3A2E1C;
+      --btn-hover:    #4A3C28;
+      --btn-border:   #5A4C38;
+      --help-bg:      rgba(12, 10, 7, 0.93);
+      --help-surface: #1B1915;
+      --help-border:  #2E2A24;
+      --help-accent:  #C89040;
+      --help-muted:   #9E9485;
+      --help-text:    #F2EDE2;
+      --note-fs:      15px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--desk);
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    }
+
+    /* ── Toolbar ───────────────────────────────────────────── */
+    #toolbar {
+      background: var(--toolbar-bg);
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 1000;
+      flex-shrink: 0;
+      border-bottom: 1px solid #3A2E1C;
+    }
+
+    .tbtn {
+      background: var(--btn-bg);
+      color: var(--toolbar-text);
+      border: 1px solid var(--btn-border);
+      border-radius: 4px;
+      padding: 5px 11px;
+      font: 500 12px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tbtn:hover { background: var(--btn-hover); }
+    .tbtn.primary {
+      background: var(--tab-active);
+      color: #0F0D0A;
+      border-color: var(--tab-active);
+    }
+    .tbtn.primary:hover { background: #D4A050; border-color: #D4A050; }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 18px;
+      background: #3A2E1C;
+      flex-shrink: 0;
+    }
+
+    /* Font size slider */
+    .font-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--toolbar-muted);
+      font: 500 12px/1 'IBM Plex Sans', system-ui;
+      white-space: nowrap;
+    }
+    #font-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 68px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--btn-border);
+      outline: none;
+      cursor: pointer;
+    }
+    #font-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--tab-active);
+      cursor: pointer;
+    }
+    #font-slider::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--tab-active);
+      border: none;
+      cursor: pointer;
+    }
+
+    #toolbar-spacer { flex: 1; }
+
+    #toolbar-hint {
+      color: var(--toolbar-muted);
+      font: 400 11px/1 'IBM Plex Sans', system-ui;
+      font-style: italic;
+      white-space: nowrap;
+      padding: 0 6px;
+    }
+
+    /* ── Tab bar ───────────────────────────────────────────── */
+    #tabbar {
+      background: var(--tab-bar);
+      padding: 6px 12px 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      z-index: 1000;
+      flex-shrink: 0;
+      min-height: 36px;
+    }
+
+    .tab {
+      padding: 6px 12px 6px 14px;
+      border-radius: 4px 4px 0 0;
+      background: var(--tab-inactive);
+      color: var(--toolbar-muted);
+      font: 500 12px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--tab-border);
+      border-bottom: none;
+      max-width: 180px;
+      min-width: 80px;
+    }
+    .tab.active {
+      background: var(--desk);
+      color: #2A1C08;
+      border-color: #8A7A66;
+      border-bottom-color: var(--desk);
+      margin-bottom: -1px;
+      padding-bottom: 7px;
+    }
+    .tab:not(.active):hover {
+      background: #3A2E1C;
+      color: var(--toolbar-text);
+    }
+    .tab.drag-over { border-color: var(--tab-active); }
+
+    .tab-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      outline: none;
+      min-width: 0;
+    }
+    .tab-name[contenteditable="true"] {
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      padding: 1px 4px;
+      color: var(--toolbar-text);
+    }
+
+    .tab-x {
+      flex-shrink: 0;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+      color: var(--toolbar-muted);
+      font-weight: 500;
+    }
+    .tab-x:hover { background: rgba(0,0,0,0.25); color: var(--toolbar-text); }
+    .tab.active .tab-x { color: #6A5A3A; }
+    .tab.active .tab-x:hover { background: rgba(0,0,0,0.15); color: #2A1C08; }
+
+    .tab-add {
+      padding: 5px 9px;
+      border-radius: 4px 4px 0 0;
+      background: transparent;
+      color: var(--toolbar-muted);
+      font: 500 16px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      align-self: center;
+    }
+    .tab-add:hover { color: var(--toolbar-text); background: rgba(255,255,255,0.05); }
+
+    /* ── Desktop ───────────────────────────────────────────── */
+    #desktop {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      /* grain texture */
+      background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+
+    .empty-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      pointer-events: none;
+      color: rgba(80, 60, 30, 0.30);
+      font: 400 15px/1 'IBM Plex Sans', system-ui;
+    }
+    .empty-hint .hint-icon {
+      font-size: 40px;
+      line-height: 1;
+      opacity: 0.5;
+    }
+
+    /* ── Notes ─────────────────────────────────────────────── */
+    .note {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      border-radius: 2px;
+      box-shadow: 2px 5px 16px rgba(30, 20, 5, 0.30), 0 1px 3px rgba(30, 20, 5, 0.18);
+      min-width: 160px;
+      min-height: 120px;
+    }
+
+    .note-header {
+      padding: 7px 8px 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .note-header:active { cursor: grabbing; }
+
+    .note-dots {
+      display: flex;
+      gap: 4px;
+    }
+    .note-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1.5px solid rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+    .note-dot.active { border-color: rgba(0,0,0,0.40); }
+
+    .note-del {
+      margin-left: auto;
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.13);
+      color: rgba(0,0,0,0.40);
+      display: flex; align-items: center; justify-content: center;
+      font: bold 11px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .note-del:hover { background: rgba(0,0,0,0.28); color: rgba(0,0,0,0.75); }
+
+    .note-body {
+      flex: 1;
+      padding: 3px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .note-textarea {
+      flex: 1;
+      width: 100%;
+      background: transparent;
+      border: none;
+      resize: none;
+      font-family: 'Caveat', cursive;
+      font-size: var(--note-fs);
+      font-weight: 400;
+      line-height: 1.55;
+      color: rgba(0, 0, 0, 0.72);
+      outline: none;
+      cursor: text;
+      user-select: text;
+    }
+    .note-textarea::placeholder { color: rgba(0,0,0,0.28); }
+
+    .note-grip {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 16px; height: 16px;
+      cursor: se-resize;
+      background:
+        linear-gradient(135deg,
+          transparent 40%,
+          rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.12) 52%,
+          transparent 52%,
+          transparent 60%,
+          rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.12) 72%,
+          transparent 72%
+        );
+    }
+
+    /* Note color themes */
+    .note.yellow  { background: #FFF8A8; }
+    .note.yellow  .note-header { background: #F5E878; }
+    .note.blue    { background: #C0E8FF; }
+    .note.blue    .note-header { background: #90CFFA; }
+    .note.green   { background: #BAFAC8; }
+    .note.green   .note-header { background: #88E8A0; }
+    .note.pink    { background: #FFBAD8; }
+    .note.pink    .note-header { background: #F890C0; }
+    .note.purple  { background: #DBBEFF; }
+    .note.purple  .note-header { background: #C090F8; }
+    .note.orange  { background: #FFD8A0; }
+    .note.orange  .note-header { background: #FAB870; }
+
+    /* ── Help overlay ──────────────────────────────────────── */
+    #help {
+      position: fixed;
+      inset: 0;
+      background: var(--help-bg);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 80ms;
+    }
+    #help.on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .help-box {
+      background: var(--help-surface);
+      border: 1px solid var(--help-border);
+      border-radius: 8px;
+      padding: 32px 36px 28px;
+      max-width: 500px;
+      width: 92%;
+      color: var(--help-text);
+    }
+
+    .help-box h2 {
+      font: 400 30px/1 'IBM Plex Sans', system-ui;
+      color: var(--help-accent);
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .help-section { margin-bottom: 20px; }
+    .help-section:last-of-type { margin-bottom: 0; }
+
+    .help-section h3 {
+      font: 600 10px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--help-muted);
+      margin-bottom: 10px;
+    }
+
+    .kblist {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 7px 14px;
+    }
+
+    kbd {
+      display: inline-block;
+      background: #252118;
+      border: 1px solid #3A3428;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font: 500 11px/1.5 'IBM Plex Sans', monospace;
+      color: var(--help-accent);
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .kdesc {
+      font-size: 13px;
+      color: #C8C0B0;
+      align-self: center;
+    }
+
+    .help-dismiss {
+      margin-top: 22px;
+      text-align: center;
+      color: var(--help-muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button class="tbtn primary" id="btn-new">+ New Note</button>
+    <button class="tbtn" id="btn-help">Help&nbsp;?</button>
+    <div class="toolbar-divider"></div>
+    <label class="font-slider-wrap" title="Note text size">
+      <span>Aa</span>
+      <input type="range" id="font-slider" min="11" max="24" value="15">
+    </label>
+    <div class="toolbar-divider"></div>
+    <button class="tbtn" id="btn-reset">Reset</button>
+    <button class="tbtn" id="btn-fullscreen">Full Screen</button>
+    <div id="toolbar-spacer"></div>
+    <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
+    <button class="tbtn" id="btn-export">Export JSON</button>
+    <button class="tbtn" id="btn-import">Import JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none">
+  </div>
+
+  <!-- Tab bar -->
+  <div id="tabbar">
+    <button class="tab-add" id="btn-add-tab" title="New board (Ctrl+T)">+</button>
+  </div>
+
+  <!-- Desktop -->
+  <div id="desktop"></div>
+
+  <!-- Help overlay -->
+  <div id="help">
+    <div class="help-box">
+      <h2>Sticky Notes</h2>
+
+      <div class="help-section">
+        <h3>Keyboard</h3>
+        <div class="kblist">
+          <kbd>N</kbd>         <span class="kdesc">New note on the current board</span>
+          <kbd>?</kbd>         <span class="kdesc">Show / hide this help panel</span>
+          <kbd>Esc</kbd>       <span class="kdesc">Close help</span>
+          <kbd>Ctrl+T</kbd>    <span class="kdesc">New board (tab)</span>
+          <kbd>Ctrl+W</kbd>    <span class="kdesc">Close current board</span>
+          <kbd>Ctrl+E</kbd>    <span class="kdesc">Export all boards as JSON</span>
+          <kbd>Ctrl+I</kbd>    <span class="kdesc">Import boards from JSON</span>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <h3>Mouse</h3>
+        <div class="kblist">
+          <kbd>Drag header</kbd>   <span class="kdesc">Move note</span>
+          <kbd>Drag corner ◢</kbd> <span class="kdesc">Resize note</span>
+          <kbd>Color dots</kbd>    <span class="kdesc">Change note color</span>
+          <kbd>× button</kbd>      <span class="kdesc">Delete note</span>
+          <kbd>Dbl-click tab</kbd> <span class="kdesc">Rename board</span>
+          <kbd>Drag tab</kbd>      <span class="kdesc">Reorder boards</span>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <h3>Data</h3>
+        <div class="kblist">
+          <kbd>Auto-save</kbd> <span class="kdesc">Notes saved to browser localStorage</span>
+          <kbd>Export</kbd>    <span class="kdesc">Download all boards as JSON</span>
+          <kbd>Import</kbd>    <span class="kdesc">Load JSON — replaces all boards</span>
+          <kbd>Reset</kbd>     <span class="kdesc">Restore the default welcome board</span>
+        </div>
+      </div>
+
+      <p class="help-dismiss">Press <kbd>Esc</kbd> or click outside to close</p>
+    </div>
+  </div>
+
+  <script>
+    // ── Constants ──────────────────────────────────────────────────────
+
+    const COLORS = ['yellow','blue','green','pink','purple','orange'];
+    const COLOR_HEX = {
+      yellow: '#FFF8A8', blue: '#C0E8FF', green: '#BAFAC8',
+      pink:   '#FFBAD8', purple: '#DBBEFF', orange: '#FFD8A0',
+    };
+
+    const DEFAULTS = [
+      { text: 'Welcome to Sticky Notes!\n\nDrag me anywhere on the board.', x: 55,  y: 70,  w: 228, h: 168, color: 'yellow'  },
+      { text: 'Press N for a new note.\nPress ? for help & shortcuts.',      x: 345, y: 55,  w: 220, h: 148, color: 'blue'    },
+      { text: 'Drag the corner ◢ to resize. Tap the color dots to change my color.', x: 195, y: 280, w: 240, h: 168, color: 'green' },
+    ];
+
+    const STORE_KEY = 'stickynotes-v3';
+    const DEFAULT_FONT_SIZE = 15;
+
+    // ── State ──────────────────────────────────────────────────────────
+
+    let state = { tabs: [], activeTab: null, fontSize: DEFAULT_FONT_SIZE };
+    let highZ = 1;
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+
+    function activeTab() {
+      return state.tabs.find(t => t.id === state.activeTab) || null;
+    }
+
+    // ── Persistence ────────────────────────────────────────────────────
+
+    function save() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) {}
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length) {
+            state = parsed;
+            if (state.fontSize == null) state.fontSize = DEFAULT_FONT_SIZE;
+            if (!state.tabs.find(t => t.id === state.activeTab)) {
+              state.activeTab = state.tabs[0].id;
+            }
+            highZ = Math.max(1, ...state.tabs.flatMap(t => t.notes.map(n => n.z || 1)));
+            return;
+          }
+        }
+      } catch (_) {}
+      // first run — load defaults
+      const id = uid();
+      state = {
+        activeTab: id,
+        fontSize: DEFAULT_FONT_SIZE,
+        tabs: [{
+          id,
+          name: 'Board 1',
+          notes: DEFAULTS.map((d, i) => ({
+            id: uid(), text: d.text,
+            x: d.x, y: d.y, w: d.w, h: d.h,
+            color: d.color, z: i + 1,
+          })),
+        }],
+      };
+      highZ = DEFAULTS.length;
+    }
+
+    function applyFontSize(size) {
+      document.documentElement.style.setProperty('--note-fs', size + 'px');
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────
+
+    function render() {
+      renderTabs();
+      renderNotes();
+    }
+
+    // ── Tabs ───────────────────────────────────────────────────────────
+
+    function renderTabs() {
+      tabbar.querySelectorAll('.tab').forEach(el => el.remove());
+      state.tabs.forEach(tab => {
+        const el = document.createElement('div');
+        el.className = 'tab' + (tab.id === state.activeTab ? ' active' : '');
+        el.dataset.id = tab.id;
+        el.draggable = true;
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'tab-name';
+        nameEl.textContent = tab.name;
+
+        const xEl = document.createElement('span');
+        xEl.className = 'tab-x';
+        xEl.textContent = '×';
+        xEl.title = 'Close board';
+
+        el.append(nameEl, xEl);
+
+        // Switch
+        el.addEventListener('mousedown', e => {
+          if (e.target === xEl) return;
+          if (e.target === nameEl && nameEl.contentEditable === 'true') return;
+          switchTab(tab.id);
+        });
+
+        // Rename on double-click
+        nameEl.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          nameEl.contentEditable = 'true';
+          nameEl.focus();
+          const range = document.createRange();
+          range.selectNodeContents(nameEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+
+        function commitRename() {
+          nameEl.contentEditable = 'false';
+          const trimmed = nameEl.textContent.trim();
+          tab.name = trimmed || tab.name;
+          nameEl.textContent = tab.name;
+          save();
+        }
+
+        nameEl.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            commitRename();
+          }
+        });
+        nameEl.addEventListener('blur', commitRename);
+
+        // Close
+        xEl.addEventListener('click', e => {
+          e.stopPropagation();
+          removeTab(tab.id);
+        });
+
+        // Drag reorder
+        el.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('tabId', tab.id);
+          el.style.opacity = '0.45';
+        });
+        el.addEventListener('dragend', () => {
+          el.style.opacity = '1';
+        });
+        el.addEventListener('dragover', e => {
+          e.preventDefault();
+          el.classList.add('drag-over');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+        el.addEventListener('drop', e => {
+          e.preventDefault();
+          el.classList.remove('drag-over');
+          const src = e.dataTransfer.getData('tabId');
+          if (src && src !== tab.id) reorderTab(src, tab.id);
+        });
+
+        tabbar.insertBefore(el, addTabBtn);
+      });
+    }
+
+    function switchTab(id) {
+      state.activeTab = id;
+      save();
+      renderTabs();
+      renderNotes();
+    }
+
+    function addTab() {
+      const id = uid();
+      const n = state.tabs.length + 1;
+      state.tabs.push({ id, name: `Board ${n}`, notes: [] });
+      state.activeTab = id;
+      save();
+      render();
+    }
+
+    function removeTab(id) {
+      if (state.tabs.length <= 1) {
+        // Keep the tab but clear notes
+        const t = activeTab();
+        if (t) { t.notes = []; save(); renderNotes(); }
+        return;
+      }
+      const idx = state.tabs.findIndex(t => t.id === id);
+      state.tabs.splice(idx, 1);
+      if (state.activeTab === id) {
+        state.activeTab = state.tabs[Math.min(idx, state.tabs.length - 1)].id;
+      }
+      save();
+      render();
+    }
+
+    function reorderTab(srcId, targetId) {
+      const si = state.tabs.findIndex(t => t.id === srcId);
+      const ti = state.tabs.findIndex(t => t.id === targetId);
+      if (si < 0 || ti < 0) return;
+      const [tab] = state.tabs.splice(si, 1);
+      state.tabs.splice(ti, 0, tab);
+      save();
+      renderTabs();
+    }
+
+    // ── Notes ──────────────────────────────────────────────────────────
+
+    function renderNotes() {
+      desktop.innerHTML = '';
+      const tab = activeTab();
+      if (!tab) return;
+
+      if (tab.notes.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.innerHTML = '<div class="hint-icon">&#9999;</div><div>Press N to add your first note</div>';
+        desktop.appendChild(hint);
+        return;
+      }
+
+      const sorted = [...tab.notes].sort((a, b) => (a.z || 1) - (b.z || 1));
+      sorted.forEach(note => desktop.appendChild(buildNoteEl(note, tab)));
+    }
+
+    function buildNoteEl(note, tab) {
+      const el = document.createElement('div');
+      el.className = `note ${note.color || 'yellow'}`;
+      el.style.cssText = `left:${note.x}px;top:${note.y}px;width:${note.w}px;height:${note.h}px;z-index:${note.z||1}`;
+      el.dataset.id = note.id;
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'note-header';
+
+      const dots = document.createElement('div');
+      dots.className = 'note-dots';
+      COLORS.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = `note-dot ${c}${c === note.color ? ' active' : ''}`;
+        dot.style.background = COLOR_HEX[c];
+        dot.title = c;
+        dot.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          note.color = c;
+          save();
+          // Swap color classes without full re-render
+          el.className = `note ${c}`;
+          header.style.background = '';
+          dots.querySelectorAll('.note-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+        });
+        dots.appendChild(dot);
+      });
+
+      const delBtn = document.createElement('div');
+      delBtn.className = 'note-del';
+      delBtn.textContent = '×';
+      delBtn.title = 'Delete note';
+      delBtn.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        tab.notes = tab.notes.filter(n => n.id !== note.id);
+        save();
+        renderNotes();
+      });
+
+      header.append(dots, delBtn);
+
+      // Body
+      const body = document.createElement('div');
+      body.className = 'note-body';
+
+      const ta = document.createElement('textarea');
+      ta.className = 'note-textarea';
+      ta.value = note.text;
+      ta.placeholder = 'Type a note…';
+      ta.addEventListener('input', () => { note.text = ta.value; save(); });
+      ta.addEventListener('mousedown', e => e.stopPropagation());
+
+      body.appendChild(ta);
+
+      // Resize grip
+      const grip = document.createElement('div');
+      grip.className = 'note-grip';
+
+      el.append(header, body, grip);
+
+      // Bring to front on any interaction
+      el.addEventListener('mousedown', () => {
+        highZ++;
+        note.z = highZ;
+        el.style.zIndex = highZ;
+        save();
+      });
+
+      makeDraggable(el, header, note);
+      makeResizable(el, grip, note);
+
+      return el;
+    }
+
+    function makeDraggable(el, handle, note) {
+      handle.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+
+        const ox = e.clientX - note.x;
+        const oy = e.clientY - note.y;
+
+        function onMove(e) {
+          note.x = e.clientX - ox;
+          note.y = e.clientY - oy;
+          el.style.left = note.x + 'px';
+          el.style.top  = note.y + 'px';
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          save();
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    function makeResizable(el, grip, note) {
+      grip.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const sw = note.w, sh = note.h, sx = e.clientX, sy = e.clientY;
+
+        function onMove(e) {
+          note.w = Math.max(160, sw + e.clientX - sx);
+          note.h = Math.max(120, sh + e.clientY - sy);
+          el.style.width  = note.w + 'px';
+          el.style.height = note.h + 'px';
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          save();
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    function createNote() {
+      const tab = activeTab();
+      if (!tab) return;
+
+      const dw = desktop.offsetWidth  || 800;
+      const dh = desktop.offsetHeight || 600;
+      const x  = Math.round(48 + Math.random() * Math.min(dw * 0.35, 260));
+      const y  = Math.round(48 + Math.random() * Math.min(dh * 0.35, 200));
+
+      highZ++;
+      const note = {
+        id: uid(), text: '', x, y, w: 224, h: 180,
+        color: COLORS[Math.floor(Math.random() * 4)],
+        z: highZ,
+      };
+      tab.notes.push(note);
+      save();
+      renderNotes();
+
+      // Focus new note
+      const el = desktop.querySelector(`[data-id="${note.id}"]`);
+      el?.querySelector('textarea')?.focus();
+    }
+
+    // ── Reset ──────────────────────────────────────────────────────────
+
+    function resetToDefaults() {
+      if (!confirm('Reset all boards and restore the default welcome notes?\n\nThis cannot be undone.')) return;
+      localStorage.removeItem(STORE_KEY);
+      const id = uid();
+      state = {
+        activeTab: id,
+        fontSize: DEFAULT_FONT_SIZE,
+        tabs: [{
+          id,
+          name: 'Board 1',
+          notes: DEFAULTS.map((d, i) => ({
+            id: uid(), text: d.text,
+            x: d.x, y: d.y, w: d.w, h: d.h,
+            color: d.color, z: i + 1,
+          })),
+        }],
+      };
+      highZ = DEFAULTS.length;
+      fontSlider.value = DEFAULT_FONT_SIZE;
+      applyFontSize(DEFAULT_FONT_SIZE);
+      save();
+      render();
+    }
+
+    // ── Full Screen ────────────────────────────────────────────────────
+
+    function updateFullscreenBtn() {
+      btnFullscreen.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenBtn);
+
+    // ── Help ───────────────────────────────────────────────────────────
+
+    const helpEl = document.getElementById('help');
+    function showHelp()   { helpEl.classList.add('on'); }
+    function hideHelp()   { helpEl.classList.remove('on'); }
+    function toggleHelp() { helpEl.classList.toggle('on'); }
+
+    helpEl.addEventListener('click', e => {
+      if (e.target === helpEl) hideHelp();
+    });
+
+    // ── Export / Import ────────────────────────────────────────────────
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = Object.assign(document.createElement('a'), { href: url, download: 'sticky-notes.json' });
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    const importFileEl = document.getElementById('import-file');
+
+    function importJSON() { importFileEl.click(); }
+
+    importFileEl.addEventListener('change', () => {
+      const file = importFileEl.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data?.tabs || !Array.isArray(data.tabs)) throw new Error('Invalid sticky notes file.');
+          state = data;
+          if (state.fontSize == null) state.fontSize = DEFAULT_FONT_SIZE;
+          if (!state.tabs.find(t => t.id === state.activeTab)) {
+            state.activeTab = state.tabs[0]?.id;
+          }
+          highZ = Math.max(1, ...state.tabs.flatMap(t => t.notes.map(n => n.z || 1)));
+          fontSlider.value = state.fontSize;
+          applyFontSize(state.fontSize);
+          save();
+          render();
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+        importFileEl.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // ── Keyboard shortcuts ─────────────────────────────────────────────
+
+    document.addEventListener('keydown', e => {
+      const active = document.activeElement;
+      const typing = active?.tagName === 'TEXTAREA' || active?.tagName === 'INPUT'
+                  || active?.contentEditable === 'true';
+
+      if (e.key === 'Escape')     { hideHelp(); active?.blur(); return; }
+
+      if (!typing && e.key === '?') { toggleHelp(); return; }
+
+      if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'e') { e.preventDefault(); exportJSON(); return; }
+        if (k === 'i') { e.preventDefault(); importJSON(); return; }
+        if (k === 't') { e.preventDefault(); addTab();    return; }
+        if (k === 'w') { e.preventDefault(); removeTab(state.activeTab); return; }
+      }
+
+      if (!typing && (e.key === 'n' || e.key === 'N')) { createNote(); return; }
+    });
+
+    // ── DOM refs & button wiring ───────────────────────────────────────
+
+    const desktop      = document.getElementById('desktop');
+    const tabbar       = document.getElementById('tabbar');
+    const addTabBtn    = document.getElementById('btn-add-tab');
+    const fontSlider   = document.getElementById('font-slider');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    document.getElementById('btn-new').addEventListener('click', createNote);
+    document.getElementById('btn-help').addEventListener('click', toggleHelp);
+    document.getElementById('btn-reset').addEventListener('click', resetToDefaults);
+    document.getElementById('btn-export').addEventListener('click', exportJSON);
+    document.getElementById('btn-import').addEventListener('click', importJSON);
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+    addTabBtn.addEventListener('click', addTab);
+
+    fontSlider.addEventListener('input', () => {
+      const size = parseInt(fontSlider.value, 10);
+      state.fontSize = size;
+      applyFontSize(size);
+      save();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────
+
+    load();
+    fontSlider.value = state.fontSize;
+    applyFontSize(state.fontSize);
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-It Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: lightsteelblue;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .note {
+            position: absolute;
+            padding-top: 2px;
+            padding-right: 16px;
+            padding-bottom: 16px;
+            padding-left: 16px;
+            background-color: lightyellow;
+            border: 1px solid #ccc;
+            box-shadow: 8px 8px 8px rgba(70, 131, 180, 0.48);
+            cursor: grab;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex-grow: 1;
+            font-size: 2em;
+            font-family: cursive;
+            border: none;
+            background: transparent;
+            resize: none;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -3px;
+            right: -4px;
+            width: 24px;
+            height: 24px;
+            background-color: palevioletred;
+            color: white;
+            font-size: 22px;
+            border-radius: 50%;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            background-color: gray;
+            cursor: se-resize;
+        }
+
+        .grab-handle {}
+
+        button {
+            font-size: 1em;
+            font-weight: bold;
+            padding: 8px 16px;
+            padding-top: 8px;
+            padding-right: 16px;
+            padding-bottom: 8px;
+            padding-left: 16px;
+            margin: 4px 16px 4px 4px;
+            margin-top: 4px;
+            margin-right: 16px;
+            margin-bottom: 4px;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button onclick="createNote()">New Note</button>
+    <div id="app"></div>
+
+    <script>
+        let notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+        function createNote() {
+            let note = {
+                id: Date.now(),
+                text: "",
+                x: Math.random() * window.innerWidth * 0.2,
+                y: Math.random() * window.innerHeight * 0.2,
+                width: 640,
+                height: 480,
+                zIndex: ++highestZIndex // Assign the highest z-index
+            };
+            notes.push(note);
+            saveNotes();
+            renderNotes();
+        }
+        
+        function saveNotes() {
+            localStorage.setItem("notes", JSON.stringify(notes));
+        }
+
+        function renderNotes() {
+            const app = document.getElementById("app");
+            app.innerHTML = "";
+            notes.forEach(note => {
+                let noteElem = document.createElement("div");
+                noteElem.className = "note";
+                noteElem.style.left = `${note.x}px`;
+                noteElem.style.top = `${note.y}px`;
+                noteElem.style.width = `${note.width}px`;
+                noteElem.style.height = `${note.height}px`;
+                noteElem.style.zIndex = note.zIndex || 1; // Restore stacking order
+
+                noteElem.innerHTML = `
+        <div class="grab-handle"><hr/><hr/></div>
+        <div class="delete-btn" onclick="deleteNote(${note.id})">X</div>
+        <textarea oninput="updateNote(${note.id}, this.value)">${note.text}</textarea>
+        <div class="resize-handle"></div>
+    `;
+
+                makeDraggable(noteElem, note);
+                makeResizable(noteElem, note);
+                app.appendChild(noteElem);
+            });
+        }
+
+        function updateNote(id, text) {
+            notes = notes.map(note => note.id === id ? { ...note, text } : note);
+            saveNotes();
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(note => note.id !== id);
+            saveNotes();
+            renderNotes();
+        }
+
+        let highestZIndex = Math.max(...notes.map(note => note.zIndex || 1), 1); // Find highest z-index on load
+
+        function makeDraggable(elem, note) {
+            elem.onmousedown = function (event) {
+                if (event.shiftKey) {
+                    // Send to back
+                    note.zIndex = 0;
+                } else {
+                    // Bring to front
+                    highestZIndex++;
+                    note.zIndex = highestZIndex;
+                }
+
+                elem.style.zIndex = note.zIndex;
+                saveNotes(); // Persist changes
+
+                let shiftX = event.clientX - elem.offsetLeft;
+                let shiftY = event.clientY - elem.offsetTop;
+
+                function moveAt(pageX, pageY) {
+                    elem.style.left = pageX - shiftX + 'px';
+                    elem.style.top = pageY - shiftY + 'px';
+                    note.x = pageX - shiftX;
+                    note.y = pageY - shiftY;
+                }
+
+                function onMouseMove(event) {
+                    moveAt(event.pageX, event.pageY);
+                }
+
+                document.addEventListener("mousemove", onMouseMove);
+
+                elem.onmouseup = function () {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    saveNotes();
+                };
+            };
+
+            elem.ondragstart = function () {
+                return false;
+            };
+        }
+
+
+        function makeResizable(elem, note) {
+            const resizeHandle = elem.querySelector(".resize-handle");
+
+            resizeHandle.onmousedown = function (event) {
+                event.stopPropagation();
+
+                function resize(event) {
+                    let newWidth = event.clientX - elem.offsetLeft;
+                    let newHeight = event.clientY - elem.offsetTop;
+                    elem.style.width = `${newWidth}px`;
+                    elem.style.height = `${newHeight}px`;
+                    note.width = newWidth;
+                    note.height = newHeight;
+                }
+
+                function stopResize() {
+                    document.removeEventListener("mousemove", resize);
+                    document.removeEventListener("mouseup", stopResize);
+                    saveNotes();
+                }
+
+                document.addEventListener("mousemove", resize);
+                document.addEventListener("mouseup", stopResize);
+            };
+        }
+
+        window.onload = renderNotes;
+    </script>
+
+</body>
+
+</html>

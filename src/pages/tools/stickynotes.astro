@@ -1,0 +1,142 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Sticky Notes" description="A virtual desktop of draggable, resizable sticky notes. Multiple boards, JSON export/import, keyboard shortcuts.">
+
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Sticky Notes</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Productivity</span>
+          <span class="tag">Draggable</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Sticky Notes</h1>
+        <p class="tool-description">
+          A virtual desktop of draggable, resizable sticky notes. Multiple boards with tabs,
+          six note colors, JSON export &amp; import, and keyboard shortcuts.
+          Opens full-screen for maximum desk space.
+        </p>
+      </div>
+
+      <div class="launch-area">
+        <a href="/sticky-notes/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
+          Launch Sticky Notes
+        </a>
+        <p class="launch-hint">Opens in a new window — go full-screen for the best experience.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <span class="feature-label">Boards</span>
+          <span class="feature-desc">Multiple tabs. Add, rename, reorder, remove.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Notes</span>
+          <span class="feature-desc">Drag, resize, pick from 6 colors.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Shortcuts</span>
+          <span class="feature-desc">N new note &nbsp;·&nbsp; ? help &nbsp;·&nbsp; Ctrl+E export &nbsp;·&nbsp; Ctrl+T new board</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Data</span>
+          <span class="feature-desc">Auto-saved to localStorage. JSON export &amp; import.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header {
+    max-width: var(--content-width);
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  h1 { margin-bottom: var(--space-xs); }
+
+  .tool-description {
+    color: var(--muted);
+    margin: 0;
+    max-width: 600px;
+  }
+
+  /* Launch */
+  .launch-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .launch-btn {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+  }
+
+  .launch-hint {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  /* Feature list */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-sm);
+    max-width: 800px;
+    padding-bottom: var(--space-2xl);
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .feature-label {
+    font: 600 12px/1 var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+  }
+
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>

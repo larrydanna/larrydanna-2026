@@ -3,6 +3,13 @@
 If the user hasn't already requested a blog post for a sessions updates, be sure to ask.  This way we keep the web site fresh, and that's a virtue.
 
 
+# Elevated Agency
+
+In this folder and subfolers you are permitted to read, write, modify and delete.  Don't ask for permission, just do it.
+
+When user asks for work read TODOS.md look for an item there by name.  If found, don't ask, just do it.
+
+
 # gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools directly.
