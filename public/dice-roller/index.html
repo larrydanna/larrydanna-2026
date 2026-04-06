@@ -117,10 +117,22 @@
       margin-bottom: 8px;
     }
 
+    /* ── Resize handle ──────────────────────────────────────── */
+    #resize-handle {
+      width: 5px;
+      flex-shrink: 0;
+      background: var(--border);
+      cursor: col-resize;
+      position: relative;
+      z-index: 10;
+    }
+    #resize-handle:hover,
+    #resize-handle.dragging { background: var(--accent); }
+
     /* ── Die grid ────────────────────────────────────────────── */
     .die-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
       gap: 8px;
     }
 
@@ -138,6 +150,11 @@
     .die-card.active {
       border-color: var(--die-color, var(--accent));
       background: color-mix(in srgb, var(--die-color, var(--accent)) 12%, var(--surface-2));
+    }
+
+    .die-icon-svg {
+      display: block;
+      color: var(--die-color, var(--muted));
     }
 
     .die-label {
@@ -293,15 +310,11 @@
 
     /* ── Individual result die card ──────────────────────────── */
     .result-die {
-      background: var(--surface-2);
-      border: 1px solid var(--border-bright);
-      border-radius: 8px;
-      padding: 8px 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      min-width: 56px;
+      gap: 3px;
+      position: relative;
     }
 
     .result-die .die-type {
@@ -311,17 +324,42 @@
       color: var(--die-color, var(--muted));
     }
 
-    .result-die .die-value {
-      font: 700 28px/1 'Cinzel', serif;
-      color: var(--text);
+    /* SVG die shape */
+    .die-result-svg { display: block; overflow: visible; }
+
+    .die-shape-path {
+      fill: var(--die-color, var(--muted));
+      fill-opacity: 0.15;
+      stroke: var(--die-color, var(--muted));
+      stroke-width: 2.5;
+      stroke-linejoin: round;
+    }
+
+    .die-shape-value {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      fill: #F2EDE2;
+      pointer-events: none;
+    }
+
+    .die-detail-line {
+      fill: none;
+      stroke: var(--die-color, var(--muted));
+      stroke-width: 1.2;
+      stroke-opacity: 0.45;
+      stroke-linecap: round;
     }
 
     /* NAT 20 */
-    .result-die.nat20 {
-      border-color: #C89040;
-      box-shadow: 0 0 12px rgba(200, 144, 64, 0.4), 0 0 24px rgba(200, 144, 64, 0.15);
+    .result-die.nat20 .die-shape-path {
+      fill-opacity: 0.22;
+      stroke: #F0C060;
+      fill: #F0C060;
+      filter: drop-shadow(0 0 6px rgba(240,192,96,0.5));
     }
-    .result-die.nat20 .die-value { color: #F0C060; }
+    .result-die.nat20 .die-shape-value { fill: #F5D980; }
+    .result-die.nat20 .die-detail-line  { stroke: #F0C060; }
+
     .nat-badge {
       font: 700 9px/1 'IBM Plex Sans', system-ui;
       letter-spacing: 0.06em;
@@ -329,20 +367,27 @@
       border-radius: 3px;
     }
     .result-die.nat20 .nat-badge {
-      background: rgba(200, 144, 64, 0.2);
+      background: rgba(200, 144, 64, 0.25);
       color: #F0C060;
     }
 
     /* NAT 1 */
-    .result-die.nat1 {
-      border-color: #DC2626;
-      box-shadow: 0 0 12px rgba(220, 38, 38, 0.35), 0 0 24px rgba(220, 38, 38, 0.12);
+    .result-die.nat1 .die-shape-path {
+      fill-opacity: 0.18;
+      stroke: #F87171;
+      fill: #F87171;
+      filter: drop-shadow(0 0 6px rgba(248,113,113,0.45));
     }
-    .result-die.nat1 .die-value { color: #F87171; }
+    .result-die.nat1 .die-shape-value { fill: #FCA5A5; }
+    .result-die.nat1 .die-detail-line  { stroke: #F87171; }
     .result-die.nat1 .nat-badge {
       background: rgba(220, 38, 38, 0.2);
       color: #F87171;
     }
+
+    /* rolling state dims the shape */
+    .result-die.rolling .die-shape-path { fill-opacity: 0.08; }
+    .result-die.rolling .die-shape-value { fill: var(--muted); }
 
     /* ── Total + Breakdown ───────────────────────────────────── */
     .result-total-block {
@@ -529,6 +574,8 @@
 
     </div>
 
+    <div id="resize-handle" title="Drag to resize panel"></div>
+
     <!-- Results panel -->
     <div id="results-panel">
 
@@ -561,6 +608,62 @@
       { type: 'd100', sides: 100, color: '#6366F1' },
     ];
 
+    /* ── Die SVG shapes (viewBox 0 0 64 64, centered at 32,32) ── */
+    const DIE_SHAPES = {
+      // equilateral triangle, centroid at (32,36)
+      d4:   'M32,4 L59,53 L5,53 Z',
+      // square
+      d6:   'M9,9 H55 V55 H9 Z',
+      // diamond
+      d8:   'M32,5 L59,32 L32,59 L5,32 Z',
+      // pentagonal kite
+      d10:  'M32,6 L57,26 L49,56 L15,56 L7,26 Z',
+      // hexagon (pointy-top)
+      d12:  'M32,5 L56,19 L56,45 L32,59 L8,45 L8,19 Z',
+      // equilateral triangle (same as d4, styled differently)
+      d20:  'M32,4 L60,54 L4,54 Z',
+      // circle (null = use <circle>)
+      d100: null,
+    };
+
+    // Inner detail lines for d20 (midpoints create 4 sub-triangles)
+    const D20_DETAIL = 'M18,29 L46,29 M18,29 L32,54 M46,29 L32,54';
+
+    // Visual centroid Y within the 64-unit viewBox for centering the value text
+    const DIE_TEXT_CY = { d4: 37, d6: 32, d8: 32, d10: 36, d12: 32, d20: 38, d100: 32 };
+
+    /* Build a small outline SVG icon for the config panel die card */
+    function buildDieIconSVG(type) {
+      const path = DIE_SHAPES[type];
+      const shape = path
+        ? `<path d="${path}" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>`
+        : `<circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="4"/>`;
+      return `<svg viewBox="0 0 64 64" width="30" height="30" class="die-icon-svg">${shape}</svg>`;
+    }
+
+    /* Build the SVG-with-value for a result die card */
+    function buildDieResultSVG(type, value) {
+      const path  = DIE_SHAPES[type];
+      const textY = DIE_TEXT_CY[type];
+      const digits = String(value).length;
+      const fs = digits >= 3 ? 13 : digits === 2 ? 15 : 17;
+
+      const shapePart = path
+        ? `<path d="${path}" class="die-shape-path"/>`
+        : `<circle cx="32" cy="32" r="26" class="die-shape-path"/>`;
+
+      const detailPart = type === 'd20'
+        ? `<path d="${D20_DETAIL}" class="die-detail-line"/>`
+        : '';
+
+      return `<svg class="die-result-svg" viewBox="0 0 64 64" width="72" height="72">
+        ${shapePart}
+        ${detailPart}
+        <text x="32" y="${textY}" text-anchor="middle" dominant-baseline="middle"
+              font-size="${fs}" class="die-shape-value">${value}</text>
+      </svg>`;
+    }
+
     /* ── State ────────────────────────────────────────────────── */
     const state = {
       counts:   Object.fromEntries(DIE_DEFS.map(d => [d.type, 0])),
@@ -589,6 +692,7 @@
       card.className = 'die-card';
       card.style.setProperty('--die-color', def.color);
       card.innerHTML = `
+        ${buildDieIconSVG(def.type)}
         <span class="die-label">${def.type}</span>
         <div class="die-counter">
           <button class="count-btn dec" data-die="${def.type}">−</button>
@@ -690,8 +794,8 @@
       if (isNat1)  badge = '<span class="nat-badge">NAT 1</span>';
 
       el.innerHTML = `
+        ${buildDieResultSVG(def.type, value)}
         <span class="die-type">${def.type}</span>
-        <span class="die-value">${value}</span>
         ${badge}
       `;
       return el;
@@ -733,7 +837,7 @@
       for (let t = 0; t < ticks; t++) {
         await new Promise(r => setTimeout(r, ANIM_INTERVAL));
         dieEls.forEach(({ el, def }) => {
-          el.querySelector('.die-value').textContent = randInt(def.sides);
+          el.querySelector('.die-shape-value').textContent = randInt(def.sides);
         });
       }
 
@@ -871,6 +975,35 @@
         doRoll();
       }
     });
+
+    /* ── Sidebar resize ───────────────────────────────────────── */
+    (function () {
+      const handle = document.getElementById('resize-handle');
+      const panel  = document.getElementById('config-panel');
+      let active = false, startX = 0, startW = 0;
+
+      handle.addEventListener('mousedown', e => {
+        active  = true;
+        startX  = e.clientX;
+        startW  = panel.offsetWidth;
+        handle.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', e => {
+        if (!active) return;
+        const w = Math.max(240, Math.min(580, startW + e.clientX - startX));
+        panel.style.width = w + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!active) return;
+        active = false;
+        handle.classList.remove('dragging');
+        document.body.style.userSelect = '';
+      });
+    })();
 
     /* ── Init ─────────────────────────────────────────────────── */
     updateUI();
