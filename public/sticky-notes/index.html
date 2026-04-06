@@ -426,10 +426,12 @@
     <div class="toolbar-divider"></div>
     <label class="font-slider-wrap" title="Note text size">
       <span>Aa</span>
-      <input type="range" id="font-slider" min="11" max="24" value="15">
+      <input type="range" id="font-slider" min="11" max="36" value="15">
     </label>
     <div class="toolbar-divider"></div>
     <button class="tbtn" id="btn-reset">Reset</button>
+    <button class="tbtn" id="btn-arrange" title="Tile all notes in a grid">Auto Arrange</button>
+    <button class="tbtn" id="btn-wrangle" title="Move off-screen notes back into view">Wrangle</button>
     <button class="tbtn" id="btn-fullscreen">Full Screen</button>
     <div id="toolbar-spacer"></div>
     <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
@@ -482,7 +484,9 @@
           <kbd>Auto-save</kbd> <span class="kdesc">Notes saved to browser localStorage</span>
           <kbd>Export</kbd>    <span class="kdesc">Download all boards as JSON</span>
           <kbd>Import</kbd>    <span class="kdesc">Load JSON — replaces all boards</span>
-          <kbd>Reset</kbd>     <span class="kdesc">Restore the default welcome board</span>
+          <kbd>Reset</kbd>         <span class="kdesc">Restore the default welcome board</span>
+          <kbd>Auto Arrange</kbd> <span class="kdesc">Tile all notes in a grid across the board</span>
+          <kbd>Wrangle</kbd>      <span class="kdesc">Pull any off-screen notes back into view</span>
         </div>
       </div>
 
@@ -893,6 +897,71 @@
       render();
     }
 
+    // ── Auto Arrange ───────────────────────────────────────────────────
+
+    function autoArrange() {
+      const tab = activeTab();
+      if (!tab || tab.notes.length === 0) return;
+
+      const dw = desktop.offsetWidth;
+      const PAD = 20;
+      const GAP = 16;
+
+      // Sort by approximate reading order (top-to-bottom, left-to-right)
+      const sorted = [...tab.notes].sort((a, b) => {
+        const rowA = Math.floor(a.y / 80);
+        const rowB = Math.floor(b.y / 80);
+        return rowA !== rowB ? rowA - rowB : a.x - b.x;
+      });
+
+      // Flow notes left-to-right, wrap to next row when a note would overflow
+      let x = PAD;
+      let y = PAD;
+      let rowHeight = 0;
+
+      sorted.forEach(note => {
+        // Would this note push past the right edge? Wrap (but never wrap on first in row)
+        if (x > PAD && x + note.w > dw - PAD) {
+          x = PAD;
+          y += rowHeight + GAP;
+          rowHeight = 0;
+        }
+        note.x = x;
+        note.y = y;
+        x += note.w + GAP;
+        rowHeight = Math.max(rowHeight, note.h);
+      });
+
+      save();
+      renderNotes();
+    }
+
+    // ── Wrangle ────────────────────────────────────────────────────────
+
+    function wrangleNotes() {
+      const tab = activeTab();
+      if (!tab || tab.notes.length === 0) return;
+
+      const dw = desktop.offsetWidth;
+      const dh = desktop.offsetHeight;
+      const GRIP = 44; // minimum pixels that must remain on-screen for the note to be reachable
+
+      let moved = 0;
+      tab.notes.forEach(note => {
+        const ox = note.x, oy = note.y;
+        // Header must be reachable: keep at least GRIP px on each edge
+        note.x = Math.max(-(note.w - GRIP), Math.min(note.x, dw - GRIP));
+        // Top of note must be visible (header is the drag handle)
+        note.y = Math.max(0, Math.min(note.y, dh - GRIP));
+        if (note.x !== ox || note.y !== oy) moved++;
+      });
+
+      if (moved > 0) {
+        save();
+        renderNotes();
+      }
+    }
+
     // ── Full Screen ────────────────────────────────────────────────────
 
     function updateFullscreenBtn() {
@@ -993,6 +1062,8 @@
     document.getElementById('btn-new').addEventListener('click', createNote);
     document.getElementById('btn-help').addEventListener('click', toggleHelp);
     document.getElementById('btn-reset').addEventListener('click', resetToDefaults);
+    document.getElementById('btn-arrange').addEventListener('click', autoArrange);
+    document.getElementById('btn-wrangle').addEventListener('click', wrangleNotes);
     document.getElementById('btn-export').addEventListener('click', exportJSON);
     document.getElementById('btn-import').addEventListener('click', importJSON);
     btnFullscreen.addEventListener('click', toggleFullscreen);

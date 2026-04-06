@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Roller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --toolbar-bg:   #221A10;
+      --toolbar-text: #F2EDE2;
+      --toolbar-muted:#9E9485;
+      --accent:       #C89040;
+      --accent-hover: #D4A050;
+      --bg:           #140F09;
+      --surface:      #1C1510;
+      --surface-2:    #231A11;
+      --border:       #2E2418;
+      --border-bright:#3A2E1C;
+      --text:         #F2EDE2;
+      --muted:        #9E9485;
+      --btn-bg:       #3A2E1C;
+      --btn-hover:    #4A3C28;
+      --btn-border:   #5A4C38;
+
+      --d4-color:  #9333EA;
+      --d6-color:  #2563EB;
+      --d8-color:  #059669;
+      --d10-color: #D97706;
+      --d12-color: #DC2626;
+      --d20-color: #C89040;
+      --d100-color:#6366F1;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Toolbar ─────────────────────────────────────────────── */
+    #toolbar {
+      background: var(--toolbar-bg);
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 1000;
+      flex-shrink: 0;
+      border-bottom: 1px solid #3A2E1C;
+    }
+
+    .toolbar-title {
+      font: 600 14px/1 'IBM Plex Sans', system-ui;
+      color: var(--toolbar-text);
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-spacer { flex: 1; }
+
+    .tbtn {
+      background: var(--btn-bg);
+      color: var(--toolbar-text);
+      border: 1px solid var(--btn-border);
+      border-radius: 4px;
+      padding: 5px 11px;
+      font: 500 12px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tbtn:hover { background: var(--btn-hover); }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 18px;
+      background: #3A2E1C;
+      flex-shrink: 0;
+    }
+
+    /* ── Main layout ─────────────────────────────────────────── */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Config Panel ────────────────────────────────────────── */
+    #config-panel {
+      width: 340px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px 16px 24px;
+      gap: 16px;
+    }
+
+    .panel-section-label {
+      font: 600 11px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* ── Die grid ────────────────────────────────────────────── */
+    .die-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .die-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .die-card.active {
+      border-color: var(--die-color, var(--accent));
+      background: color-mix(in srgb, var(--die-color, var(--accent)) 12%, var(--surface-2));
+    }
+
+    .die-label {
+      font: 600 11px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--die-color, var(--muted));
+    }
+
+    .die-counter {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .count-btn {
+      background: var(--btn-bg);
+      color: var(--toolbar-text);
+      border: 1px solid var(--btn-border);
+      border-radius: 4px;
+      width: 22px;
+      height: 22px;
+      font: 600 14px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .count-btn:hover { background: var(--btn-hover); }
+
+    .count-val {
+      font: 600 14px/1 'Cinzel', serif;
+      color: var(--die-color, var(--text));
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* ── Modifier row ────────────────────────────────────────── */
+    .modifier-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modifier-label {
+      font: 500 13px/1 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .modifier-display {
+      font: 600 15px/1 'Cinzel', serif;
+      color: var(--text);
+      min-width: 36px;
+      text-align: center;
+    }
+
+    /* ── Notation display ────────────────────────────────────── */
+    .notation-display {
+      font: 400 italic 13px/1.4 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      min-height: 18px;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .notation-display.has-dice {
+      color: var(--accent);
+    }
+
+    /* ── Roll button ─────────────────────────────────────────── */
+    .roll-btn {
+      background: var(--accent);
+      color: #0F0D0A;
+      border: none;
+      border-radius: 4px;
+      padding: 14px 24px;
+      font: 600 15px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .roll-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .roll-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .clear-link {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font: 500 12px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+      padding: 4px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .clear-link:hover { color: var(--text); }
+
+    .kb-hint {
+      font: 400 11px/1 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    /* ── Results panel ───────────────────────────────────────── */
+    #results-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ── Result display ──────────────────────────────────────── */
+    #result-display {
+      min-height: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--surface);
+    }
+
+    .result-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 160px;
+      font: 400 italic 14px/1 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .result-dice-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    /* ── Individual result die card ──────────────────────────── */
+    .result-die {
+      background: var(--surface-2);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 56px;
+    }
+
+    .result-die .die-type {
+      font: 600 10px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--die-color, var(--muted));
+    }
+
+    .result-die .die-value {
+      font: 700 28px/1 'Cinzel', serif;
+      color: var(--text);
+    }
+
+    /* NAT 20 */
+    .result-die.nat20 {
+      border-color: #C89040;
+      box-shadow: 0 0 12px rgba(200, 144, 64, 0.4), 0 0 24px rgba(200, 144, 64, 0.15);
+    }
+    .result-die.nat20 .die-value { color: #F0C060; }
+    .nat-badge {
+      font: 700 9px/1 'IBM Plex Sans', system-ui;
+      letter-spacing: 0.06em;
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+    .result-die.nat20 .nat-badge {
+      background: rgba(200, 144, 64, 0.2);
+      color: #F0C060;
+    }
+
+    /* NAT 1 */
+    .result-die.nat1 {
+      border-color: #DC2626;
+      box-shadow: 0 0 12px rgba(220, 38, 38, 0.35), 0 0 24px rgba(220, 38, 38, 0.12);
+    }
+    .result-die.nat1 .die-value { color: #F87171; }
+    .result-die.nat1 .nat-badge {
+      background: rgba(220, 38, 38, 0.2);
+      color: #F87171;
+    }
+
+    /* ── Total + Breakdown ───────────────────────────────────── */
+    .result-total-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .result-total {
+      font: 700 36px/1 'Cinzel', serif;
+      color: var(--accent);
+      animation: total-pop 300ms ease-out;
+    }
+
+    .result-breakdown {
+      font: 400 12px/1.4 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+    }
+
+    /* ── History panel ───────────────────────────────────────── */
+    #history-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-header {
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .history-label {
+      font: 600 11px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .history-empty {
+      padding: 32px 20px;
+      font: 400 italic 13px/1 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-row:last-child { border-bottom: none; }
+
+    .history-id {
+      font: 500 11px/1 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      min-width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .history-notation {
+      font: 400 13px/1.4 'IBM Plex Sans', system-ui;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .history-notation .history-values {
+      display: block;
+      font-size: 11px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    .history-total {
+      font: 700 18px/1 'Cinzel', serif;
+      color: var(--accent);
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .history-total.nat20-total { color: #F0C060; }
+    .history-total.nat1-total  { color: #F87171; }
+
+    /* ── Animations ──────────────────────────────────────────── */
+    @keyframes die-wiggle {
+      0%   { transform: rotate(0deg) scale(1); }
+      15%  { transform: rotate(-6deg) scale(1.06); }
+      30%  { transform: rotate(5deg) scale(0.97); }
+      45%  { transform: rotate(-4deg) scale(1.04); }
+      60%  { transform: rotate(3deg) scale(0.98); }
+      75%  { transform: rotate(-2deg) scale(1.02); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    @keyframes die-land {
+      0%   { transform: scale(0.7); opacity: 0.4; }
+      60%  { transform: scale(1.12); }
+      80%  { transform: scale(0.95); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes total-pop {
+      0%   { transform: scale(0.8); opacity: 0; }
+      70%  { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .result-die.rolling {
+      animation: die-wiggle 130ms ease-in-out infinite;
+    }
+
+    .result-die.landing {
+      animation: die-land 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      #main { flex-direction: column; overflow-y: auto; }
+      #config-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      #results-panel { flex: none; min-height: 400px; }
+      html, body { overflow: auto; height: auto; }
+      #result-display { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Toolbar ──────────────────────────────────────────────── -->
+  <div id="toolbar">
+    <span class="toolbar-title">🎲 Dice Roller</span>
+    <div class="toolbar-spacer"></div>
+    <button class="tbtn" id="btn-export">Export JSON</button>
+    <div class="toolbar-divider"></div>
+    <button class="tbtn" id="btn-clear-history">Clear History</button>
+  </div>
+
+  <!-- ── Main ─────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- Config panel -->
+    <div id="config-panel">
+
+      <div>
+        <div class="panel-section-label">Dice</div>
+        <div class="die-grid" id="die-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-section-label">Modifier</div>
+        <div class="modifier-row">
+          <span class="modifier-label">Add to total</span>
+          <button class="count-btn" id="mod-dec">−</button>
+          <span class="modifier-display" id="mod-display">0</span>
+          <button class="count-btn" id="mod-inc">+</button>
+        </div>
+      </div>
+
+      <div class="notation-display" id="notation-display">No dice selected.</div>
+
+      <button class="roll-btn" id="btn-roll" disabled>🎲 Roll Dice</button>
+      <button class="clear-link" id="btn-clear-dice">Clear all dice</button>
+      <div class="kb-hint">Press R or Enter to roll</div>
+
+    </div>
+
+    <!-- Results panel -->
+    <div id="results-panel">
+
+      <div id="result-display">
+        <div class="result-placeholder" id="result-placeholder">Roll some dice to see results here.</div>
+      </div>
+
+      <div id="history-panel">
+        <div class="history-header">
+          <span class="history-label">History</span>
+        </div>
+        <div class="history-empty" id="history-empty">No rolls yet this session.</div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ── Die definitions ──────────────────────────────────────── */
+    const DIE_DEFS = [
+      { type: 'd4',   sides: 4,   color: '#9333EA' },
+      { type: 'd6',   sides: 6,   color: '#2563EB' },
+      { type: 'd8',   sides: 8,   color: '#059669' },
+      { type: 'd10',  sides: 10,  color: '#D97706' },
+      { type: 'd12',  sides: 12,  color: '#DC2626' },
+      { type: 'd20',  sides: 20,  color: '#C89040' },
+      { type: 'd100', sides: 100, color: '#6366F1' },
+    ];
+
+    /* ── State ────────────────────────────────────────────────── */
+    const state = {
+      counts:   Object.fromEntries(DIE_DEFS.map(d => [d.type, 0])),
+      modifier: 0,
+      rolling:  false,
+      history:  [],
+      rollId:   0,
+      sessionStart: new Date().toISOString(),
+    };
+
+    /* ── DOM refs ─────────────────────────────────────────────── */
+    const dieGrid       = document.getElementById('die-grid');
+    const notationEl    = document.getElementById('notation-display');
+    const modDisplay    = document.getElementById('mod-display');
+    const rollBtn       = document.getElementById('btn-roll');
+    const resultDisplay = document.getElementById('result-display');
+    const placeholder   = document.getElementById('result-placeholder');
+    const historyEmpty  = document.getElementById('history-empty');
+    const historyList   = document.getElementById('history-list');
+
+    /* ── Build die grid ───────────────────────────────────────── */
+    const cardEls = {};
+
+    DIE_DEFS.forEach(def => {
+      const card = document.createElement('div');
+      card.className = 'die-card';
+      card.style.setProperty('--die-color', def.color);
+      card.innerHTML = `
+        <span class="die-label">${def.type}</span>
+        <div class="die-counter">
+          <button class="count-btn dec" data-die="${def.type}">−</button>
+          <span class="count-val" id="count-${def.type}">0</span>
+          <button class="count-btn inc" data-die="${def.type}">+</button>
+        </div>
+      `;
+      cardEls[def.type] = card;
+      dieGrid.appendChild(card);
+    });
+
+    /* ── Helpers ──────────────────────────────────────────────── */
+    function randInt(sides) {
+      return Math.floor(Math.random() * sides) + 1;
+    }
+
+    function buildNotation() {
+      const parts = DIE_DEFS
+        .filter(d => state.counts[d.type] > 0)
+        .map(d => `${state.counts[d.type]}${d.type}`);
+      if (!parts.length) return '';
+      const mod = state.modifier;
+      if (mod > 0)  parts.push(`+${mod}`);
+      if (mod < 0)  parts.push(`${mod}`);
+      return parts.join(' + ').replace(' + +', ' + ').replace(' + -', ' − ');
+    }
+
+    function hasDice() {
+      return DIE_DEFS.some(d => state.counts[d.type] > 0);
+    }
+
+    /* ── Update UI ────────────────────────────────────────────── */
+    function updateUI() {
+      DIE_DEFS.forEach(def => {
+        const cnt = state.counts[def.type];
+        document.getElementById(`count-${def.type}`).textContent = cnt;
+        cardEls[def.type].classList.toggle('active', cnt > 0);
+      });
+
+      const mod = state.modifier;
+      modDisplay.textContent = mod > 0 ? `+${mod}` : String(mod);
+
+      const notation = buildNotation();
+      if (notation) {
+        notationEl.textContent = notation;
+        notationEl.classList.add('has-dice');
+      } else {
+        notationEl.textContent = 'No dice selected.';
+        notationEl.classList.remove('has-dice');
+      }
+
+      rollBtn.disabled = !hasDice() || state.rolling;
+    }
+
+    /* ── Die count controls ───────────────────────────────────── */
+    dieGrid.addEventListener('click', e => {
+      const btn = e.target.closest('.count-btn');
+      if (!btn) return;
+      const die = btn.dataset.die;
+      if (btn.classList.contains('inc')) {
+        state.counts[die] = Math.min(state.counts[die] + 1, 20);
+      } else {
+        state.counts[die] = Math.max(state.counts[die] - 1, 0);
+      }
+      updateUI();
+    });
+
+    /* ── Modifier controls ────────────────────────────────────── */
+    document.getElementById('mod-inc').addEventListener('click', () => {
+      state.modifier = Math.min(state.modifier + 1, 99);
+      updateUI();
+    });
+    document.getElementById('mod-dec').addEventListener('click', () => {
+      state.modifier = Math.max(state.modifier - 1, -99);
+      updateUI();
+    });
+
+    /* ── Clear all dice ───────────────────────────────────────── */
+    document.getElementById('btn-clear-dice').addEventListener('click', () => {
+      DIE_DEFS.forEach(d => { state.counts[d.type] = 0; });
+      state.modifier = 0;
+      updateUI();
+    });
+
+    /* ── Build result die card element ───────────────────────── */
+    function buildResultDieEl(def, value) {
+      const el = document.createElement('div');
+      el.className = 'result-die';
+      el.style.setProperty('--die-color', def.color);
+
+      const isNat20 = def.type === 'd20' && value === 20;
+      const isNat1  = def.type === 'd20' && value === 1;
+
+      if (isNat20) el.classList.add('nat20');
+      if (isNat1)  el.classList.add('nat1');
+
+      let badge = '';
+      if (isNat20) badge = '<span class="nat-badge">NAT 20</span>';
+      if (isNat1)  badge = '<span class="nat-badge">NAT 1</span>';
+
+      el.innerHTML = `
+        <span class="die-type">${def.type}</span>
+        <span class="die-value">${value}</span>
+        ${badge}
+      `;
+      return el;
+    }
+
+    /* ── Roll ─────────────────────────────────────────────────── */
+    async function doRoll() {
+      if (!hasDice() || state.rolling) return;
+      state.rolling = true;
+      rollBtn.disabled = true;
+
+      const rollDefs = [];
+      DIE_DEFS.forEach(def => {
+        for (let i = 0; i < state.counts[def.type]; i++) {
+          rollDefs.push(def);
+        }
+      });
+
+      const notation = buildNotation();
+
+      // Build initial placeholder die cards
+      resultDisplay.innerHTML = '';
+      const diceRow = document.createElement('div');
+      diceRow.className = 'result-dice-row';
+
+      const dieEls = rollDefs.map(def => {
+        const el = buildResultDieEl(def, randInt(def.sides));
+        el.classList.add('rolling');
+        diceRow.appendChild(el);
+        return { el, def };
+      });
+      resultDisplay.appendChild(diceRow);
+
+      // Animate for 650ms, update every 65ms
+      const ANIM_DURATION = 650;
+      const ANIM_INTERVAL = 65;
+      const ticks = Math.floor(ANIM_DURATION / ANIM_INTERVAL);
+
+      for (let t = 0; t < ticks; t++) {
+        await new Promise(r => setTimeout(r, ANIM_INTERVAL));
+        dieEls.forEach(({ el, def }) => {
+          el.querySelector('.die-value').textContent = randInt(def.sides);
+        });
+      }
+
+      // Settle to final values
+      const finalValues = rollDefs.map(def => randInt(def.sides));
+      const subtotal = finalValues.reduce((a, b) => a + b, 0);
+      const total = subtotal + state.modifier;
+
+      diceRow.innerHTML = '';
+      dieEls.forEach(({ def }, i) => {
+        const el = buildResultDieEl(def, finalValues[i]);
+        el.classList.add('landing');
+        diceRow.appendChild(el);
+      });
+
+      // Total + breakdown
+      const totalBlock = document.createElement('div');
+      totalBlock.className = 'result-total-block';
+
+      const totalEl = document.createElement('div');
+      totalEl.className = 'result-total';
+      totalEl.textContent = total;
+
+      const breakdownParts = [];
+      const grouped = {};
+      rollDefs.forEach((def, i) => {
+        if (!grouped[def.type]) grouped[def.type] = [];
+        grouped[def.type].push(finalValues[i]);
+      });
+
+      const allVals = finalValues.join(' + ');
+      let breakdown = `[${allVals}]`;
+      if (state.modifier !== 0) {
+        const sign = state.modifier > 0 ? '+' : '−';
+        breakdown += ` · modifier ${sign}${Math.abs(state.modifier)}`;
+      }
+      breakdown += ` = ${total}`;
+
+      const breakdownEl = document.createElement('div');
+      breakdownEl.className = 'result-breakdown';
+      breakdownEl.textContent = breakdown;
+
+      totalBlock.appendChild(totalEl);
+      totalBlock.appendChild(breakdownEl);
+      resultDisplay.appendChild(totalBlock);
+
+      // Record in history
+      state.rollId++;
+      const roll = {
+        id: state.rollId,
+        timestamp: new Date().toISOString(),
+        notation,
+        dice: rollDefs.map((def, i) => ({ type: def.type, sides: def.sides, value: finalValues[i] })),
+        modifier: state.modifier,
+        subtotal,
+        total,
+      };
+      state.history.unshift(roll); // newest first in display
+      addHistoryRow(roll);
+
+      state.rolling = false;
+      updateUI();
+    }
+
+    /* ── Add history row ──────────────────────────────────────── */
+    function addHistoryRow(roll) {
+      historyEmpty.style.display = 'none';
+
+      const row = document.createElement('div');
+      row.className = 'history-row';
+
+      // Group values per die type for display
+      const grouped = {};
+      roll.dice.forEach(d => {
+        if (!grouped[d.type]) grouped[d.type] = [];
+        grouped[d.type].push(d.value);
+      });
+      const valParts = Object.entries(grouped).map(([type, vals]) => `${type}: ${vals.join(', ')}`).join('  ·  ');
+
+      const hasNat20 = roll.dice.some(d => d.type === 'd20' && d.value === 20);
+      const hasNat1  = roll.dice.some(d => d.type === 'd20' && d.value === 1);
+      let totalClass = 'history-total';
+      if (hasNat20) totalClass += ' nat20-total';
+      else if (hasNat1) totalClass += ' nat1-total';
+
+      row.innerHTML = `
+        <span class="history-id">#${roll.id}</span>
+        <span class="history-notation">
+          ${roll.notation}
+          <span class="history-values">${valParts}</span>
+        </span>
+        <span class="${totalClass}">${roll.total}</span>
+      `;
+
+      // Insert at top (newest first)
+      historyList.insertBefore(row, historyList.firstChild);
+    }
+
+    /* ── Toolbar: Roll button ─────────────────────────────────── */
+    rollBtn.addEventListener('click', doRoll);
+
+    /* ── Toolbar: Export JSON ─────────────────────────────────── */
+    document.getElementById('btn-export').addEventListener('click', () => {
+      const chronological = [...state.history].reverse();
+      const data = {
+        session_start: state.sessionStart,
+        session_end: new Date().toISOString(),
+        total_rolls: state.history.length,
+        rolls: chronological,
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dice-session-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    /* ── Toolbar: Clear history ───────────────────────────────── */
+    document.getElementById('btn-clear-history').addEventListener('click', () => {
+      if (!state.history.length) return;
+      if (!confirm('Clear all roll history? This cannot be undone.')) return;
+      state.history = [];
+      state.rollId = 0;
+      historyList.innerHTML = '';
+      historyEmpty.style.display = '';
+    });
+
+    /* ── Keyboard shortcuts ───────────────────────────────────── */
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if ((e.key === 'r' || e.key === 'R' || e.key === 'Enter') && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        doRoll();
+      }
+    });
+
+    /* ── Init ─────────────────────────────────────────────────── */
+    updateUI();
+  </script>
+
+</body>
+</html>

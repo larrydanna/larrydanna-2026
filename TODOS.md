@@ -17,7 +17,7 @@ Quality of life features should include 2 or 3 default examples when opeining to
 
 Preserve the existing color scheme for this view.
 
-### Needs More
+### Needs More — RESOLVED
 
 Add a 'live' font-size slider in the top bar, adjust the note text size
 Add a 'reset' button to put the board back to it's original state.

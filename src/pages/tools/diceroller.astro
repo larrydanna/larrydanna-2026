@@ -2,57 +2,52 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Sticky Notes" description="A virtual desktop of draggable, resizable sticky notes. Multiple boards, JSON export/import, keyboard shortcuts.">
+<BaseLayout title="Dice Roller" description="Roll d4 through d100 with animated dice, custom modifiers, and a full session history. Built for tabletop RPG sessions.">
 
   <div class="section-sm">
     <div class="container">
       <nav class="breadcrumb">
         <a href="/tools">Tools</a>
         <span>/</span>
-        <span>Sticky Notes</span>
+        <span>Dice Roller</span>
       </nav>
 
       <div class="tool-header">
         <div class="tool-tags">
           <span class="tag">Productivity</span>
-          <span class="tag">Draggable</span>
+          <span class="tag">RPG</span>
           <span class="tag">Vanilla JS</span>
         </div>
-        <h1>Sticky Notes</h1>
+        <h1>Dice Roller</h1>
         <p class="tool-description">
-          A virtual desktop of draggable, resizable sticky notes. Multiple boards with tabs,
-          six note colors, JSON export &amp; import, and keyboard shortcuts.
-          Opens full-screen for maximum desk space.
+          Roll d4 through d100 with animated dice, custom modifiers, and a full session history.
+          Built for tabletop RPG sessions.
         </p>
       </div>
 
       <div class="launch-area">
-        <a href="/sticky-notes/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
-          Launch Sticky Notes
+        <a href="/dice-roller/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
+          Launch Dice Roller
         </a>
         <p class="launch-hint">Opens in a new window — go full-screen for the best experience.</p>
       </div>
 
       <div class="feature-grid">
         <div class="feature">
-          <span class="feature-label">Boards</span>
-          <span class="feature-desc">Multiple tabs. Add, rename, reorder, remove.</span>
+          <span class="feature-label">Dice</span>
+          <span class="feature-desc">d4 · d6 · d8 · d10 · d12 · d20 · d100</span>
         </div>
         <div class="feature">
-          <span class="feature-label">Notes</span>
-          <span class="feature-desc">Drag, resize, pick from 6 colors. Live font-size slider.</span>
+          <span class="feature-label">Modifiers</span>
+          <span class="feature-desc">Add +/− to any roll.</span>
         </div>
         <div class="feature">
-          <span class="feature-label">Arrange</span>
-          <span class="feature-desc">Auto Arrange tiles notes in a grid. Wrangle pulls off-screen notes back into view.</span>
+          <span class="feature-label">History</span>
+          <span class="feature-desc">Running log of every roll this session.</span>
         </div>
         <div class="feature">
-          <span class="feature-label">Shortcuts</span>
-          <span class="feature-desc">N new note &nbsp;·&nbsp; ? help &nbsp;·&nbsp; Ctrl+E export &nbsp;·&nbsp; Ctrl+T new board</span>
-        </div>
-        <div class="feature">
-          <span class="feature-label">Data</span>
-          <span class="feature-desc">Auto-saved to localStorage. JSON export &amp; import.</span>
+          <span class="feature-label">Export</span>
+          <span class="feature-desc">Download the full session as JSON.</span>
         </div>
       </div>
     </div>
