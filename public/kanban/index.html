@@ -291,6 +291,7 @@
     }
     .card:active { cursor: grabbing; }
     .card:hover { border-color: var(--border-b); }
+    .card.dragging { opacity: 0.4; }
 
     .card-text {
       font-size: 13px;
@@ -473,7 +474,8 @@ let dragSrcCardId = null;
 /* ── Utilities ──────────────────────────────────────────────── */
 
 function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
 let hintTimer = null;
@@ -487,8 +489,12 @@ function flashHint(msg) {
 /* ── Persistence ────────────────────────────────────────────── */
 
 function save(hint) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-  if (hint) flashHint(hint);
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    if (hint) flashHint(hint);
+  } catch (e) {
+    flashHint('⚠ Storage full — not saved!');
+  }
 }
 
 function load() {
@@ -554,6 +560,7 @@ function addBoard() {
 
 function removeBoard(id) {
   if (state.boards.length === 1) {
+    if (state.boards[0].id !== id) return; // stale close button, ignore
     // Last board: clear its cards instead of deleting
     state.boards[0].columns.forEach(col => { col.cards = []; });
     save('Board cleared.');
@@ -596,14 +603,13 @@ function addCard(colId) {
   if (!col) return;
   const card = { id: uid(), text: '' };
   col.cards.push(card);
+  const newCardId = card.id;
   save();
   renderBoard();
-  // Focus the new card
+  // Focus by the card's specific ID — not DOM position — so double-clicks don't mis-target
   setTimeout(() => {
-    const cardEls = document.querySelectorAll(`.col-cards[data-col-id="${colId}"] .card`);
-    const lastEl  = cardEls[cardEls.length - 1];
-    if (lastEl) lastEl.querySelector('.card-text')?.click();
-    // Scroll the column to show the new card
+    const textEl = document.querySelector(`[data-card-id="${newCardId}"] .card-text`);
+    if (textEl) textEl.click();
     const colCards = document.querySelector(`.col-cards[data-col-id="${colId}"]`);
     if (colCards) colCards.scrollTop = colCards.scrollHeight;
   }, 0);
@@ -647,7 +653,7 @@ function exportJSON() {
   a.href     = url;
   a.download = 'kanban.json';
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
   flashHint('Exported!');
 }
 
@@ -659,7 +665,7 @@ function importJSON() {
 
 function getDragAfterElement(container, y) {
   const cards = [...container.querySelectorAll('.card')].filter(el => {
-    return parseFloat(el.style.opacity) !== 0.4;
+    return !el.classList.contains('dragging');
   });
   return cards.reduce((closest, child) => {
     const box    = child.getBoundingClientRect();
@@ -725,7 +731,7 @@ function renderTabs() {
     nameSpan.addEventListener('blur', () => {
       nameSpan.contentEditable = 'false';
       const newName = nameSpan.textContent.trim();
-      board.name = newName || board.name;
+      board.name = newName || board.name || 'Board';
       nameSpan.textContent = board.name;
       save();
     });
@@ -743,6 +749,9 @@ function renderTabs() {
 
     /* drag to reorder tabs */
     tab.addEventListener('dragstart', e => {
+      // Clear any stale card drag state so tab drops aren't misrouted
+      dragSrcColId  = null;
+      dragSrcCardId = null;
       e.dataTransfer.setData('tabId', board.id);
       setTimeout(() => { tab.style.opacity = '0.5'; }, 0);
     });
@@ -807,7 +816,7 @@ function buildColumnEl(col) {
   nameEl.addEventListener('blur', () => {
     nameEl.contentEditable = 'false';
     const newName = nameEl.textContent.trim();
-    col.name = newName || col.name;
+    col.name = newName || col.name || 'Column';
     nameEl.textContent = col.name;
     save();
   });
@@ -908,7 +917,8 @@ function buildCardEl(card, col) {
     const newText = textEl.textContent.trim();
     // If brand-new and still empty, remove it
     if (newText === '' && card.text === '') {
-      deleteCard(col.id, card.id);
+      // Defer to let the blur event fully resolve before tearing down the DOM
+      setTimeout(() => deleteCard(col.id, card.id), 0);
       return;
     }
     card.text          = newText || card.text;
@@ -934,11 +944,11 @@ function buildCardEl(card, col) {
     dragSrcCardId = card.id;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('cardId', card.id);
-    setTimeout(() => { cardEl.style.opacity = '0.4'; }, 0);
+    cardEl.classList.add('dragging');  // synchronous — no setTimeout race
   });
 
   cardEl.addEventListener('dragend', () => {
-    cardEl.style.opacity = '1';
+    cardEl.classList.remove('dragging');
     dragSrcColId  = null;
     dragSrcCardId = null;
     removeAllDropIndicators();
@@ -1011,6 +1021,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data.boards || !Array.isArray(data.boards) || data.boards.length === 0) {
           throw new Error('Invalid kanban file — expected { boards: [...] }');
         }
+        // Deep-validate and repair each board so malformed imports can't crash the app
+        data.boards.forEach((b, bi) => {
+          if (!b.id || typeof b.id !== 'string') b.id = uid();
+          if (typeof b.name !== 'string' || !b.name.trim()) b.name = `Board ${bi + 1}`;
+          if (!Array.isArray(b.columns) || b.columns.length === 0) {
+            b.columns = [
+              { id: uid(), name: 'To Do', cards: [] },
+              { id: uid(), name: 'WIP',   cards: [] },
+              { id: uid(), name: 'Done',  cards: [] },
+            ];
+          }
+          b.columns.forEach((c, ci) => {
+            if (!c.id || typeof c.id !== 'string') c.id = uid();
+            if (typeof c.name !== 'string' || !c.name.trim()) c.name = `Column ${ci + 1}`;
+            if (!Array.isArray(c.cards)) c.cards = [];
+            c.cards = c.cards.filter(card =>
+              card && typeof card.id === 'string' && typeof card.text === 'string'
+            );
+          });
+        });
         state = data;
         if (!state.boards.find(b => b.id === state.activeBoard)) {
           state.activeBoard = state.boards[0].id;
