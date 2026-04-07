@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Personal Kanban" description="A personal Kanban board with drag-and-drop cards, multiple boards, editable columns, and JSON export/import.">
+
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Personal Kanban</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Productivity</span>
+          <span class="tag">Kanban</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Personal Kanban</h1>
+        <p class="tool-description">
+          A drag-and-drop Kanban board with three columns: To Do, WIP, and Done.
+          Multiple boards as tabs, editable column names, and full JSON export &amp; import.
+          Everything auto-saves to your browser.
+        </p>
+      </div>
+
+      <div class="launch-area">
+        <a href="/kanban/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
+          Open Kanban
+        </a>
+        <p class="launch-hint">Opens in a new tab — works best full-screen.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <span class="feature-label">Boards</span>
+          <span class="feature-desc">Multiple boards as tabs. Add, rename, reorder, and remove.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Columns</span>
+          <span class="feature-desc">Three columns per board: To Do · WIP · Done. Click any header to rename.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Cards</span>
+          <span class="feature-desc">Add cards to any column. Click to edit text. Hover to delete.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Drag &amp; Drop</span>
+          <span class="feature-desc">Drag cards across columns or reorder within a column. Live drop indicator.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Shortcuts</span>
+          <span class="feature-desc">N new card &nbsp;·&nbsp; ? help &nbsp;·&nbsp; Ctrl+E export &nbsp;·&nbsp; Ctrl+T new board</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Data</span>
+          <span class="feature-desc">Auto-saved to localStorage. Full JSON export &amp; import.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header {
+    max-width: var(--content-width);
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  h1 { margin-bottom: var(--space-xs); }
+
+  .tool-description {
+    color: var(--muted);
+    margin: 0;
+    max-width: 600px;
+  }
+
+  /* Launch */
+  .launch-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .launch-btn {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+  }
+
+  .launch-hint {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  /* Feature list */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-sm);
+    max-width: 800px;
+    padding-bottom: var(--space-2xl);
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .feature-label {
+    font: 600 12px/1 var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+  }
+
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>

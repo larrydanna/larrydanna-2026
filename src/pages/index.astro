@@ -29,6 +29,16 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
         <div class="card featured-tool">
           <div class="tool-meta">
             <span class="tag">Productivity</span>
+            <span class="tag">Kanban</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <h3>Personal Kanban</h3>
+          <p>Drag-and-drop cards across To Do, WIP, and Done. Multiple boards, editable columns, and JSON export.</p>
+          <a href="/kanban/index.html" class="btn btn-secondary">Open Board</a>
+        </div>
+        <div class="card featured-tool">
+          <div class="tool-meta">
+            <span class="tag">Productivity</span>
             <span class="tag">RPG</span>
             <span class="tag">Vanilla JS</span>
           </div>
@@ -44,16 +54,6 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
           <h3>Sticky Notes</h3>
           <p>A virtual desktop of draggable, resizable sticky notes. Multiple boards with tabs, six note colors, JSON export &amp; import, and keyboard shortcuts.</p>
           <a href="/tools/stickynotes/index.html" class="btn btn-secondary">Try it</a>
-        </div>
-        <div class="card featured-tool">
-          <div class="tool-meta">
-            <span class="tag">Wallpaper</span>
-            <span class="tag">Canvas</span>
-            <span class="tag">Vanilla JS</span>
-          </div>
-          <h3>Blotter</h3>
-          <p>Generate a desktop or phone wallpaper from your active theme. Add a calendar overlay, pick a size, download the PNG.</p>
-          <a href="/tools/blotter" class="btn btn-secondary">Try it</a>
         </div>
       </div>
     </div>

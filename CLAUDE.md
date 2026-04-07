@@ -1,6 +1,8 @@
 # Best Practices
 
-If the user hasn't already requested a blog post for a sessions updates, be sure to ask.  This way we keep the web site fresh, and that's a virtue.
+**Always write a blog post at the end of every working session.** Do not ask — just do it. Summarize what was built or changed that session. This keeps the site fresh.
+
+**Featured Tools on the homepage (`src/pages/index.astro`) must always show exactly 3 cards.** When adding a new tool, insert it first (newest-first) and remove the oldest card to stay at 3. Never let the featured grid exceed 3 items.
 
 
 # Elevated Agency
