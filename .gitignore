@@ -26,3 +26,9 @@ pnpm-debug.log*
 # gstack skills (local tooling, not part of the site)
 .claude/
 .gstack/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
