@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6502 Debugger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #1A1208;
+      --surface:    #241A10;
+      --surface-2:  #2E2218;
+      --text:       #F2EDE2;
+      --muted:      #9E9080;
+      --accent:     #C89040;
+      --accent-alt: #B83828;
+      --success:    #6DB884;
+      --border:     #382C20;
+      --font-ui:    'IBM Plex Sans', system-ui, sans-serif;
+      --font-code:  'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 13px;
+    }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    .debugger {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .main-area {
+      display: grid;
+      grid-template-columns: 1fr 248px;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Toolbar ───────────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .tb-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 2px;
+    }
+
+    .btn {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 400;
+      padding: 5px 11px;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #0F0D0A; border-color: var(--accent); font-weight: 600; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); color: #0F0D0A; border-color: var(--accent); }
+    .btn-danger:hover:not(:disabled) { border-color: var(--accent-alt); color: var(--accent-alt); }
+
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    #speed { width: 72px; accent-color: var(--accent); }
+    #speed-lbl { min-width: 44px; color: var(--accent); font-size: 11px; }
+
+    #status-bar {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--font-code);
+    }
+
+    /* ── Panel base ────────────────────────────────────────── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      padding: 5px 10px 4px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-title-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-xs {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      padding: 2px 7px;
+      background: var(--surface-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .btn-xs:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Editor panel ──────────────────────────────────────── */
+    .editor-panel {
+      border-right: 1px solid var(--border);
+    }
+
+    .editor-wrap {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    #line-nums {
+      width: 34px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 8px 4px 8px 0;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      user-select: none;
+    }
+
+    #line-nums span {
+      font-family: var(--font-code);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--border);
+      display: block;
+      padding-right: 6px;
+    }
+
+    #line-nums span.active {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    #editor {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-code);
+      font-size: 12.5px;
+      line-height: 1.6;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 8px 10px;
+      overflow-y: scroll;
+      tab-size: 4;
+      white-space: pre;
+    }
+
+    #editor::selection { background: rgba(200, 144, 64, 0.25); }
+
+    /* ── CPU panel ─────────────────────────────────────────── */
+    .cpu-panel {
+      background: var(--surface);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .cpu-inner {
+      padding: 8px 10px;
+    }
+
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2px;
+    }
+
+    .reg-table td {
+      padding: 1px 0;
+      vertical-align: middle;
+    }
+
+    .rl {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      width: 22px;
+      text-align: right;
+      padding-right: 8px;
+    }
+
+    .rv {
+      font-family: var(--font-code);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+
+    .flags-wrap {
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
+
+    .flags-labels, .flags-values {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+    }
+
+    .fl {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .fv {
+      font-family: var(--font-code);
+      font-size: 13px;
+      color: var(--surface-2);
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 0;
+    }
+
+    .fv.on {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(200,144,64,0.08);
+    }
+
+    .fv.always-on {
+      color: var(--muted);
+      border-color: var(--border);
+    }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin: 10px 0 4px;
+    }
+
+    .stack-view {
+      font-family: var(--font-code);
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .stack-row { display: flex; align-items: center; gap: 4px; }
+    .sp-marker { color: var(--accent); font-weight: 700; width: 12px; }
+    .stack-addr { color: var(--muted); }
+    .stack-val  { color: var(--text); }
+
+    /* ── Memory panel ──────────────────────────────────────── */
+    .mem-panel {
+      height: 152px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    #mem-addr { font-family: var(--font-code); font-size: 11px; color: var(--accent); }
+
+    #memory-view {
+      flex: 1;
+      overflow: auto;
+      padding: 4px 10px 6px;
+      font-family: var(--font-code);
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+
+    .mrow { white-space: pre; display: flex; align-items: center; }
+    .maddr { color: var(--muted); margin-right: 6px; flex-shrink: 0; }
+    .msep { display: inline-block; width: 6px; flex-shrink: 0; }
+    .mbyte { color: var(--text); margin-right: 3px; }
+    .mbyte.cur {
+      background: var(--accent);
+      color: #0F0D0A;
+      border-radius: 2px;
+      padding: 0 1px;
+      font-weight: 500;
+    }
+
+    /* ── Console panel ─────────────────────────────────────── */
+    .console-panel {
+      height: 88px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    #console-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 10px;
+      font-family: var(--font-code);
+      font-size: 11.5px;
+      line-height: 1.65;
+    }
+
+    .log-info  { color: var(--muted); }
+    .log-ok    { color: var(--success); }
+    .log-error { color: var(--accent-alt); }
+
+    /* ── Scrollbars ────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .main-area { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+      .cpu-panel { border-top: 1px solid var(--border); max-height: 220px; }
+      .mem-panel { height: 120px; }
+    }
+  </style>
+</head>
+<body>
+<div class="debugger">
+
+  <!-- ── Toolbar ───────────────────────────────────────────── -->
+  <div class="toolbar">
+    <button id="btn-assemble" class="btn btn-primary">Assemble</button>
+    <div class="tb-sep"></div>
+    <button id="btn-step"  class="btn" disabled>Step</button>
+    <button id="btn-run"   class="btn" disabled>&#9654; Run</button>
+    <button id="btn-stop"  class="btn btn-danger" style="display:none">&#9646;&#9646; Stop</button>
+    <div class="tb-sep"></div>
+    <button id="btn-reset" class="btn btn-danger" disabled>&#x21BA; Reset</button>
+    <div class="speed-wrap">
+      Speed
+      <input type="range" id="speed" min="1" max="5" value="2" step="1">
+      <span id="speed-lbl">Slow</span>
+    </div>
+    <span id="status-bar">Ready</span>
+  </div>
+
+  <!-- ── Main: Editor + CPU ─────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Editor -->
+    <div class="editor-panel panel">
+      <div class="panel-title">Assembly</div>
+      <div class="editor-wrap">
+        <div id="line-nums"></div>
+        <textarea id="editor" spellcheck="false" autocomplete="off"
+                  autocorrect="off" autocapitalize="off"></textarea>
+      </div>
+    </div>
+
+    <!-- CPU State -->
+    <div class="cpu-panel panel">
+      <div class="panel-title">CPU State</div>
+      <div class="cpu-inner">
+
+        <!-- Registers -->
+        <table class="reg-table">
+          <tr><td class="rl">A</td><td class="rv" id="r-a">$00</td>
+              <td class="rl">X</td><td class="rv" id="r-x">$00</td>
+              <td class="rl">Y</td><td class="rv" id="r-y">$00</td></tr>
+          <tr><td class="rl">PC</td><td class="rv" id="r-pc" colspan="3">$C000</td>
+              <td class="rl">SP</td><td class="rv" id="r-sp">$FF</td></tr>
+        </table>
+
+        <!-- Flags -->
+        <div class="flags-wrap">
+          <div class="flags-labels">
+            <span class="fl">N</span><span class="fl">V</span><span class="fl">&#8210;</span>
+            <span class="fl">B</span><span class="fl">D</span><span class="fl">I</span>
+            <span class="fl">Z</span><span class="fl">C</span>
+          </div>
+          <div class="flags-values" style="margin-top:2px">
+            <span class="fv" id="f-n">0</span>
+            <span class="fv" id="f-v">0</span>
+            <span class="fv always-on">1</span>
+            <span class="fv" id="f-b">0</span>
+            <span class="fv" id="f-d">0</span>
+            <span class="fv on"  id="f-i">1</span>
+            <span class="fv" id="f-z">0</span>
+            <span class="fv" id="f-c">0</span>
+          </div>
+        </div>
+
+        <!-- Stack -->
+        <div class="section-label">Stack ($01xx)</div>
+        <div id="stack-view" class="stack-view"></div>
+
+      </div>
+    </div>
+  </div><!-- end main-area -->
+
+  <!-- ── Memory Inspector ───────────────────────────────────── -->
+  <div class="mem-panel panel">
+    <div class="panel-title">
+      Memory
+      <span id="mem-addr">$C000</span>
+      <div class="panel-title-right">
+        <button id="mem-prev"    class="btn-xs">&#9664;</button>
+        <button id="mem-next"    class="btn-xs">&#9654;</button>
+        <button id="mem-goto-pc" class="btn-xs">Jump to PC</button>
+      </div>
+    </div>
+    <div id="memory-view"></div>
+  </div>
+
+  <!-- ── Console ────────────────────────────────────────────── -->
+  <div class="console-panel panel">
+    <div class="panel-title">
+      Console
+      <div class="panel-title-right">
+        <button id="btn-clear-log" class="btn-xs">Clear</button>
+      </div>
+    </div>
+    <div id="console-log"></div>
+  </div>
+
+</div><!-- end .debugger -->
+
+<script src="assembler.js"></script>
+<script src="cpu.js"></script>
+<script src="debugger.js"></script>
+</body>
+</html>

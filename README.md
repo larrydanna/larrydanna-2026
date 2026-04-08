@@ -1,6 +1,15 @@
 # LarryDanna.com
 file:///C:/Users/larry/.gstack/projects/larrydanna-2026/designs/design-system-20260330/preview.html#
 
+# Maintenance Workflow
+
+- **Backlog Item Docs** create in /backlog if needed
+- **Claude Code** Plan mode; @read `your-doc-here`.md
+- **Claude Code** Code 
+- **Claude Code** Blog Post
+- **Ship It** - gskill
+
+
 # Astro Starter Kit: Minimal
 
 ```sh

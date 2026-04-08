@@ -28,13 +28,23 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
       <div class="featured-grid">
         <div class="card featured-tool">
           <div class="tool-meta">
+            <span class="tag">Assembly</span>
+            <span class="tag">6502</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <h3>6502 Debugger</h3>
+          <p>Write 6502 assembly in the browser and watch it run. Full assembler, step execution, live registers and flags, hex memory inspector. C64 compatible.</p>
+          <a href="/6502-debugger/index.html" target="_blank" rel="noopener" class="btn btn-secondary">Open Debugger</a>
+        </div>
+        <div class="card featured-tool">
+          <div class="tool-meta">
             <span class="tag">Productivity</span>
             <span class="tag">Kanban</span>
             <span class="tag">Vanilla JS</span>
           </div>
           <h3>Personal Kanban</h3>
           <p>Drag-and-drop cards across To Do, WIP, and Done. Multiple boards, editable columns, and JSON export.</p>
-          <a href="/kanban/index.html" class="btn btn-secondary">Open Board</a>
+          <a href="/kanban/index.html" target="_blank" rel="noopener" class="btn btn-secondary">Open Board</a>
         </div>
         <div class="card featured-tool">
           <div class="tool-meta">
@@ -45,15 +55,6 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
           <h3>Dice Roller</h3>
           <p>Roll d4 through d100 with animated dice, custom modifiers, and a full session history. Built for tabletop RPG sessions.</p>
           <a href="/tools/diceroller" class="btn btn-secondary">Roll it</a>
-        </div>
-        <div class="card featured-tool">
-          <div class="tool-meta">
-            <span class="tag">Productivity</span>
-            <span class="tag">Vanilla JS</span>
-          </div>
-          <h3>Sticky Notes</h3>
-          <p>A virtual desktop of draggable, resizable sticky notes. Multiple boards with tabs, six note colors, JSON export &amp; import, and keyboard shortcuts.</p>
-          <a href="/tools/stickynotes/index.html" class="btn btn-secondary">Try it</a>
         </div>
       </div>
     </div>

@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="6502 Debugger" description="A browser-based 6502/6510 assembler and live debugger. Write assembly, step through instructions, inspect registers, flags, and memory in real time.">
+
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>6502 Debugger</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Assembly</span>
+          <span class="tag">6502</span>
+          <span class="tag">C64</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>6502 Debugger</h1>
+        <p class="tool-description">
+          Write 6502 assembly in the browser and watch it execute live. Full two-pass assembler,
+          all 56 opcodes, step-by-step execution, live register and flag display,
+          and a hex memory inspector. C64 / 6510 compatible.
+        </p>
+      </div>
+
+      <div class="launch-area">
+        <a href="/6502-debugger/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
+          Open Debugger
+        </a>
+        <p class="launch-hint">Opens full-screen in a new tab.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <span class="feature-label">Assembler</span>
+          <span class="feature-desc">Two-pass assembler. All 56 opcodes, all 13 addressing modes, labels, .ORG, .BYTE.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Step / Run</span>
+          <span class="feature-desc">Step one instruction at a time or run continuously. Speed slider from 1 Hz to ~600k/s.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Registers</span>
+          <span class="feature-desc">Live A, X, Y, PC, SP display. All eight status flags (N V &#8210; B D I Z C) highlighted on change.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Memory</span>
+          <span class="feature-desc">Scrollable hex dump of all 64KB. Current instruction highlighted in amber. Jump to PC.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Stack</span>
+          <span class="feature-desc">Live view of $0100–$01FF stack area. SP pointer shown at current top.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">6510 Compatible</span>
+          <span class="feature-desc">Standard 6502 instruction set. Includes the indirect JMP page-boundary bug for accuracy.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header {
+    max-width: var(--content-width);
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  h1 { margin-bottom: var(--space-xs); }
+
+  .tool-description {
+    color: var(--muted);
+    margin: 0;
+    max-width: 600px;
+  }
+
+  .launch-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .launch-btn {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+  }
+
+  .launch-hint {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-sm);
+    max-width: 800px;
+    padding-bottom: var(--space-2xl);
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .feature-label {
+    font: 600 12px/1 var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+  }
+
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>
