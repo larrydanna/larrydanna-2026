@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Player View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0D0A;
+      --surface: #1B1915;
+      --surface-2: #252118;
+      --text: #F2EDE2;
+      --muted: #9E9080;
+      --accent: #C89040;
+      --accent-dim: rgba(200,144,64,0.15);
+      --success: #6DB884;
+      --danger: #B83828;
+      --border: #382C20;
+      --font: 'IBM Plex Sans', sans-serif;
+      --radius-sm: 4px;
+      --radius: 8px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Status bar ──────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+
+    .status-game { font-weight: 600; color: var(--accent); }
+    .status-session { color: var(--muted); }
+    .status-player { color: var(--text); font-weight: 500; }
+
+    /* ── Turn banner ─────────────────────────────────────── */
+    .turn-banner {
+      padding: 10px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .turn-banner.my-turn {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .turn-banner.waiting {
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    /* ── Main content ────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      line-height: 1;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0F0D0A;
+      width: 100%;
+      padding: 14px;
+      font-size: 1.0625rem;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #d9a050; }
+
+    .btn-primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      width: 100%;
+      padding: 12px;
+    }
+
+    .btn-secondary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+      padding: 8px 14px;
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      width: 100%;
+      padding: 12px;
+    }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* ── Dice (tappable) ─────────────────────────────────── */
+    .dice-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .die-btn {
+      width: 60px;
+      height: 60px;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--font);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .die-btn.kept {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .die-btn:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    .die-btn.empty {
+      color: var(--muted);
+      font-size: 1.25rem;
+    }
+
+    /* ── Score category list (Yacht) ─────────────────────── */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-family: var(--font);
+      text-align: left;
+      width: 100%;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    /* Open category with a non-zero preview score — clearly actionable */
+    .cat-row.scoreable {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .cat-row:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    .cat-row.scored {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .cat-row:disabled:not(.scored) { cursor: not-allowed; }
+
+    .cat-name {
+      flex: 1;
+      font-size: 0.9375rem;
+      color: var(--text);
+    }
+
+    .cat-row.scored .cat-name { color: var(--muted); }
+
+    .cat-preview {
+      font-size: 1rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .cat-preview.scored-val {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .cat-preview.zero { color: var(--muted); opacity: 0.5; }
+
+    .section-divider {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding: 6px 12px 2px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Farkle turn info ────────────────────────────────── */
+    .farkle-stats {
+      display: flex;
+      gap: 12px;
+    }
+
+    .farkle-stat {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .farkle-stat-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .farkle-stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Scoreboard mini ─────────────────────────────────── */
+    .mini-scores {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mini-score-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+
+    .mini-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .mini-dot.active { background: var(--success); }
+    .mini-score-name { flex: 1; color: var(--muted); }
+    .mini-score-name.me { color: var(--text); font-weight: 600; }
+    .mini-score-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* ── Overlays ────────────────────────────────────────── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      z-index: 100;
+    }
+
+    .overlay-inner {
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .overlay-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .overlay-sub {
+      color: var(--muted);
+      font-size: 0.9375rem;
+      margin-bottom: 24px;
+    }
+
+    /* ── Final scores ────────────────────────────────────── */
+    .final-player {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .final-player.winner {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .final-rank { font-size: 1rem; font-weight: 700; color: var(--muted); width: 24px; }
+    .final-rank.gold { color: var(--accent); }
+    .final-name { flex: 1; font-weight: 500; font-size: 0.9375rem; }
+    .final-score { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+
+    /* ── Hot dice badge ──────────────────────────────────── */
+    .hot-badge {
+      background: var(--accent);
+      color: #0F0D0A;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    /* ── Input helpers ───────────────────────────────────── */
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 1rem;
+      padding: 10px 14px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ── In-game error toast ─────────────────────────────────── */
+    @keyframes toast-slide-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    #error-toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      z-index: 500;
+      max-width: 320px;
+      text-align: center;
+      display: none;
+      white-space: nowrap;
+      animation: toast-slide-in 0.15s ease-out;
+    }
+
+    /* ── Farkle animation overlay ──────────────────────────── */
+    @keyframes farkle-slam {
+      0%   { opacity: 0; transform: scale(0.5) rotate(-8deg); }
+      25%  { opacity: 1; transform: scale(1.12) rotate(3deg); }
+      40%  { transform: scale(0.97) rotate(-1deg); }
+      55%  { transform: scale(1.03) rotate(0deg); }
+      65%  { transform: scale(1) rotate(0deg); opacity: 1; }
+      100% { opacity: 0; transform: scale(0.9) rotate(0deg); }
+    }
+
+    #farkle-anim {
+      position: fixed;
+      inset: 0;
+      background: rgba(140, 30, 20, 0.93);
+      z-index: 400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    #farkle-anim.active {
+      display: flex;
+      animation: farkle-slam 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .farkle-word {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    }
+
+    .farkle-emoji { font-size: 2.5rem; }
+
+    .farkle-player-name {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+
+    /* ── Committed dice row ──────────────────────────────────── */
+    .committed-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+
+    .die-btn.committed {
+      border-color: var(--success);
+      background: rgba(109, 184, 132, 0.12);
+      color: var(--success);
+      opacity: 0.75;
+      cursor: default;
+      font-size: 1.4rem;
+    }
+
+    /* ── Help button in status bar ─────────────────────────── */
+    .help-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+
+    .help-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Help modal ──────────────────────────────────────────── */
+    .help-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+
+    .help-modal-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .help-modal-title {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .help-modal h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 14px 0 6px;
+    }
+
+    .help-modal p, .help-modal li {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .help-modal ul { padding-left: 18px; }
+    .help-modal-close {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    /* ── Chat section ────────────────────────────────────────── */
+    .chat-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding: 10px 12px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+
+    .chat-msg {
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    .chat-msg-name { color: var(--accent); font-weight: 600; }
+    .chat-empty { color: var(--muted); font-size: 0.8125rem; padding: 6px 12px 10px; }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.875rem;
+      padding: 6px 10px;
+      outline: none;
+      margin-bottom: 0;
+      width: auto;
+    }
+
+    .chat-input:focus { border-color: var(--accent); }
+
+    .chat-send-btn {
+      background: var(--accent);
+      color: #0F0D0A;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<!-- ── Join overlay ───────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay-join">
+  <div class="overlay-inner">
+    <div class="overlay-title">Join Game</div>
+    <div class="overlay-sub" id="join-sub">Enter your name to join.</div>
+    <input type="text" id="join-name-input" placeholder="Your name" maxlength="20" autocomplete="off">
+    <p class="error-msg" id="join-error-msg"></p>
+    <button class="btn btn-primary" id="overlay-join-btn">Join</button>
+  </div>
+</div>
+
+<!-- ── Connecting overlay ─────────────────────────────────────────────── -->
+<div class="overlay" id="overlay-connecting" style="display:none">
+  <div class="overlay-inner">
+    <div class="overlay-title" id="connecting-title">Connecting…</div>
+    <div class="overlay-sub" id="connecting-sub"></div>
+    <button class="btn btn-ghost" id="reconnect-btn" style="display:none; margin-top:16px;">
+      Tap to Reconnect
+    </button>
+  </div>
+</div>
+
+<!-- ── Error toast ─────────────────────────────────────────────────────── -->
+<div id="error-toast"></div>
+
+<!-- ── Farkle animation ────────────────────────────────────────────────── -->
+<div id="farkle-anim">
+  <div class="farkle-emoji">😬</div>
+  <div class="farkle-word">FARKLE!</div>
+  <div class="farkle-player-name" id="farkle-anim-name"></div>
+</div>
+
+<!-- ── Waiting overlay ────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay-waiting" style="display:none">
+  <div class="overlay-inner">
+    <div class="overlay-title">Waiting for host to start…</div>
+    <div class="overlay-sub" id="waiting-players-count"></div>
+    <button class="btn btn-ghost" id="leave-waiting-btn" style="margin-top:8px">Leave</button>
+  </div>
+</div>
+
+<!-- ── Final overlay ──────────────────────────────────────────────────── -->
+<div class="overlay" id="overlay-final" style="display:none">
+  <div class="overlay-inner">
+    <div class="overlay-title">Game Over</div>
+    <div id="final-end-reason" style="display:none; font-size:0.875rem; color:var(--muted); margin-bottom:8px;"></div>
+    <div id="final-scores-list" style="margin: 16px 0; text-align:left"></div>
+    <button class="btn btn-ghost" id="leave-final-btn">Leave</button>
+  </div>
+</div>
+
+<!-- ── Main game UI ───────────────────────────────────────────────────── -->
+<div class="app" id="game-ui" style="display:none">
+  <div class="status-bar">
+    <span class="status-game" id="sb-game">Yacht</span>
+    <span class="status-session" id="sb-session">—</span>
+    <span class="status-player" id="sb-player">—</span>
+    <button class="help-btn" id="help-open-btn">Rules</button>
+  </div>
+
+  <div class="turn-banner" id="turn-banner"></div>
+
+  <main id="main-content">
+    <!-- Yacht or Farkle content rendered here -->
+  </main>
+
+  <div style="padding: 0 16px 16px">
+    <div class="chat-section">
+      <div class="chat-header">Chat</div>
+      <div class="chat-messages" id="chat-messages">
+        <span class="chat-empty" id="chat-empty">No messages yet.</span>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Say something…" maxlength="200" autocomplete="off">
+        <button class="chat-send-btn" id="chat-send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Help modal ──────────────────────────────────────────────────────── -->
+<div class="help-modal" id="help-modal" style="display:none">
+  <div class="help-modal-inner">
+    <div class="help-modal-title" id="help-title">Game Rules</div>
+    <div id="help-body"></div>
+    <button class="btn btn-ghost help-modal-close" id="help-close-btn">Close</button>
+  </div>
+</div>
+
+<script type="module">
+import { Yacht } from '../engine/yacht.js';
+import { Farkle } from '../engine/farkle.js';
+
+const IS_LOCAL      = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const PARTYKIT_HOST = IS_LOCAL ? 'localhost:1999' : 'larrydanna-games.larrydanna.partykit.dev';
+const ENGINES = { yacht: Yacht, farkle: Farkle };
+
+// ── State ────────────────────────────────────────────────────────────────
+let ws = null;
+let session = null;
+let myId = null;
+let myName = '';
+let sessionId = '';
+let passcode = '';
+
+// ── Utils ────────────────────────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showOnly(id) {
+  ['overlay-join','overlay-connecting','overlay-waiting','overlay-final','game-ui']
+    .forEach(v => { el(v).style.display = v === id ? '' : 'none'; });
+}
+
+function vibrate(ms) { try { navigator.vibrate?.(ms); } catch {} }
+
+// ── URL params ───────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+sessionId = (params.get('s') || '').toUpperCase();
+passcode  = params.get('p') || '';
+myName    = params.get('name') || '';
+
+if (sessionId && passcode) {
+  el('join-sub').textContent = `Session ${sessionId} — enter your name to join.`;
+  if (myName) {
+    el('join-name-input').value = myName;
+  }
+}
+
+// ── Join button ──────────────────────────────────────────────────────────
+el('overlay-join-btn').addEventListener('click', () => {
+  const name = el('join-name-input').value.trim();
+  if (!name) {
+    el('join-error-msg').textContent = 'Enter your name.';
+    el('join-error-msg').classList.add('visible');
+    return;
+  }
+  if (!sessionId || !passcode) {
+    el('join-error-msg').textContent = 'Missing session ID or passcode in URL. Scan the QR code again.';
+    el('join-error-msg').classList.add('visible');
+    return;
+  }
+  myName = name;
+  startConnection();
+});
+
+// ── Connection ───────────────────────────────────────────────────────────
+function startConnection() {
+  showOnly('overlay-connecting');
+  el('connecting-title').textContent = `Joining session ${sessionId}…`;
+
+  const url = `${IS_LOCAL ? 'ws' : 'wss'}://${PARTYKIT_HOST}/parties/main/${sessionId}`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      type: 'JOIN_SESSION',
+      sessionId,
+      passcode,
+      playerName: myName,
+    }));
+  };
+
+  ws.onmessage = (evt) => {
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+    handleMessage(msg);
+  };
+
+  ws.onerror = () => {
+    el('connecting-title').textContent = 'Connection failed.';
+    el('connecting-sub').textContent = 'Could not reach the game server.';
+    el('reconnect-btn').style.display = '';
+  };
+
+  ws.onclose = () => {
+    el('reconnect-btn').style.display = 'none';
+    if (session?.phase === 'playing' || session?.phase === 'waiting') {
+      el('connecting-title').textContent = 'Reconnecting…';
+      el('connecting-sub').textContent = `Session ${sessionId} · ${myName}`;
+      showOnly('overlay-connecting');
+      // Auto-retry after 3 s; also show manual button after 6 s if still waiting
+      setTimeout(startConnection, 3000);
+      setTimeout(() => {
+        if (el('overlay-connecting').style.display !== 'none') {
+          el('reconnect-btn').style.display = '';
+        }
+      }, 6000);
+    }
+  };
+}
+
+el('reconnect-btn').addEventListener('click', () => {
+  el('reconnect-btn').style.display = 'none';
+  el('connecting-title').textContent = 'Reconnecting…';
+  startConnection();
+});
+
+function send(obj) {
+  if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+// ── Farkle animation ──────────────────────────────────────────────────────
+let _lastLogTs    = 0;
+let _farkleTimer  = null;
+
+function showFarkleAnim(playerName) {
+  const anim = el('farkle-anim');
+  el('farkle-anim-name').textContent =
+    playerName === myName ? 'You lost your turn!' : `${playerName} lost their turn!`;
+  anim.className = '';
+  void anim.offsetWidth;          // force reflow so animation re-fires
+  anim.className = 'active';
+  clearTimeout(_farkleTimer);
+  _farkleTimer = setTimeout(() => { anim.className = ''; }, 2500);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg) {
+  const t = el('error-toast');
+  // Re-trigger animation by briefly removing and re-adding display
+  t.style.display = 'none';
+  t.textContent = msg;
+  // Force reflow so animation replays
+  void t.offsetWidth;
+  t.style.display = '';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+function handleMessage(msg) {
+  switch (msg.type) {
+    case 'STATE': {
+      // Detect farkle events that arrived since our last STATE update
+      const log = msg.session.log || [];
+      const newEvents = log.filter(e => e.ts > _lastLogTs);
+      if (log.length) _lastLogTs = Math.max(...log.map(e => e.ts));
+      const farkleEvt = newEvents.find(e => e.event === 'farkled');
+      if (farkleEvt && msg.session.phase === 'playing') {
+        const fp = msg.session.players.find(p => p.id === farkleEvt.playerId);
+        showFarkleAnim(fp?.name || '?');
+      }
+
+      session = msg.session;
+      if (msg.yourId) myId = msg.yourId;
+
+      if (session.phase === 'waiting') {
+        showOnly('overlay-waiting');
+        el('waiting-players-count').textContent =
+          `${session.players.length} player${session.players.length !== 1 ? 's' : ''} in the lobby.`;
+      } else if (session.phase === 'playing') {
+        renderGame();
+      } else if (session.phase === 'finished') {
+        showFinal();
+      }
+      break;
+
+    } // end case 'STATE'
+    case 'ERROR':
+      if (session?.phase === 'playing') {
+        // During gameplay: show inline toast — do NOT disrupt the view
+        showToast(msg.error);
+      } else {
+        // Pre-game: show error on the join form
+        el('join-error-msg').textContent = msg.error;
+        el('join-error-msg').classList.add('visible');
+        showOnly('overlay-join');
+      }
+      break;
+  }
+}
+
+// ── Leave ────────────────────────────────────────────────────────────────
+function leave() {
+  send({ type: 'LEAVE' });
+  ws?.close();
+  window.location.href = '/games/index.html';
+}
+
+el('leave-waiting-btn').addEventListener('click', leave);
+el('leave-final-btn').addEventListener('click', leave);
+
+// ── Help modal ───────────────────────────────────────────────────────────
+const HELP_CONTENT = {
+  yacht: `
+    <p>Each player takes turns rolling 5 dice up to 3 times per turn. After rolling, you may keep any dice and re-roll the rest. After your final roll (or any earlier roll), you must score exactly one category.</p>
+    <h3>Upper Section</h3>
+    <ul>
+      <li><strong>Ones–Sixes:</strong> Sum of all dice showing that face.</li>
+    </ul>
+    <h3>Lower Section</h3>
+    <ul>
+      <li><strong>Full House:</strong> Three of one face + two of another = sum of all dice.</li>
+      <li><strong>Four of a Kind:</strong> Four matching dice = sum of those four.</li>
+      <li><strong>Little Straight:</strong> 1-2-3-4-5 = 30 pts.</li>
+      <li><strong>Big Straight:</strong> 2-3-4-5-6 = 30 pts.</li>
+      <li><strong>Choice:</strong> Sum of all five dice.</li>
+      <li><strong>Yacht:</strong> Five of a kind = 50 pts.</li>
+    </ul>
+    <p>All 12 categories must be filled (even for 0). Highest total wins. No upper bonus.</p>
+  `,
+  farkle: `
+    <p>Race to 10,000 points. On your turn, roll 6 dice. You <em>must</em> set aside at least one scoring die each roll, then choose to bank your points or risk rolling the remaining dice.</p>
+    <p>If none of your rolled dice score — that's a <strong>Farkle</strong>. You lose all unbanked points and your turn ends.</p>
+    <h3>Scoring</h3>
+    <ul>
+      <li><strong>Single 1:</strong> 100 pts</li>
+      <li><strong>Single 5:</strong> 50 pts</li>
+      <li><strong>Three 1s:</strong> 1,000 pts</li>
+      <li><strong>Three 2s–6s:</strong> face × 100 pts (e.g. three 4s = 400)</li>
+      <li><strong>Four of a kind:</strong> 2× the three-of-a-kind value</li>
+      <li><strong>Five of a kind:</strong> 4× the three-of-a-kind value</li>
+      <li><strong>Six of a kind:</strong> 8× the three-of-a-kind value</li>
+      <li><strong>Straight (1–6):</strong> 1,500 pts</li>
+      <li><strong>Three pairs:</strong> 1,500 pts</li>
+      <li><strong>Two triplets:</strong> 2,500 pts</li>
+    </ul>
+    <p><strong>Hot Dice:</strong> If you score all 6 dice in one turn, you can roll all 6 again while keeping your accumulated points!</p>
+    <p>Once any player reaches 10,000, everyone else gets one final turn. Highest score wins.</p>
+  `,
+};
+
+el('help-open-btn').addEventListener('click', () => {
+  const game = session?.game || 'yacht';
+  el('help-title').textContent = game === 'yacht' ? 'Yacht — Rules' : 'Farkle — Rules';
+  el('help-body').innerHTML = HELP_CONTENT[game] || '';
+  el('help-modal').style.display = '';
+});
+
+el('help-close-btn').addEventListener('click', () => {
+  el('help-modal').style.display = 'none';
+});
+
+el('help-modal').addEventListener('click', (e) => {
+  if (e.target === el('help-modal')) el('help-modal').style.display = 'none';
+});
+
+// ── Chat ─────────────────────────────────────────────────────────────────
+el('chat-send-btn').addEventListener('click', sendChat);
+el('chat-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChat();
+});
+
+function sendChat() {
+  const text = el('chat-input').value.trim();
+  if (!text) return;
+  send({ type: 'CHAT_MSG', text });
+  el('chat-input').value = '';
+}
+
+function renderChat() {
+  const msgs = session?.chat || [];
+  const container = el('chat-messages');
+  const empty = el('chat-empty');
+  if (!msgs.length) {
+    empty.style.display = '';
+    // Remove any existing message nodes
+    [...container.querySelectorAll('.chat-msg')].forEach(n => n.remove());
+    return;
+  }
+  empty.style.display = 'none';
+  // Rebuild messages
+  [...container.querySelectorAll('.chat-msg')].forEach(n => n.remove());
+  msgs.slice(-20).forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `<span class="chat-msg-name">${escHtml(m.playerName)}:</span> ${escHtml(m.text)}`;
+    container.appendChild(div);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Render game ───────────────────────────────────────────────────────────
+function renderGame() {
+  showOnly('game-ui');
+
+  const gameName = session.game === 'yacht' ? 'Yacht' : 'Farkle';
+  el('sb-game').textContent = gameName;
+  el('sb-session').textContent = session.sessionId.toUpperCase();
+  el('sb-player').textContent = myName;
+
+  const isMyTurn = session.turnPlayerId === myId;
+  const turnPlayer = session.players.find(p => p.id === session.turnPlayerId);
+
+  const banner = el('turn-banner');
+  if (isMyTurn) {
+    banner.className = 'turn-banner my-turn';
+    banner.textContent = 'Your turn';
+  } else {
+    banner.className = 'turn-banner waiting';
+    banner.textContent = `${turnPlayer?.name || '?'}'s turn — waiting…`;
+  }
+
+  if (session.game === 'yacht') {
+    renderYacht(isMyTurn);
+  } else {
+    renderFarkle(isMyTurn);
+  }
+
+  renderChat();
+}
+
+// ── Yacht ─────────────────────────────────────────────────────────────────
+const YACHT_CATS = [
+  { section: 'Upper Section', cats: [
+    { id: 'ones', label: 'Ones' }, { id: 'twos', label: 'Twos' },
+    { id: 'threes', label: 'Threes' }, { id: 'fours', label: 'Fours' },
+    { id: 'fives', label: 'Fives' }, { id: 'sixes', label: 'Sixes' },
+  ]},
+  { section: 'Lower Section', cats: [
+    { id: 'full_house', label: 'Full House' },
+    { id: 'four_of_a_kind', label: 'Four of a Kind' },
+    { id: 'little_straight', label: 'Little Straight' },
+    { id: 'big_straight', label: 'Big Straight' },
+    { id: 'choice', label: 'Choice' },
+    { id: 'yacht', label: 'Yacht' },
+  ]},
+];
+
+function renderYacht(isMyTurn) {
+  const pc = session.gameState.playerCards?.[myId];
+  if (!pc) return;
+
+  const content = el('main-content');
+  content.innerHTML = '';
+
+  // ── Dice card
+  const diceCard = document.createElement('div');
+  diceCard.className = 'card';
+  diceCard.innerHTML = `<div class="card-label">Dice${pc.rollsLeft < 3 ? ` — Rolls left: ${pc.rollsLeft}` : ''}</div>`;
+
+  const diceGrid = document.createElement('div');
+  diceGrid.className = 'dice-grid';
+
+  pc.dice.forEach((val, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'die-btn' + (pc.kept[i] ? ' kept' : '');
+    btn.textContent = val || '·';
+    // Can toggle kept on 2nd or 3rd roll opportunity (i.e. after first roll)
+    const canToggle = isMyTurn && pc.rollsLeft < 3 && pc.rollsLeft > 0;
+    btn.disabled = !canToggle;
+    btn.addEventListener('click', () => {
+      if (!canToggle) return;
+      vibrate(30);
+      send({ type: 'PLAYER_ACTION', action: { type: 'toggle_keep', payload: { index: i } } });
+    });
+    diceGrid.appendChild(btn);
+  });
+
+  diceCard.appendChild(diceGrid);
+
+  // Roll button
+  if (isMyTurn && pc.rollsLeft > 0) {
+    const rollBtn = document.createElement('button');
+    rollBtn.className = 'btn btn-primary';
+    rollBtn.style.marginTop = '12px';
+    rollBtn.textContent = pc.rollsLeft === 3 ? 'Roll Dice' : 'Roll Again';
+    rollBtn.addEventListener('click', () => {
+      vibrate(50);
+      send({ type: 'PLAYER_ACTION', action: { type: 'roll' } });
+    });
+    diceCard.appendChild(rollBtn);
+  }
+
+  content.appendChild(diceCard);
+
+  // ── Score categories card
+  const scoreCard = document.createElement('div');
+  scoreCard.className = 'card';
+  scoreCard.innerHTML = `<div class="card-label">Score a Category${pc.rollsLeft === 0 ? ' — required' : ''}</div>`;
+
+  const catList = document.createElement('div');
+  catList.className = 'cat-list';
+
+  YACHT_CATS.forEach(section => {
+    const divider = document.createElement('div');
+    divider.className = 'section-divider';
+    divider.textContent = section.section;
+    catList.appendChild(divider);
+
+    section.cats.forEach(cat => {
+      const isScored = pc.scorecard[cat.id] !== null && pc.scorecard[cat.id] !== undefined;
+      const preview = isScored ? pc.scorecard[cat.id] : Yacht.previewScore(pc.dice, cat.id);
+
+      const canScore = !isScored && isMyTurn && pc.rollsLeft < 3;
+      const scoreable = canScore && preview > 0;
+
+      const btn = document.createElement('button');
+      btn.className = 'cat-row' + (isScored ? ' scored' : '') + (scoreable ? ' scoreable' : '');
+      btn.disabled = isScored || !isMyTurn || pc.rollsLeft === 3;
+
+      const previewClass = isScored ? 'scored-val' : (preview === 0 ? 'zero' : '');
+      btn.innerHTML = `
+        <span class="cat-name">${cat.label}</span>
+        <span class="cat-preview ${previewClass}">${isScored ? pc.scorecard[cat.id] : preview}</span>
+      `;
+
+      if (!isScored && isMyTurn && pc.rollsLeft < 3) {
+        btn.addEventListener('click', () => {
+          vibrate(40);
+          send({ type: 'PLAYER_ACTION', action: { type: 'score_category', payload: { category: cat.id } } });
+        });
+      }
+
+      catList.appendChild(btn);
+    });
+  });
+
+  scoreCard.appendChild(catList);
+  content.appendChild(scoreCard);
+
+  // ── Mini scoreboard
+  content.appendChild(buildMiniScoreboard());
+}
+
+// ── Farkle ────────────────────────────────────────────────────────────────
+function renderFarkle(isMyTurn) {
+  const ts = session.gameState.turnState;
+  const scores = session.gameState.scores || {};
+  const content = el('main-content');
+  content.innerHTML = '';
+
+  // ── Turn stats
+  const statsCard = document.createElement('div');
+  statsCard.className = 'card';
+  statsCard.innerHTML = `
+    <div class="card-label">This Turn</div>
+    ${ts?.hotDice ? '<div class="hot-badge">Hot Dice!</div>' : ''}
+    <div class="farkle-stats">
+      <div class="farkle-stat">
+        <div class="farkle-stat-label">Turn Points</div>
+        <div class="farkle-stat-val">${ts?.turnPoints ?? 0}</div>
+      </div>
+      <div class="farkle-stat">
+        <div class="farkle-stat-label">Your Total</div>
+        <div class="farkle-stat-val">${scores[myId] ?? 0}</div>
+      </div>
+    </div>
+  `;
+  content.appendChild(statsCard);
+
+  // ── Dice card
+  const diceCard = document.createElement('div');
+  diceCard.className = 'card';
+
+  const rollPhase = !ts?.currentRoll?.length;
+  diceCard.innerHTML = `<div class="card-label">${rollPhase ? 'Ready to roll' : 'Select scoring dice to keep'}</div>`;
+
+  // ── Committed dice from previous roll phases (locked in for this turn)
+  if (ts?.keptThisTurn?.length) {
+    const committedLabel = document.createElement('div');
+    committedLabel.className = 'committed-label';
+    committedLabel.textContent = 'Locked in this turn';
+    diceCard.appendChild(committedLabel);
+
+    const committedGrid = document.createElement('div');
+    committedGrid.className = 'dice-grid';
+    ts.keptThisTurn.forEach(val => {
+      const d = document.createElement('div');
+      d.className = 'die-btn committed';
+      d.textContent = val;
+      committedGrid.appendChild(d);
+    });
+    diceCard.appendChild(committedGrid);
+  }
+
+  // ── Current roll dice
+  if (ts?.currentRoll?.length) {
+    if (ts.keptThisTurn?.length) {
+      const sep = document.createElement('div');
+      sep.className = 'committed-label';
+      sep.style.marginTop = '10px';
+      sep.textContent = ts.hotDice ? 'Hot dice — roll again!' : 'Current roll — tap to keep';
+      diceCard.appendChild(sep);
+    }
+
+    const diceGrid = document.createElement('div');
+    diceGrid.className = 'dice-grid';
+
+    ts.currentRoll.forEach((val, i) => {
+      const isKept = ts.kept?.includes(i);
+      const btn = document.createElement('button');
+      btn.className = 'die-btn' + (isKept ? ' kept' : '');
+      btn.textContent = val;
+      btn.disabled = !isMyTurn;
+      btn.addEventListener('click', () => {
+        if (!isMyTurn) return;
+        vibrate(30);
+        send({ type: 'PLAYER_ACTION', action: { type: 'keep_die', payload: { index: i } } });
+      });
+      diceGrid.appendChild(btn);
+    });
+
+    diceCard.appendChild(diceGrid);
+  }
+
+  // Action buttons
+  const actionsDiv = document.createElement('div');
+  actionsDiv.style.cssText = 'display:flex; flex-direction:column; gap:8px; margin-top:12px;';
+
+  if (isMyTurn) {
+    const keptCount = ts?.kept?.length || 0;
+    const hasRolled = !!ts?.currentRoll?.length;
+
+    const rollBtn = document.createElement('button');
+    rollBtn.className = 'btn btn-primary';
+    rollBtn.textContent = !hasRolled ? 'Roll Dice' : 'Roll Again';
+    // Must keep at least one die before rolling again (unless first roll)
+    rollBtn.disabled = hasRolled && keptCount === 0;
+    rollBtn.addEventListener('click', () => {
+      vibrate(50);
+      send({ type: 'PLAYER_ACTION', action: { type: 'roll' } });
+    });
+    actionsDiv.appendChild(rollBtn);
+
+    if (hasRolled && (ts?.turnPoints ?? 0) > 0) {
+      const bankBtn = document.createElement('button');
+      bankBtn.className = 'btn btn-secondary';
+      bankBtn.textContent = `Bank ${ts.turnPoints} pts`;
+      bankBtn.disabled = false;
+      bankBtn.addEventListener('click', () => {
+        vibrate(60);
+        send({ type: 'PLAYER_ACTION', action: { type: 'bank' } });
+      });
+      actionsDiv.appendChild(bankBtn);
+    }
+  }
+
+  diceCard.appendChild(actionsDiv);
+  content.appendChild(diceCard);
+
+  // ── Mini scoreboard
+  content.appendChild(buildMiniScoreboard());
+}
+
+// ── Mini scoreboard ───────────────────────────────────────────────────────
+function buildMiniScoreboard() {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<div class="card-label">Scores</div>`;
+
+  const list = document.createElement('div');
+  list.className = 'mini-scores';
+
+  session.players.forEach(p => {
+    let score = 0;
+    if (session.game === 'yacht') {
+      const pc = session.gameState.playerCards?.[p.id];
+      score = pc ? Object.values(pc.scorecard).reduce((a, v) => a + (v ?? 0), 0) : 0;
+    } else {
+      score = session.gameState.scores?.[p.id] ?? 0;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'mini-score-row';
+    row.innerHTML = `
+      <span class="mini-dot ${p.connected ? 'active' : ''}"></span>
+      <span class="mini-score-name ${p.id === myId ? 'me' : ''}">${escHtml(p.name)}${p.id === myId ? ' (you)' : ''}</span>
+      <span class="mini-score-val">${score}</span>
+    `;
+    list.appendChild(row);
+  });
+
+  card.appendChild(list);
+  return card;
+}
+
+// ── Final scores ──────────────────────────────────────────────────────────
+function showFinal() {
+  showOnly('overlay-final');
+
+  const reasonEl = el('final-end-reason');
+  if (session.endReason === 'early') {
+    reasonEl.textContent = 'Game over — called by the table.';
+    reasonEl.style.display = '';
+  } else {
+    reasonEl.style.display = 'none';
+  }
+
+  const engine = ENGINES[session.game];
+  const scores = engine.getFinalScores(session.gameState, session.players);
+  const list = el('final-scores-list');
+  list.innerHTML = '';
+  scores.forEach((entry, i) => {
+    const div = document.createElement('div');
+    div.className = 'final-player' + (i === 0 ? ' winner' : '');
+    div.innerHTML = `
+      <div class="final-rank ${i === 0 ? 'gold' : ''}">${i === 0 ? '★' : i + 1}</div>
+      <div class="final-name">${escHtml(entry.name)}</div>
+      <div class="final-score">${entry.score}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ── Auto-start if we have params but no name ──────────────────────────────
+if (sessionId && passcode && !myName) {
+  // Show join overlay with session pre-filled
+  showOnly('overlay-join');
+} else if (sessionId && passcode && myName) {
+  // Has everything, connect immediately
+  startConnection();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Games — Lobby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0D0A;
+      --surface: #1B1915;
+      --surface-2: #252118;
+      --text: #F2EDE2;
+      --muted: #9E9080;
+      --accent: #C89040;
+      --accent-dim: rgba(200,144,64,0.15);
+      --success: #6DB884;
+      --danger: #B83828;
+      --border: #382C20;
+      --font: 'IBM Plex Sans', sans-serif;
+      --radius-sm: 4px;
+      --radius: 8px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    header a.back {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    header a.back:hover { color: var(--accent); text-decoration: none; }
+
+    main {
+      flex: 1;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px 64px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      line-height: 1;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0F0D0A;
+    }
+
+    .btn-primary:hover { background: #d9a050; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .btn-secondary:hover { background: var(--accent-dim); }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); }
+    .btn-lg { padding: 13px 28px; font-size: 1rem; }
+    .btn-full { width: 100%; text-align: center; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    /* ── Tag ─────────────────────────────────────────────── */
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* ── Section headings ────────────────────────────────── */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ── Views (shown/hidden) ────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Game Picker ─────────────────────────────────────── */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .game-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--font);
+      color: var(--text);
+      width: 100%;
+    }
+
+    .game-card:hover { border-color: var(--accent); }
+
+    .game-card.selected {
+      border-color: var(--accent);
+      background: var(--surface-2);
+    }
+
+    .game-card-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .game-card-desc {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .game-card-meta {
+      margin-top: 12px;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    /* ── Form ────────────────────────────────────────────── */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 1rem;
+      padding: 10px 14px;
+      outline: none;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--accent);
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    /* ── Waiting room ────────────────────────────────────── */
+    .session-info {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .session-codes {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .code-block {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .code-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .code-value {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .code-url {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      word-break: break-all;
+      margin-top: 4px;
+    }
+
+    .qr-wrap {
+      background: white;
+      border-radius: var(--radius);
+      padding: 12px;
+      display: inline-block;
+    }
+
+    .qr-wrap svg { display: block; width: 160px; height: 160px; }
+
+    /* ── Player list ─────────────────────────────────────── */
+    .player-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .player-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    .player-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    .player-name {
+      font-size: 0.9375rem;
+      font-weight: 500;
+    }
+
+    .player-badge {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── Status banner ───────────────────────────────────── */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .status-dot.connecting { background: var(--accent); }
+    .status-dot.connected  { background: var(--success); }
+    .status-dot.error      { background: var(--danger); }
+
+    /* ── Error message ───────────────────────────────────── */
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.875rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ── Actions row ─────────────────────────────────────── */
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Table link ──────────────────────────────────────── */
+    .table-link-wrap {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .table-link-label {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .table-link {
+      font-size: 0.875rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Dice Games</h1>
+    <a href="/tools/games" class="back">← Back to Tools</a>
+  </header>
+
+  <main>
+
+    <!-- ── VIEW: Home ──────────────────────────────────── -->
+    <div id="view-home" class="view active">
+      <h2>Game Lobby</h2>
+      <p class="subtitle">Host a session or join an existing game.</p>
+
+      <p class="section-label">Create a session</p>
+
+      <div class="game-grid" id="game-picker">
+        <button class="game-card" data-game="yacht">
+          <div class="game-card-name">Yacht</div>
+          <div class="game-card-desc">Classic public-domain dice game. Roll 5 dice up to 3 times and fill 12 scoring categories. Most points wins.</div>
+          <div class="game-card-meta">2–6 players · ~30 min</div>
+        </button>
+        <button class="game-card" data-game="farkle">
+          <div class="game-card-name">Farkle</div>
+          <div class="game-card-desc">Push-your-luck dice game. Roll 6 dice, bank scoring combinations, and race to 10,000 — without farkling!</div>
+          <div class="game-card-meta">2–8 players · ~20 min</div>
+        </button>
+      </div>
+
+      <div class="card" id="create-form" style="display:none">
+        <p class="section-label">Session setup</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="table-name">Table name</label>
+            <input type="text" id="table-name" placeholder="Larry's Den" maxlength="30" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="passcode">Passcode (4 digits)</label>
+            <input type="password" id="passcode" placeholder="1234" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+          </div>
+        </div>
+        <p class="error-msg" id="create-error"></p>
+        <div class="actions">
+          <button class="btn btn-primary" id="create-btn">Create Session</button>
+          <button class="btn btn-ghost" id="cancel-create-btn">Cancel</button>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <p class="section-label">Join a session</p>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="join-name">Your name</label>
+            <input type="text" id="join-name" placeholder="Dana" maxlength="20" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="join-session-id">Session ID</label>
+            <input type="text" id="join-session-id" placeholder="xk7m" maxlength="4" autocomplete="off" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="join-passcode">Passcode</label>
+          <input type="password" id="join-passcode" placeholder="····" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+        </div>
+        <p class="error-msg" id="join-error"></p>
+        <button class="btn btn-secondary" id="join-btn">Join Session</button>
+      </div>
+    </div>
+
+    <!-- ── VIEW: Connecting ────────────────────────────── -->
+    <div id="view-connecting" class="view">
+      <div class="status-banner">
+        <span class="status-dot connecting"></span>
+        <span id="connecting-msg">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- ── VIEW: Redirecting ──────────────────────────── -->
+    <div id="view-redirecting" class="view">
+      <div class="status-banner">
+        <span class="status-dot connecting"></span>
+        <span id="redirecting-msg">Opening table view…</span>
+      </div>
+    </div>
+
+    <!-- ── VIEW: Error ─────────────────────────────────── -->
+    <div id="view-error" class="view">
+      <h2>Something went wrong</h2>
+      <p class="subtitle" id="error-detail">Unable to connect to the game server.</p>
+      <button class="btn btn-secondary" id="retry-btn" style="margin-top:16px">Try again</button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────
+const IS_LOCAL      = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const PARTYKIT_HOST = IS_LOCAL ? 'localhost:1999' : 'larrydanna-games.larrydanna.partykit.dev';
+const SITE_ORIGIN   = IS_LOCAL ? `http://${location.host}` : 'https://larrydanna.com';
+
+let selectedGame = null;
+let ws = null;
+
+function el(id) { return document.getElementById(id); }
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  el(id).classList.add('active');
+}
+
+function showError(elId, msg) {
+  const e = el(elId);
+  e.textContent = msg;
+  e.classList.add('visible');
+}
+
+function clearError(elId) {
+  const e = el(elId);
+  e.textContent = '';
+  e.classList.remove('visible');
+}
+
+// ── Game picker ──────────────────────────────────────────────────────────
+el('game-picker').addEventListener('click', (e) => {
+  const card = e.target.closest('.game-card');
+  if (!card) return;
+  document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedGame = card.dataset.game;
+  el('create-form').style.display = '';
+});
+
+el('cancel-create-btn').addEventListener('click', () => {
+  selectedGame = null;
+  document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
+  el('create-form').style.display = 'none';
+});
+
+// ── Create session ───────────────────────────────────────────────────────
+// Connect to PartyKit, send CREATE_SESSION, then redirect to the table view.
+el('create-btn').addEventListener('click', () => {
+  clearError('create-error');
+  const tableName = el('table-name').value.trim();
+  const pass      = el('passcode').value.trim();
+
+  if (!selectedGame)             { showError('create-error', 'Select a game first.'); return; }
+  if (!tableName)                { showError('create-error', 'Enter a table name.'); return; }
+  if (!/^\d{4}$/.test(pass))    { showError('create-error', 'Passcode must be exactly 4 digits.'); return; }
+
+  const sessionId = Math.random().toString(36).slice(2, 6).toUpperCase();
+  el('connecting-msg').textContent = 'Creating session…';
+  showView('view-connecting');
+
+  const url = `${IS_LOCAL ? 'ws' : 'wss'}://${PARTYKIT_HOST}/parties/main/${sessionId}`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      type: 'CREATE_SESSION',
+      game: selectedGame,
+      tableName,
+      passcode: pass,
+    }));
+  };
+
+  ws.onmessage = (evt) => {
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+
+    if (msg.type === 'STATE') {
+      // Session created — hand off to the table view
+      ws.close();
+      el('redirecting-msg').textContent = 'Opening table view…';
+      showView('view-redirecting');
+      window.location.href =
+        `/games/table/index.html?s=${msg.session.sessionId.toLowerCase()}&manage=1`;
+    } else if (msg.type === 'ERROR') {
+      showError('create-error', msg.error);
+      showView('view-home');
+    }
+  };
+
+  ws.onerror = () => {
+    el('error-detail').textContent = 'WebSocket connection failed. Is the game server running?';
+    showView('view-error');
+  };
+});
+
+// ── Join session ─────────────────────────────────────────────────────────
+// No WebSocket needed here — just navigate to the player view directly.
+el('join-btn').addEventListener('click', () => {
+  clearError('join-error');
+  const name = el('join-name').value.trim();
+  const sid  = el('join-session-id').value.trim().toUpperCase();
+  const pass = el('join-passcode').value.trim();
+
+  if (!name)                       { showError('join-error', 'Enter your name.'); return; }
+  if (!sid || sid.length !== 4)    { showError('join-error', 'Enter a valid 4-character session ID.'); return; }
+  if (!/^\d{4}$/.test(pass))      { showError('join-error', 'Enter the 4-digit passcode.'); return; }
+
+  const params = new URLSearchParams({ s: sid.toLowerCase(), p: pass, name });
+  window.location.href = `/games/player/index.html?${params}`;
+});
+
+el('retry-btn').addEventListener('click', () => showView('view-home'));
+</script>
+</body>
+</html>

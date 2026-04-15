@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Table</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0D0A;
+      --surface: #1B1915;
+      --surface-2: #252118;
+      --text: #F2EDE2;
+      --muted: #9E9080;
+      --accent: #C89040;
+      --accent-dim: rgba(200,144,64,0.15);
+      --success: #6DB884;
+      --danger: #B83828;
+      --border: #382C20;
+      --font: 'IBM Plex Sans', sans-serif;
+      --radius-sm: 4px;
+      --radius: 8px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ── Full-screen layout ──────────────────────────────── */
+    .table-layout {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      grid-template-columns: 280px 1fr 180px;
+      height: 100vh;
+      gap: 0;
+    }
+
+    /* Header spans full width */
+    .table-header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .game-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .session-chip {
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    .session-chip span {
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Scoreboard (left column) ────────────────────────── */
+    .scoreboard {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .score-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .player-score {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+    }
+
+    .player-score.active-turn {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .ps-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .ps-dot.online { background: var(--success); }
+
+    .ps-name {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ps-score {
+      font-size: 1.125rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+    }
+
+    /* ── Main area (center column) ───────────────────────── */
+    .main-area {
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .turn-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .turn-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    .turn-name {
+      font-size: 1.375rem;
+      font-weight: 600;
+    }
+
+    .turn-sub {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    /* ── Dice display ────────────────────────────────────── */
+    .dice-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .die {
+      width: 72px;
+      height: 72px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .die.kept {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .die.empty {
+      color: var(--muted);
+      font-size: 1.5rem;
+    }
+
+    .rolls-left {
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .rolls-left span {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Yacht scorecard (in main area) ──────────────────── */
+    .scorecard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .sc-section-label {
+      grid-column: 1 / -1;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      margin-top: 4px;
+    }
+
+    .sc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+    }
+
+    .sc-row.scored {
+      background: var(--surface);
+    }
+
+    .sc-cat { color: var(--muted); }
+    .sc-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .sc-val.empty-slot { color: var(--border); }
+
+    /* ── Farkle turn info ────────────────────────────────── */
+    .farkle-info {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .farkle-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+    }
+
+    .farkle-stat-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .farkle-stat-val {
+      font-size: 1.375rem;
+      font-weight: 600;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Activity log (right column) ─────────────────────── */
+    .activity-log {
+      border-left: 1px solid var(--border);
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .log-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .log-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .log-entry:last-child { border-bottom: none; }
+
+    .log-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── QR code ─────────────────────────────────────────── */
+    .qr-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 0;
+    }
+
+    .qr-wrap {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .qr-wrap svg { display: block; width: 120px; height: 120px; }
+
+    .qr-label {
+      font-size: 0.6875rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-block;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      line-height: 1;
+      padding: 10px 20px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: #0F0D0A; }
+    .btn-primary:hover:not(:disabled) { background: #d9a050; }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-lg { padding: 13px 28px; font-size: 1rem; }
+    .btn-skip {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 0.8125rem;
+      padding: 5px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .btn-skip:hover { border-color: var(--danger); color: var(--danger); }
+    .btn-call-over {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      font-size: 0.8125rem;
+      padding: 5px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font);
+      opacity: 0.6;
+    }
+    .btn-call-over:hover { opacity: 1; }
+    .btn-ghost-sm {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font);
+      line-height: 1.5;
+    }
+    .btn-ghost-sm:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Chat in log column ──────────────────────────────────── */
+    .chat-divider {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .chat-entry {
+      padding: 5px 0;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .chat-name { font-weight: 600; color: var(--text); }
+    .chat-empty { color: var(--border); font-size: 0.8125rem; }
+
+    /* ── Help modal ──────────────────────────────────────────── */
+    .help-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .help-modal-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .help-modal-title {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .help-modal h3 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 14px 0 6px;
+    }
+
+    .help-modal p, .help-modal li {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .help-modal ul { padding-left: 18px; }
+    .help-modal-close { margin-top: 16px; }
+
+    /* ── Connecting/waiting overlays ─────────────────────── */
+    .overlay {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .overlay-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── Final scores ────────────────────────────────────── */
+    .final-scores {
+      max-width: 400px;
+    }
+
+    .final-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .final-player {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .final-player.winner {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .final-rank {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--muted);
+      width: 28px;
+      text-align: center;
+    }
+
+    .final-rank.gold { color: var(--accent); }
+
+    .final-name { flex: 1; font-weight: 500; }
+
+    .final-score {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Dice face maps ──────────────────────────────────── */
+    /* Using unicode die faces */
+    .die-face { font-size: 2.5rem; line-height: 1; }
+
+    /* ── Farkle bust animation ───────────────────────────── */
+    #farkle-anim {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0,0,0,0.45);
+    }
+    #farkle-anim.active { display: flex; animation: farkle-backdrop 2.5s ease forwards; }
+    .farkle-emoji { font-size: 5rem; line-height: 1; animation: farkle-slam 2.5s ease forwards; }
+    .farkle-word  { font-size: 3.5rem; font-weight: 700; color: var(--danger); letter-spacing: 0.05em; animation: farkle-slam 2.5s ease forwards; }
+    .farkle-player-name { font-size: 1.25rem; color: var(--muted); animation: farkle-slam 2.5s ease forwards; }
+    @keyframes farkle-slam {
+      0%   { transform: scale(3) rotate(-8deg); opacity: 0; }
+      15%  { transform: scale(1) rotate(3deg);  opacity: 1; }
+      25%  { transform: scale(1.05) rotate(-2deg); }
+      35%  { transform: scale(1) rotate(0deg); }
+      70%  { opacity: 1; }
+      100% { opacity: 0; transform: scale(0.9); }
+    }
+    @keyframes farkle-backdrop {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      70%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="table-layout" id="table-layout">
+
+  <!-- Header -->
+  <header class="table-header">
+    <div class="header-left">
+      <span class="game-title" id="header-game-name">Dice Games</span>
+      <span class="session-chip">Session: <span id="header-session-id">—</span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn-ghost-sm" id="help-open-btn">Rules</button>
+      <div class="qr-area">
+        <div class="qr-wrap" id="qr-container"></div>
+        <div class="qr-label">Scan to join</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Waiting overlay (before game starts) -->
+  <div class="overlay" id="overlay-waiting" style="display:none">
+    <div class="overlay-title" id="overlay-msg">Connecting…</div>
+    <div style="font-size:0.875rem; color:var(--muted); margin-bottom:24px;" id="overlay-sub"></div>
+
+    <!-- Player list shown while waiting -->
+    <div id="waiting-player-area" style="display:none; width:100%; max-width:360px; margin-bottom:24px;">
+      <div style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;">
+        Players (<span id="waiting-player-count">0</span>)
+      </div>
+      <ul id="waiting-player-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;"></ul>
+      <button class="btn btn-primary btn-lg" id="start-btn" disabled
+              style="width:100%;font-size:1.0625rem;padding:14px;">
+        Start Game
+      </button>
+      <p id="start-error" style="color:var(--danger);font-size:0.875rem;margin-top:8px;display:none;"></p>
+    </div>
+  </div>
+
+  <!-- Scoreboard (left) -->
+  <aside class="scoreboard" id="scoreboard" style="display:none">
+    <div class="score-label">Scoreboard</div>
+    <div id="score-list"></div>
+  </aside>
+
+  <!-- Main area (center) -->
+  <section class="main-area" id="main-area" style="display:none">
+    <div class="turn-header">
+      <div class="turn-indicator"></div>
+      <div>
+        <div class="turn-name" id="turn-name">—</div>
+        <div class="turn-sub" id="turn-sub"></div>
+      </div>
+    </div>
+
+    <!-- Skip / Call Over (table-managing only, shown during play) -->
+    <div id="skip-wrap" style="display:none">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-skip" id="skip-btn">Skip Turn</button>
+        <button class="btn-call-over" id="call-over-btn">Call Game Over</button>
+      </div>
+    </div>
+
+    <!-- Dice -->
+    <div class="dice-row" id="dice-row"></div>
+    <div class="rolls-left" id="rolls-left-display" style="display:none">
+      Rolls left: <span id="rolls-left-val">—</span>
+    </div>
+
+    <!-- Farkle specific -->
+    <div class="farkle-info" id="farkle-info" style="display:none">
+      <div class="farkle-stat">
+        <div class="farkle-stat-label">Turn Points</div>
+        <div class="farkle-stat-val" id="farkle-turn-pts">0</div>
+      </div>
+      <div class="farkle-stat">
+        <div class="farkle-stat-label">Dice Remaining</div>
+        <div class="farkle-stat-val" id="farkle-dice-remaining">6</div>
+      </div>
+    </div>
+
+    <!-- Yacht scorecard for active player -->
+    <div id="yacht-scorecard" style="display:none">
+      <div style="font-size:0.8125rem; color:var(--muted); margin-bottom:8px;" id="scorecard-player-name"></div>
+      <div class="scorecard-grid" id="scorecard-grid"></div>
+    </div>
+  </section>
+
+  <!-- Activity log + chat (right) -->
+  <aside class="activity-log" id="activity-log" style="display:none">
+    <div class="log-label">Activity</div>
+    <div id="log-entries"></div>
+    <div class="chat-divider">Chat</div>
+    <div id="chat-entries"><span class="chat-empty">No messages yet.</span></div>
+  </aside>
+
+  <!-- Final scores overlay -->
+  <div class="overlay" id="overlay-final" style="display:none">
+    <div class="final-scores">
+      <div class="final-title">Game Over</div>
+      <div id="final-end-reason" style="display:none; font-size:0.875rem; color:var(--muted); margin-bottom:16px;"></div>
+      <div id="final-list"></div>
+      <button class="btn btn-primary" id="play-again-btn" style="margin-top:20px;width:100%;padding:14px;font-size:1.0625rem;">
+        Play Again
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Farkle bust animation overlay ───────────────────────────────────── -->
+<div id="farkle-anim">
+  <div class="farkle-emoji">😬</div>
+  <div class="farkle-word">FARKLE!</div>
+  <div class="farkle-player-name" id="farkle-anim-name"></div>
+</div>
+
+<!-- ── Help modal ──────────────────────────────────────────────────────── -->
+<div class="help-modal" id="help-modal" style="display:none">
+  <div class="help-modal-inner">
+    <div class="help-modal-title" id="help-title">Game Rules</div>
+    <div id="help-body"></div>
+    <button class="btn btn-primary help-modal-close" id="help-close-btn" style="width:100%; margin-top:16px;">Close</button>
+  </div>
+</div>
+
+<script src="../../games/vendor/qrcode.min.js"></script>
+<script type="module">
+import { Yacht } from '../engine/yacht.js';
+import { Farkle } from '../engine/farkle.js';
+
+const IS_LOCAL      = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const PARTYKIT_HOST = IS_LOCAL ? 'localhost:1999' : 'larrydanna-games.larrydanna.partykit.dev';
+const SITE_ORIGIN   = IS_LOCAL ? `http://${location.host}` : 'https://larrydanna.com';
+
+const ENGINES = { yacht: Yacht, farkle: Farkle };
+const DIE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+let session = null;
+let ws = null;
+let _lastLogTs = 0;
+let _farkleTimer = null;
+
+function el(id) { return document.getElementById(id); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showFarkleAnim(playerName) {
+  const anim = el('farkle-anim');
+  el('farkle-anim-name').textContent = `${playerName} lost their turn!`;
+  anim.className = '';
+  void anim.offsetWidth;
+  anim.className = 'active';
+  clearTimeout(_farkleTimer);
+  _farkleTimer = setTimeout(() => { anim.className = ''; }, 2500);
+}
+
+// ── QR Code ─────────────────────────────────────────────────────────────
+function renderQR(sid, pass) {
+  const url = `${SITE_ORIGIN}/games/player/index.html?s=${sid.toLowerCase()}&p=${pass}`;
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  el('qr-container').innerHTML = qr.createSvgTag({ scalable: true });
+}
+
+// ── Render full state ────────────────────────────────────────────────────
+function render(s) {
+  session = s;
+
+  el('header-game-name').textContent = s.tableName || (s.game === 'yacht' ? 'Yacht' : 'Farkle');
+  el('header-session-id').textContent = s.sessionId.toUpperCase();
+
+  if (s.phase === 'waiting') {
+    renderQR(s.sessionId, s.passcode);
+    showWaiting(s);
+    return;
+  }
+
+  if (s.phase === 'finished') {
+    showFinal(s);
+    return;
+  }
+
+  // Playing
+  el('overlay-waiting').style.display = 'none';
+  el('overlay-final').style.display = 'none';
+  el('scoreboard').style.display = '';
+  el('main-area').style.display = '';
+  el('activity-log').style.display = '';
+  el('skip-wrap').style.display = isManaging ? '' : 'none';
+
+  renderScoreboard(s);
+  renderMainArea(s);
+  renderLog(s);
+  renderChat(s);
+}
+
+function showWaiting(s) {
+  el('overlay-waiting').style.display = '';
+  el('overlay-final').style.display = 'none';
+  el('scoreboard').style.display = 'none';
+  el('main-area').style.display = 'none';
+  el('activity-log').style.display = 'none';
+
+  if (!s) {
+    // Called before session exists (connecting state)
+    el('overlay-msg').textContent = 'Connecting…';
+    el('overlay-sub').textContent = '';
+    el('waiting-player-area').style.display = 'none';
+    return;
+  }
+
+  const count = s.players.length;
+  el('overlay-msg').textContent = s.tableName || 'Waiting Room';
+  el('overlay-sub').textContent = count === 0
+    ? 'No players yet — share the QR code.'
+    : `${count} player${count !== 1 ? 's' : ''} joined.`;
+
+  if (isManaging) {
+    el('waiting-player-area').style.display = '';
+    el('waiting-player-count').textContent = count;
+
+    const list = el('waiting-player-list');
+    list.innerHTML = '';
+    s.players.forEach(p => {
+      const li = document.createElement('li');
+      li.style.cssText = 'display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;';
+      li.innerHTML = `
+        <span style="width:8px;height:8px;border-radius:50%;background:${p.connected ? 'var(--success)' : 'var(--muted)'};flex-shrink:0;display:inline-block;"></span>
+        <span style="font-size:0.9375rem;font-weight:500;">${escHtml(p.name)}</span>
+      `;
+      list.appendChild(li);
+    });
+
+    const startBtn = el('start-btn');
+    startBtn.disabled = count < 1;
+  } else {
+    el('waiting-player-area').style.display = 'none';
+  }
+}
+
+function showFinal(s) {
+  el('overlay-waiting').style.display = 'none';
+  el('scoreboard').style.display = 'none';
+  el('main-area').style.display = 'none';
+  el('activity-log').style.display = 'none';
+  el('overlay-final').style.display = '';
+
+  const reasonEl = el('final-end-reason');
+  if (s.endReason === 'early') {
+    reasonEl.textContent = 'Game over — called by the table.';
+    reasonEl.style.display = '';
+  } else {
+    reasonEl.style.display = 'none';
+  }
+
+  const engine = ENGINES[s.game];
+  const scores = engine.getFinalScores(s.gameState, s.players);
+  const list = el('final-list');
+  list.innerHTML = '';
+  scores.forEach((entry, i) => {
+    const div = document.createElement('div');
+    div.className = 'final-player' + (i === 0 ? ' winner' : '');
+    div.innerHTML = `
+      <div class="final-rank ${i === 0 ? 'gold' : ''}">${i === 0 ? '★' : i + 1}</div>
+      <div class="final-name">${escHtml(entry.name)}</div>
+      <div class="final-score">${entry.score}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function renderChat(s) {
+  const msgs = s.chat || [];
+  const container = el('chat-entries');
+  container.innerHTML = '';
+  if (!msgs.length) {
+    container.innerHTML = '<span class="chat-empty">No messages yet.</span>';
+    return;
+  }
+  msgs.slice(-15).forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'chat-entry';
+    div.innerHTML = `<span class="chat-name">${escHtml(m.playerName)}:</span> ${escHtml(m.text)}`;
+    container.appendChild(div);
+  });
+}
+
+function renderScoreboard(s) {
+  const list = el('score-list');
+  list.innerHTML = '';
+  s.players.forEach(p => {
+    const score = computeDisplayScore(s, p.id);
+    const div = document.createElement('div');
+    div.className = 'player-score' + (p.id === s.turnPlayerId ? ' active-turn' : '');
+    div.innerHTML = `
+      <span class="ps-dot ${p.connected ? 'online' : ''}"></span>
+      <span class="ps-name">${escHtml(p.name)}</span>
+      <span class="ps-score">${score}</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function computeDisplayScore(s, playerId) {
+  if (s.game === 'yacht') {
+    const pc = s.gameState.playerCards?.[playerId];
+    if (!pc) return 0;
+    return Object.values(pc.scorecard).reduce((a, v) => a + (v ?? 0), 0);
+  }
+  // Farkle: banked score
+  return s.gameState.scores?.[playerId] ?? 0;
+}
+
+function renderMainArea(s) {
+  const activePid = s.turnPlayerId;
+  const activePlayer = s.players.find(p => p.id === activePid);
+  el('turn-name').textContent = `${activePlayer?.name || '?'}'s Turn`;
+
+  if (s.game === 'yacht') {
+    renderYachtMain(s, activePid, activePlayer);
+  } else {
+    renderFarkleMain(s, activePid, activePlayer);
+  }
+}
+
+function renderYachtMain(s, pid, player) {
+  el('farkle-info').style.display = 'none';
+  el('rolls-left-display').style.display = '';
+  el('yacht-scorecard').style.display = '';
+
+  const pc = s.gameState.playerCards?.[pid];
+  if (!pc) return;
+
+  el('rolls-left-val').textContent = pc.rollsLeft;
+  el('turn-sub').textContent = pc.rollsLeft === 0 ? 'Must score a category' : 'Roll or keep dice';
+
+  // Dice
+  const row = el('dice-row');
+  row.innerHTML = '';
+  (pc.dice || []).forEach((val, i) => {
+    const d = document.createElement('div');
+    d.className = 'die' + (pc.kept?.[i] ? ' kept' : '');
+    d.textContent = val || '·';
+    row.appendChild(d);
+  });
+
+  // Scorecard for active player
+  el('scorecard-player-name').textContent = `${player?.name || ''}'s scorecard`;
+  renderYachtScorecard(pc.scorecard, el('scorecard-grid'));
+}
+
+function renderYachtScorecard(scorecard, container) {
+  const CATEGORIES = [
+    { section: 'Upper', cats: [
+      { id: 'ones', label: 'Ones' }, { id: 'twos', label: 'Twos' },
+      { id: 'threes', label: 'Threes' }, { id: 'fours', label: 'Fours' },
+      { id: 'fives', label: 'Fives' }, { id: 'sixes', label: 'Sixes' },
+    ]},
+    { section: 'Lower', cats: [
+      { id: 'full_house', label: 'Full House' },
+      { id: 'four_of_a_kind', label: 'Four of a Kind' },
+      { id: 'little_straight', label: 'Little Straight' },
+      { id: 'big_straight', label: 'Big Straight' },
+      { id: 'choice', label: 'Choice' },
+      { id: 'yacht', label: 'Yacht' },
+    ]},
+  ];
+
+  container.innerHTML = '';
+  CATEGORIES.forEach(section => {
+    const lbl = document.createElement('div');
+    lbl.className = 'sc-section-label';
+    lbl.textContent = section.section;
+    container.appendChild(lbl);
+    section.cats.forEach(cat => {
+      const row = document.createElement('div');
+      const val = scorecard[cat.id];
+      const scored = val !== null && val !== undefined;
+      row.className = 'sc-row' + (scored ? ' scored' : '');
+      row.innerHTML = `
+        <span class="sc-cat">${cat.label}</span>
+        <span class="sc-val ${scored ? '' : 'empty-slot'}">${scored ? val : '—'}</span>
+      `;
+      container.appendChild(row);
+    });
+  });
+}
+
+function renderFarkleMain(s, pid, player) {
+  el('yacht-scorecard').style.display = 'none';
+  el('rolls-left-display').style.display = 'none';
+  el('farkle-info').style.display = '';
+
+  const ts = s.gameState.turnState;
+  if (!ts) return;
+
+  el('farkle-turn-pts').textContent = ts.turnPoints;
+  el('farkle-dice-remaining').textContent = ts.diceCount - (ts.kept?.length || 0);
+  el('turn-sub').textContent = ts.hotDice ? 'Hot Dice! Roll again!' : '';
+
+  const row = el('dice-row');
+  row.innerHTML = '';
+  (ts.currentRoll || []).forEach((val, i) => {
+    const d = document.createElement('div');
+    const isKept = ts.kept?.includes(i);
+    d.className = 'die' + (isKept ? ' kept' : '');
+    d.textContent = val || '·';
+    row.appendChild(d);
+  });
+}
+
+function renderLog(s) {
+  const entries = el('log-entries');
+  entries.innerHTML = '';
+  const log = (s.log || []).slice().reverse().slice(0, 12);
+  log.forEach(evt => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = describeEvent(s, evt);
+    entries.appendChild(div);
+  });
+}
+
+function describeEvent(s, evt) {
+  const engine = ENGINES[s.game];
+  if (engine?.describeEvent) {
+    const playerName = s.players.find(p => p.id === evt.playerId)?.name || '?';
+    return engine.describeEvent(evt, playerName);
+  }
+  return `<span class="log-name">${escHtml(evt.playerId)}</span>: ${escHtml(evt.event)}`;
+}
+
+// ── WebSocket ────────────────────────────────────────────────────────────
+let isManaging = false;
+
+function connect(sessionId) {
+  const url = `${IS_LOCAL ? 'ws' : 'wss'}://${PARTYKIT_HOST}/parties/main/${sessionId.toUpperCase()}`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    if (isManaging) {
+      ws.send(JSON.stringify({ type: 'CLAIM_TABLE' }));
+    } else {
+      ws.send(JSON.stringify({ type: 'OBSERVE' }));
+    }
+  };
+
+  ws.onmessage = (evt) => {
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+    if (msg.type === 'STATE') {
+      const log = msg.session.log || [];
+      const newEvents = log.filter(e => e.ts > _lastLogTs);
+      if (log.length) _lastLogTs = Math.max(...log.map(e => e.ts));
+      const farkleEvt = newEvents.find(e => e.event === 'farkled');
+      if (farkleEvt && msg.session.phase === 'playing') {
+        const fp = msg.session.players.find(p => p.id === farkleEvt.playerId);
+        showFarkleAnim(fp?.name || '?');
+      }
+      render(msg.session);
+    }
+    if (msg.type === 'ERROR') {
+      const errEl = el('start-error');
+      if (errEl) { errEl.textContent = msg.error; errEl.style.display = ''; }
+    }
+  };
+
+  ws.onerror = () => showWaiting(null);
+  ws.onclose = () => {
+    showWaiting(null);
+    setTimeout(() => connect(sessionId), 3000);
+  };
+}
+
+// ── Help modal ────────────────────────────────────────────────────────────
+const HELP_CONTENT = {
+  yacht: `
+    <p>Each player takes turns rolling 5 dice up to 3 times per turn. After rolling, you may keep any dice and re-roll the rest. After your final roll you must score exactly one category.</p>
+    <h3>Upper Section</h3>
+    <ul>
+      <li><strong>Ones–Sixes:</strong> Sum of all dice showing that face.</li>
+    </ul>
+    <h3>Lower Section</h3>
+    <ul>
+      <li><strong>Full House:</strong> Three of one + two of another = sum of all dice.</li>
+      <li><strong>Four of a Kind:</strong> Four matching = sum of those four.</li>
+      <li><strong>Little Straight:</strong> 1-2-3-4-5 = 30 pts.</li>
+      <li><strong>Big Straight:</strong> 2-3-4-5-6 = 30 pts.</li>
+      <li><strong>Choice:</strong> Sum of all five dice.</li>
+      <li><strong>Yacht:</strong> Five of a kind = 50 pts.</li>
+    </ul>
+    <p>All 12 categories must be filled. Highest total wins. No upper bonus.</p>
+  `,
+  farkle: `
+    <p>Race to 10,000 points. Roll 6 dice, set aside at least one scoring die, then bank or risk rolling the rest. Roll no scoring dice and you <strong>Farkle</strong> — losing all unbanked turn points.</p>
+    <h3>Scoring</h3>
+    <ul>
+      <li><strong>Single 1:</strong> 100 pts · <strong>Single 5:</strong> 50 pts</li>
+      <li><strong>Three 1s:</strong> 1,000 · <strong>Three 2s–6s:</strong> face × 100</li>
+      <li><strong>Four/Five/Six of a kind:</strong> 2×/4×/8× the three-of-a-kind value</li>
+      <li><strong>Straight 1–6:</strong> 1,500 · <strong>Three pairs:</strong> 1,500 · <strong>Two triplets:</strong> 2,500</li>
+    </ul>
+    <p><strong>Hot Dice:</strong> Score all 6 dice and re-roll all 6 while keeping your points!</p>
+    <p>Once any player reaches 10,000, everyone else gets one final turn. Highest score wins.</p>
+  `,
+};
+
+el('help-open-btn').addEventListener('click', () => {
+  const game = session?.game || 'yacht';
+  el('help-title').textContent = game === 'yacht' ? 'Yacht — Rules' : 'Farkle — Rules';
+  el('help-body').innerHTML = HELP_CONTENT[game] || '';
+  el('help-modal').style.display = '';
+});
+
+el('help-close-btn').addEventListener('click', () => {
+  el('help-modal').style.display = 'none';
+});
+
+el('help-modal').addEventListener('click', (e) => {
+  if (e.target === el('help-modal')) el('help-modal').style.display = 'none';
+});
+
+// ── Button clicks ─────────────────────────────────────────────────────────
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'start-btn') {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'START_GAME' }));
+    }
+  }
+  if (e.target.id === 'play-again-btn') {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'RESET_GAME' }));
+    } else {
+      window.location.href = '/games/index.html';
+    }
+  }
+  if (e.target.id === 'skip-btn') {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'SKIP_TURN' }));
+    }
+  }
+  if (e.target.id === 'call-over-btn') {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      if (confirm('End the game now for all players?')) {
+        ws.send(JSON.stringify({ type: 'CALL_GAME_OVER' }));
+      }
+    }
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const sessionId = params.get('s');
+isManaging = params.get('manage') === '1';
+
+if (!sessionId) {
+  showWaiting(null);
+  el('overlay-msg').textContent = 'No session ID in URL.';
+  el('overlay-sub').textContent = 'Add ?s=XXXX to the URL.';
+} else {
+  showWaiting(null);
+  connect(sessionId);
+}
+</script>
+</body>
+</html>
