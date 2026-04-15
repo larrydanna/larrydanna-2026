@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Dice Games" description="Multiplayer Yacht and Farkle in the browser. Host a session, share a QR code, and play from any device in real time.">
+
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Dice Games</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Game</span>
+          <span class="tag">Multiplayer</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Dice Games</h1>
+        <p class="tool-description">
+          Multiplayer Yacht and Farkle in the browser. Host a session, share a QR code,
+          and play from any device — phones, tablets, and a shared screen.
+        </p>
+      </div>
+
+      <div class="launch-area">
+        <a href="/games/index.html" target="_blank" rel="noopener" class="btn btn-primary launch-btn">
+          Open Game Lobby
+        </a>
+        <p class="launch-hint">Host opens the lobby on any device. Players join by scanning the QR code.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature">
+          <span class="feature-label">Games</span>
+          <span class="feature-desc">Yacht and Farkle — classic public-domain dice games, more to come.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Multiplayer</span>
+          <span class="feature-desc">Real-time sync across all devices. Turn enforcement, scoring, full session lifecycle.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">QR Join</span>
+          <span class="feature-desc">Host shares a QR code. Players scan from any phone — no install, no account.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Two Views</span>
+          <span class="feature-desc">Game Table for the shared screen. Player View, mobile-optimized, for each player.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+  .breadcrumb a { color: var(--muted); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header {
+    max-width: var(--content-width);
+    margin-bottom: var(--space-xl);
+  }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  h1 { margin-bottom: var(--space-xs); }
+
+  .tool-description {
+    color: var(--muted);
+    margin: 0;
+    max-width: 600px;
+  }
+
+  .launch-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .launch-btn {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+  }
+
+  .launch-hint {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-sm);
+    max-width: 800px;
+    padding-bottom: var(--space-2xl);
+  }
+
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .feature-label {
+    font: 600 12px/1 var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+  }
+
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>

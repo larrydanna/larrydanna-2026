@@ -28,6 +28,16 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
       <div class="featured-grid">
         <div class="card featured-tool">
           <div class="tool-meta">
+            <span class="tag">Game</span>
+            <span class="tag">Multiplayer</span>
+            <span class="tag">Vanilla JS</span>
+          </div>
+          <h3>Dice Games</h3>
+          <p>Multiplayer Yacht and Farkle in the browser. Host a session, share a QR code, and play from any device in real time.</p>
+          <a href="/tools/games" class="btn btn-secondary">Play now</a>
+        </div>
+        <div class="card featured-tool">
+          <div class="tool-meta">
             <span class="tag">Assembly</span>
             <span class="tag">6502</span>
             <span class="tag">Vanilla JS</span>
@@ -45,16 +55,6 @@ const recentPosts = (await getCollection('blog', ({ data }) => !data.draft))
           <h3>Personal Kanban</h3>
           <p>Drag-and-drop cards across To Do, WIP, and Done. Multiple boards, editable columns, and JSON export.</p>
           <a href="/kanban/index.html" target="_blank" rel="noopener" class="btn btn-secondary">Open Board</a>
-        </div>
-        <div class="card featured-tool">
-          <div class="tool-meta">
-            <span class="tag">Productivity</span>
-            <span class="tag">RPG</span>
-            <span class="tag">Vanilla JS</span>
-          </div>
-          <h3>Dice Roller</h3>
-          <p>Roll d4 through d100 with animated dice, custom modifiers, and a full session history. Built for tabletop RPG sessions.</p>
-          <a href="/tools/diceroller" class="btn btn-secondary">Roll it</a>
         </div>
       </div>
     </div>
