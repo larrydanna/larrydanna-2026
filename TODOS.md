@@ -1,4 +1,4 @@
-# TODOS
+# LarryDanna.com TODOS
 
 When finished with an item indicate that it is resolved.
 
@@ -47,3 +47,16 @@ the dependency, defer unless the dep is trivially removable.
 **Depends on:** Nothing. Do this before step 6 in the Next Steps.
 
 **Effort:** ~30 minutes
+
+
+## Resume Page
+
+**What:** Build a personal resume/CV page at `/resume`
+
+**Why:** A dedicated resume page makes the site more useful as a professional presence.
+
+**Reference:** https://mantu-nigam.github.io/ — use as visual/layout inspiration
+
+**How to apply:** Design a clean, printable resume page following the site's design system (Warm Dark / Studio Amber). Include sections for experience, skills, and education. Should look good both on-screen and when printed.
+
+**Effort:** TBD
