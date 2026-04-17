@@ -29,3 +29,9 @@ pnpm-debug.log*
 
 # PartyKit local dev state (SQLite runtime files)
 .partykit/state/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
