@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Sudoku" description="Classic Sudoku with 5 difficulty levels, 5 visual themes, and a hint counter. Mobile-friendly, works offline.">
+  <div class="section-sm">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/tools">Tools</a>
+        <span>/</span>
+        <span>Sudoku</span>
+      </nav>
+
+      <div class="tool-header">
+        <div class="tool-tags">
+          <span class="tag">Game</span>
+          <span class="tag">Puzzle</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <h1>Sudoku</h1>
+        <p class="tool-description">
+          Classic 9×9 Sudoku with five difficulty levels, five hand-crafted visual themes,
+          pencil-mark notes, and a hint system that counts every hint you use. Works offline,
+          no account needed.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-frame-wrapper">
+    <iframe
+      src="/sudoku/index.html"
+      title="Sudoku game"
+      id="sudoku-frame"
+      scrolling="no"
+    ></iframe>
+    <p class="frame-error" id="frame-error" style="display:none">
+      Could not load game. <a href="/sudoku/index.html" target="_blank">Open in new tab</a>
+    </p>
+  </div>
+
+  <div class="section-sm">
+    <div class="container">
+      <div class="feature-grid">
+        <div class="feature">
+          <span class="feature-label">Difficulty</span>
+          <span class="feature-desc">Five levels from Beginner (52 clues) to Expert (23 clues), each with guaranteed unique solutions.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Themes</span>
+          <span class="feature-desc">Ember, Blueprint, Parchment, Slate, and Jade — each with its own color palette and texture.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Hints</span>
+          <span class="feature-desc">Unlimited hints, but every one is counted. Your hint total is shown on the win screen.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Notes mode</span>
+          <span class="feature-desc">Toggle pencil marks to track candidates in any cell. Cleared automatically when you place a number.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Mobile</span>
+          <span class="feature-desc">Designed first for iPhone. Full touch support, no pinch-zoom needed.</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Offline</span>
+          <span class="feature-desc">No CDN, no server calls. Runs entirely in the browser — works without a connection.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const frame = document.getElementById('sudoku-frame') as HTMLIFrameElement;
+  const error = document.getElementById('frame-error') as HTMLElement;
+
+  function resizeFrame() {
+    try {
+      const h = frame.contentWindow?.document?.body?.scrollHeight;
+      if (h && h > 100) frame.style.height = h + 'px';
+    } catch { /* cross-origin guard */ }
+  }
+
+  frame.addEventListener('load', () => {
+    resizeFrame();
+    setTimeout(resizeFrame, 300);
+    setTimeout(resizeFrame, 800);
+  });
+
+  frame.addEventListener('error', () => {
+    frame.style.display = 'none';
+    error.style.display = 'block';
+  });
+</script>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--muted);
+    margin-bottom: var(--space-md);
+  }
+  .breadcrumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .tool-header { margin-bottom: var(--space-lg); }
+
+  .tool-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .tool-description {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 600px;
+    line-height: 1.65;
+    margin-top: var(--space-sm);
+  }
+
+  .game-frame-wrapper {
+    width: 100%;
+    background: #1A1208;
+  }
+
+  #sudoku-frame {
+    width: 100%;
+    min-height: 840px;
+    border: none;
+    display: block;
+  }
+
+  .frame-error {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--muted);
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+  }
+
+  .feature {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .feature-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .feature-desc {
+    font-size: 0.9375rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+</style>
