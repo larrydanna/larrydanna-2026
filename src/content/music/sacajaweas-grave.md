@@ -8,6 +8,7 @@ tracks:
     note: "Original — v5"
   - id: "4262096f-57a0-4557-aa93-461b6447a880"
     note: "Reprise — v5"
+    backstory: "This version wasn't what I set out to create. From the beginning, I had a clear sense of the tone and style I thought this story should live in — something that matched the perspective of the lyrics and the way I experienced that quiet evening. But along the way, this alternate recording took on a life of its own. It leaned in a different direction — one I didn't plan, and honestly, one I might not have chosen if I were trying to stay \"on script.\" But when I stepped back and listened… it moved me. Even though the presentation doesn't perfectly mirror the lyrical point of view, the emotional weight of it landed in a way I couldn't ignore. There's something in this version that reaches a little deeper, maybe says less in words but more in feeling. It captures a kind of reverence and reflection that goes beyond what I originally imagined. So I kept it — not as a replacement for the original, but as a companion piece. A different lens on the same moment. Sometimes the road takes you somewhere you didn't intend to go… and every now and then, that turns out to be exactly where you needed to be."
 lyrics: |
   [Verse 1 – The Turn]
   We almost missed / the sign by the highway bend,
