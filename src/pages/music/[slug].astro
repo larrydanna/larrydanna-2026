@@ -16,6 +16,8 @@ const { Content } = await render(song);
 const lyricStanzas = song.data.lyrics
   ? song.data.lyrics.split('\n\n').map(stanza => stanza.split('\n').filter(l => l.trim()))
   : [];
+
+const [firstTrack, ...remainingTracks] = song.data.tracks;
 ---
 
 <BaseLayout title={song.data.title} description={song.data.description}>
@@ -36,6 +38,20 @@ const lyricStanzas = song.data.lyrics
         <h1>{song.data.title}</h1>
         <p class="song-description">{song.data.description}</p>
       </header>
+
+      {firstTrack && (
+        <div class="primary-player">
+          {firstTrack.note && <span class="track-note">{firstTrack.title ?? song.data.title} — {firstTrack.note}</span>}
+          <iframe
+            src={`https://suno.com/embed/${firstTrack.id}`}
+            width="100%"
+            height="166"
+            frameborder="0"
+            allow="autoplay"
+            title={firstTrack.title ?? song.data.title}
+          ></iframe>
+        </div>
+      )}
 
       <div class="song-body">
         <div class="backstory">
@@ -63,24 +79,22 @@ const lyricStanzas = song.data.lyrics
         )}
       </div>
 
-      {song.data.tracks.length > 0 && (
-        <div class="player-section">
-          <h2 class="zone-label">Listen</h2>
-          <div class="track-group">
-            {song.data.tracks.map(track => (
-              <div class="track">
-                {track.note && <span class="track-note">{track.title ?? song.data.title} — {track.note}</span>}
-                <iframe
-                  src={`https://suno.com/embed/${track.id}`}
-                  width="100%"
-                  height="166"
-                  frameborder="0"
-                  allow="autoplay"
-                  title={track.title ?? song.data.title}
-                ></iframe>
-              </div>
-            ))}
-          </div>
+      {remainingTracks.length > 0 && (
+        <div class="alternate-tracks">
+          {remainingTracks.map(track => (
+            <div class="alternate-track">
+              {track.note && <span class="track-note">{track.title ?? song.data.title} — {track.note}</span>}
+              {track.backstory && <p class="track-backstory">{track.backstory}</p>}
+              <iframe
+                src={`https://suno.com/embed/${track.id}`}
+                width="100%"
+                height="166"
+                frameborder="0"
+                allow="autoplay"
+                title={track.title ?? song.data.title}
+              ></iframe>
+            </div>
+          ))}
         </div>
       )}
 
@@ -226,16 +240,31 @@ const lyricStanzas = song.data.lyrics
     color: var(--text);
   }
 
-  /* Player section */
-  .player-section {
-    margin-bottom: var(--space-2xl);
+  /* Primary player (first track, above story) */
+  .primary-player {
     max-width: 800px;
+    margin-bottom: var(--space-2xl);
   }
 
-  .track-group {
+  .primary-player iframe {
+    border-radius: 8px;
+    display: block;
+  }
+
+  /* Alternate tracks (remaining, below story) */
+  .alternate-tracks {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-xl);
+    max-width: 800px;
+    margin-bottom: var(--space-2xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border);
+  }
+
+  .alternate-track iframe {
+    border-radius: 8px;
+    display: block;
   }
 
   .track-note {
@@ -245,9 +274,12 @@ const lyricStanzas = song.data.lyrics
     margin-bottom: var(--space-xs);
   }
 
-  .track iframe {
-    border-radius: 8px;
-    display: block;
+  .track-backstory {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: var(--space-sm);
+    margin-top: 0;
   }
 
   .song-footer {

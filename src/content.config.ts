@@ -37,6 +37,7 @@ const music = defineCollection({
       id: z.string(),
       title: z.string().optional(),
       note: z.string().optional(),
+      backstory: z.string().optional(),
     })).default([]),
   }),
 });
