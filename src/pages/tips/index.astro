@@ -2,47 +2,144 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
-const allTips = (await getCollection('tips', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.date.localeCompare(a.data.date));
+const KB_BASE = 'https://github.com/larrydanna/knowledge-base/blob/master/';
+const INDEX_URL = 'https://raw.githubusercontent.com/larrydanna/knowledge-base/master/INDEX.md';
 
-const allTags = [...new Set(allTips.flatMap(t => t.data.tags))].sort();
-const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
+type Item = {
+  title: string;
+  date: string;
+  tags: string[];
+  category: string;
+  url: string;
+  description: string;
+  source: 'local' | 'kb';
+  external: boolean;
+};
+
+// Fetch and parse knowledge base index at build time
+let kbItems: Item[] = [];
+try {
+  const res = await fetch(INDEX_URL);
+  const text = await res.text();
+  let currentCategory = '';
+  const lines = text.split('\n');
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const catMatch = line.match(/^## (.+)/);
+    if (catMatch) {
+      currentCategory = catMatch[1].trim();
+      i++;
+      continue;
+    }
+    const articleMatch = line.match(/^### \[(.+?)\]\((.+?)\)/);
+    if (articleMatch) {
+      const title = articleMatch[1];
+      const path = articleMatch[2];
+      const description = lines[i + 1]?.trim() ?? '';
+      const tagLine = lines[i + 2]?.trim() ?? '';
+      const tags = [...tagLine.matchAll(/`([^`]+)`/g)].map(m => m[1]);
+      const dateMatch = tagLine.match(/·\s*(\d{4}-\d{2}-\d{2})/);
+      kbItems.push({
+        title,
+        date: dateMatch?.[1] ?? '',
+        tags,
+        category: currentCategory,
+        url: KB_BASE + path,
+        description,
+        source: 'kb',
+        external: true,
+      });
+      i += 3;
+      continue;
+    }
+    i++;
+  }
+} catch (_) {
+  // KB unavailable at build time — show local tips only
+}
+
+// Local tips
+const localTips: Item[] = (await getCollection('tips', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .map(tip => ({
+    title: tip.data.title,
+    date: tip.data.date,
+    tags: tip.data.tags,
+    category: tip.data.language,
+    url: `/tips/${tip.id}`,
+    description: '',
+    source: 'local' as const,
+    external: false,
+  }));
+
+// Merge and sort newest-first
+const allItems = [...localTips, ...kbItems].sort((a, b) => b.date.localeCompare(a.date));
+
+const allTags = [...new Set(allItems.flatMap(t => t.tags))].sort();
+const kbCategories = [...new Set(kbItems.map(k => k.category))].sort();
 ---
 
-<BaseLayout title="Tips" description="Pro tips in C#, SQL, JavaScript, and more. Personal knowledge base by Larry Danna.">
+<BaseLayout title="Tips" description="Pro tips and knowledge base articles. C#, SQL, JavaScript, environment setup, engineering practices.">
   <div class="section">
     <div class="container">
-      <h1>Tips</h1>
-      <p class="page-sub">Pro tips I keep coming back to. C#, SQL, JavaScript, 6502 assembly.</p>
+      <h1>Tips &amp; Knowledge Base</h1>
+      <p class="page-sub">Code tips I keep coming back to, plus articles from my personal knowledge base.</p>
 
-      {allTags.length > 0 && (
-        <div class="filters" id="filters">
-          <div class="filter-group">
-            {allTags.map(tag => (
-              <button class="tag filter-tag" data-filter={tag}>{tag}</button>
-            ))}
-          </div>
-          <button class="clear-btn" id="clear-filters" style="display:none">Clear filter</button>
+      <div class="controls">
+        <div class="search-row">
+          <input
+            type="search"
+            id="search-input"
+            class="search-input"
+            placeholder="Search titles, descriptions, tags…"
+            autocomplete="off"
+          />
         </div>
-      )}
+
+        <div class="source-row">
+          <button class="source-btn active" data-source="all">All <span class="count" id="count-all">{allItems.length}</span></button>
+          <button class="source-btn" data-source="local">Site Tips <span class="count" id="count-local">{localTips.length}</span></button>
+          <button class="source-btn" data-source="kb">Knowledge Base <span class="count" id="count-kb">{kbItems.length}</span></button>
+        </div>
+
+        {allTags.length > 0 && (
+          <div class="filters" id="filters">
+            <div class="filter-group">
+              {allTags.map(tag => (
+                <button class="tag filter-tag" data-filter={tag}>{tag}</button>
+              ))}
+            </div>
+            <button class="clear-btn" id="clear-filters" style="display:none">Clear filter</button>
+          </div>
+        )}
+      </div>
 
       <div class="tips-list" id="tips-list">
-        {allTips.length === 0 ? (
+        {allItems.length === 0 ? (
           <p class="empty-state">No tips yet. Check back soon.</p>
         ) : (
-          allTips.map(tip => (
+          allItems.map(item => (
             <article
               class="tip-item"
-              data-tags={tip.data.tags.join(',')}
-              data-language={tip.data.language}
+              data-tags={item.tags.join(',')}
+              data-source={item.source}
+              data-title={item.title.toLowerCase()}
+              data-description={item.description.toLowerCase()}
             >
               <div class="tip-meta">
-                <span class="tip-lang">{tip.data.language}</span>
-                <span class="tip-date">{tip.data.date}</span>
+                <span class={`tip-lang tip-lang--${item.source}`}>{item.category}</span>
+                <span class="tip-date">{item.date}</span>
+                {item.external && <span class="tip-ext-badge">↗ KB</span>}
               </div>
-              <h3><a href={`/tips/${tip.id}`}>{tip.data.title}</a></h3>
+              <h3>
+                <a href={item.url} {...item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}}>
+                  {item.title}
+                </a>
+              </h3>
+              {item.description && <p class="tip-desc">{item.description}</p>}
               <div class="tip-tags">
-                {tip.data.tags.map(tag => <span class="tag">{tag}</span>)}
+                {item.tags.map(tag => <span class="tag">{tag}</span>)}
               </div>
             </article>
           ))
@@ -50,49 +147,84 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
       </div>
 
       <p class="empty-state" id="no-results" style="display:none">
-        No tips match that filter. <button class="link-btn" id="clear-inline">Clear it</button> to see all.
+        No items match. <button class="link-btn" id="clear-all-filters">Clear filters</button>
       </p>
     </div>
   </div>
 </BaseLayout>
 
 <script>
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
   const filterTags = document.querySelectorAll<HTMLButtonElement>('.filter-tag');
+  const sourceBtns = document.querySelectorAll<HTMLButtonElement>('.source-btn');
   const tipItems = document.querySelectorAll<HTMLElement>('.tip-item');
   const clearBtn = document.getElementById('clear-filters') as HTMLButtonElement;
   const noResults = document.getElementById('no-results') as HTMLElement;
-  const clearInline = document.getElementById('clear-inline') as HTMLButtonElement;
+  const clearAllBtn = document.getElementById('clear-all-filters') as HTMLButtonElement;
 
-  let activeFilter: string | null = null;
+  let activeTag: string | null = null;
+  let activeSource: string = 'all';
+  let searchQuery: string = '';
 
-  function applyFilter(tag: string | null) {
-    activeFilter = tag;
+  function applyFilters() {
     let visibleCount = 0;
 
     tipItems.forEach(item => {
       const tags = item.dataset.tags?.split(',') ?? [];
-      const visible = tag === null || tags.includes(tag);
+      const source = item.dataset.source ?? '';
+      const title = item.dataset.title ?? '';
+      const desc = item.dataset.description ?? '';
+      const allText = `${title} ${desc} ${tags.join(' ')}`;
+
+      const tagOk = activeTag === null || tags.includes(activeTag);
+      const sourceOk = activeSource === 'all' || source === activeSource;
+      const searchOk = searchQuery === '' || allText.includes(searchQuery);
+
+      const visible = tagOk && sourceOk && searchOk;
       item.style.display = visible ? '' : 'none';
       if (visible) visibleCount++;
     });
 
     filterTags.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.filter === tag);
+      btn.classList.toggle('active', btn.dataset.filter === activeTag);
     });
 
-    clearBtn.style.display = tag ? 'inline-block' : 'none';
+    clearBtn.style.display = activeTag ? 'inline-block' : 'none';
     noResults.style.display = visibleCount === 0 ? 'block' : 'none';
   }
 
   filterTags.forEach(btn => {
     btn.addEventListener('click', () => {
       const tag = btn.dataset.filter ?? null;
-      applyFilter(activeFilter === tag ? null : tag);
+      activeTag = activeTag === tag ? null : tag;
+      applyFilters();
     });
   });
 
-  clearBtn.addEventListener('click', () => applyFilter(null));
-  clearInline?.addEventListener('click', () => applyFilter(null));
+  sourceBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeSource = btn.dataset.source ?? 'all';
+      sourceBtns.forEach(b => b.classList.toggle('active', b === btn));
+      applyFilters();
+    });
+  });
+
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  function clearAll() {
+    activeTag = null;
+    activeSource = 'all';
+    searchQuery = '';
+    searchInput.value = '';
+    sourceBtns.forEach(b => b.classList.toggle('active', b.dataset.source === 'all'));
+    applyFilters();
+  }
+
+  clearBtn.addEventListener('click', () => { activeTag = null; applyFilters(); });
+  clearAllBtn?.addEventListener('click', clearAll);
 </script>
 
 <style>
@@ -104,12 +236,73 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
     margin-bottom: var(--space-xl);
   }
 
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 480px;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    outline: none;
+  }
+
+  .search-input:focus {
+    border-color: var(--accent);
+  }
+
+  .search-input::placeholder {
+    color: var(--muted);
+  }
+
+  .source-row {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  .source-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .source-btn.active {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .count {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .source-btn.active .count {
+    color: var(--accent);
+  }
+
   .filters {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
     flex-wrap: wrap;
-    margin-bottom: var(--space-xl);
   }
 
   .filter-group {
@@ -145,9 +338,17 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
   }
 
   .tip-item {
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid var(--border);
     padding: var(--space-md) 0 var(--space-md) var(--space-md);
     border-bottom: 1px solid var(--border);
+  }
+
+  .tip-item[data-source="local"] {
+    border-left-color: var(--accent);
+  }
+
+  .tip-item[data-source="kb"] {
+    border-left-color: var(--muted);
   }
 
   .tip-item:last-child {
@@ -156,6 +357,7 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
 
   .tip-meta {
     display: flex;
+    align-items: center;
     gap: var(--space-sm);
     margin-bottom: var(--space-xs);
   }
@@ -165,12 +367,28 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .tip-lang--local {
     color: var(--accent);
+  }
+
+  .tip-lang--kb {
+    color: var(--muted);
   }
 
   .tip-date {
     font-size: 0.875rem;
     color: var(--muted);
+  }
+
+  .tip-ext-badge {
+    font-size: 0.7rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    letter-spacing: 0.03em;
   }
 
   .tip-item h3 {
@@ -180,11 +398,18 @@ const allLanguages = [...new Set(allTips.map(t => t.data.language))].sort();
 
   .tip-item h3 a {
     color: var(--text);
+    text-decoration: none;
   }
 
   .tip-item h3 a:hover {
     color: var(--accent);
-    text-decoration: none;
+  }
+
+  .tip-desc {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: var(--space-xs);
+    line-height: 1.5;
   }
 
   .tip-tags {
