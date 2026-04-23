@@ -27,8 +27,8 @@ Multiple tracks per story are supported. If I ever want to compare an original a
 
 ## The first entry
 
-[Sacajawea's Grave (Reprise)](/music/sacajaweas-grave) — we almost missed the turn. A small brown highway marker in the dust, outside Fort Washakie, Wyoming. My wife said "let's stop." I turned the truck around. What we found there took a while to process.
+[Sacajawea's Grave (Reprise)](/music/sacajaweas-grave) — we almost missed the turn. A small brown highway marker in the dust, outside Fort Washakie, Wyoming. My friend Cathy said "let's stop." I turned the truck around. What we found there took a while to process.
 
-The song came out of that afternoon. Suno wrote the melody and the voice. I wrote the words in the truck on the way back, while the scenery was still in my eyes.
+The song came out of that visit, but not immediately — it was a few days after I'd returned home, when the memory had settled, that the words came together.
 
 More songs coming. The Yellowstone playlists are full of them.
