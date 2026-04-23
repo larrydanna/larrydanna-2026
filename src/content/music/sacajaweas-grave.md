@@ -1,9 +1,11 @@
 ---
-title: "Sacajawea's Grave (Reprise)"
+title: "Sacajawea's Grave"
 date: "2025-10-04"
-description: "We almost missed the sign. A small brown marker by the highway bend — and a decision to turn around that changed the afternoon."
+description: "We almost missed the sign. A small brown marker by the highway bend — and a drive that got longer and lonelier than either of us expected."
 tags: ["folk", "cinematic", "ballad", "Yellowstone"]
 tracks:
+  - id: "a80c5aa8-5ce8-42d1-97d0-1822dad67c18"
+    note: "Original — v5"
   - id: "4262096f-57a0-4557-aa93-461b6447a880"
     note: "Reprise — v5"
 lyrics: |
@@ -24,7 +26,6 @@ lyrics: |
   Where colors bloom — and voices cease,
   I feel the weight — of time and grace,
   Sacred hymn flowing slow / through this place
-
   I can't say what right / brought me here,
   Only to stand / to see, to hear.
 
@@ -44,7 +45,7 @@ lyrics: |
   Here — where the red dirt sleeps in peace,
   Where colors bloom — and voices cease,
   We felt the hush — the holy call,
-  When the wind moved soft / through Saa-kah-juh-WEE-uh's hall.
+  When the wind moved soft / through Sah-kah-juh-WEE-uh's hall.
 
   [Outro – Reflection]
   We turned to leave / as the shadows grew,
@@ -53,14 +54,52 @@ lyrics: |
   A prayer we found / beside her grave.
 ---
 
-We were driving through Fort Washakie on the way back from a long day in the Wind River country. Someone had told us there was a grave site — the supposed burial place of Sacajawea — but I half-expected a roadside tourist stop, maybe a plaque and a parking lot.
+It was toward the tail end of a two-week run Cathy and I took out through Yellowstone National Park in 2025. We weren't in any hurry anymore — just drifting our way back home, letting the road decide a little more than we did.
 
-It wasn't that.
+At some point, we got the idea we'd point the truck toward something different — maybe even Dodge City — just to say we'd seen it. But that's not where the road had in mind to take us.
 
-There was a small brown marker by the highway bend, easy to miss at 60 mph. We almost did. My wife said "let's stop," and I made a U-turn in the dust. The road down to the cemetery was unpaved and quiet. When we stepped out, the air went still.
+We were driving through country neither of us knew. Wide, quiet stretches. Fewer signs. The kind of land where you start to feel like a guest whether anyone told you that or not.
 
-The site was full of handmade crosses, silk flowers bleached bright by the sun, names painted on boards. The Wind River Range was visible in every direction. A painted statue of Sacajawea stood at the center — her gaze out toward the mountains, holding a sand dollar, a symbol of the Pacific she helped Lewis and Clark reach. The incongruity of a sand dollar in the middle of Wyoming stopped me cold.
+And then Cathy did what Cathy always does — she spotted one of those little brown signs off the highway.
 
-I stood there longer than I expected. I didn't take many photos. Some places want you to just be there.
+"Let's go see what that is."
 
-Suno wrote the melody and voice. I wrote the words that afternoon, in the truck, while the scenery was still in my eyes.
+Now I've learned over the years, if I don't turn that truck around, I'll be hearing about what we missed for a long, long time. So I turned us back.
+
+The sign read: Sacajawea Cemetery.
+
+What followed was a drive that got longer and lonelier than either of us expected. Small roads turned into smaller ones. Fewer houses. More quiet. At a couple points we wondered if we ought to turn back.
+
+But we didn't.
+
+And eventually, we found it.
+
+It's not a grand place. No gates. No crowds. It sits off by itself, away from town — like it belongs more to the land than to people passing through it.
+
+The graves are different from what we're used to. Shallow, mounded earth. Hand-laid stones tracing their edges. Wooden crosses — mostly painted white, some marked with simple designs, names written by hand. You can tell right away this isn't a place maintained by systems — it's cared for by people.
+
+The evening was warm. The air was still — almost too still.
+
+And I'll tell you plain: I felt like I was somewhere I needed to tread lightly. Not unwelcome… but not mine. A sacred place that belonged first to the people who lived there, and the ones who were laid to rest there.
+
+So we moved quiet. Slow. Respectful.
+
+We found her marker — Sacagawea — and nearby, markers for her family. There's a small statue there too… her holding a sand dollar, a reminder of when she reached the Pacific with the Lewis and Clark Expedition and brought something back to show her people.
+
+We stood there a while.
+
+Thinking about what she carried — between worlds, between cultures… between what was coming and what was already there.
+
+Cathy said she felt like we were being watched.
+
+Maybe we were.
+
+I know I could hear voices off in the distance — people living their lives just beyond where we stood. And that made it feel even more like we were stepping into something that wasn't meant to be ours… just briefly shared.
+
+After a while, we made our way back to the truck.
+
+Didn't say much.
+
+Just drove on, both of us a little quieter than before.
+
+And I've carried that with me ever since — not just the place, but the feeling of it. That somehow, for a few minutes, we were allowed to stand there… pay our respects… and leave a little more aware than we arrived.
