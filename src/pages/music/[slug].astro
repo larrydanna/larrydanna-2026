@@ -1,0 +1,266 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const songs = await getCollection('music', ({ data }) => !data.draft);
+  return songs.map(song => ({ params: { slug: song.id } }));
+}
+
+const { slug } = Astro.params;
+const song = await getEntry('music', slug);
+if (!song) return Astro.redirect('/music');
+
+const { Content } = await render(song);
+
+const lyricStanzas = song.data.lyrics
+  ? song.data.lyrics.split('\n\n').map(stanza => stanza.split('\n').filter(l => l.trim()))
+  : [];
+---
+
+<BaseLayout title={song.data.title} description={song.data.description}>
+  <div class="section">
+    <div class="container">
+
+      <nav class="breadcrumb">
+        <a href="/music">Music</a>
+        <span>/</span>
+        <span>{song.data.title}</span>
+      </nav>
+
+      <header class="song-header">
+        <div class="song-meta">
+          <time>{song.data.date}</time>
+          {song.data.tags.map(tag => <span class="tag">{tag}</span>)}
+        </div>
+        <h1>{song.data.title}</h1>
+        <p class="song-description">{song.data.description}</p>
+      </header>
+
+      <div class="song-body">
+        <div class="backstory">
+          <h2 class="zone-label">The Story</h2>
+          <div class="prose">
+            <Content />
+          </div>
+        </div>
+
+        {lyricStanzas.length > 0 && (
+          <div class="lyrics">
+            <h2 class="zone-label">Lyrics</h2>
+            <div class="lyric-body">
+              {lyricStanzas.map(lines => (
+                <div class="lyric-stanza">
+                  {lines.map(line =>
+                    line.startsWith('[')
+                      ? <span class="lyric-section">{line}</span>
+                      : <span class="lyric-line">{line}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {song.data.tracks.length > 0 && (
+        <div class="player-section">
+          <h2 class="zone-label">Listen</h2>
+          <div class="track-group">
+            {song.data.tracks.map(track => (
+              <div class="track">
+                {track.note && <span class="track-note">{track.title ?? song.data.title} — {track.note}</span>}
+                <iframe
+                  src={`https://suno.com/embed/${track.id}`}
+                  width="100%"
+                  height="166"
+                  frameborder="0"
+                  allow="autoplay"
+                  title={track.title ?? song.data.title}
+                ></iframe>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <footer class="song-footer">
+        <a href="/music" class="back-link">← All songs</a>
+      </footer>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  .breadcrumb a {
+    color: var(--muted);
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent);
+  }
+
+  .song-header {
+    max-width: 800px;
+    margin-bottom: var(--space-xl);
+  }
+
+  .song-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-md);
+  }
+
+  .song-meta time {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .tag {
+    background: rgba(212, 134, 58, 0.15);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 2.75rem;
+    font-weight: 400;
+    margin-bottom: var(--space-sm);
+    line-height: 1.15;
+  }
+
+  .song-description {
+    font-size: 1.125rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .song-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl);
+    margin-bottom: var(--space-2xl);
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .song-body {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .zone-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: var(--space-md);
+  }
+
+  /* Backstory prose */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .prose p {
+    margin-bottom: var(--space-md);
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Lyrics zone */
+  .lyrics {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--space-md);
+  }
+
+  .lyric-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .lyric-stanza {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 3px solid var(--accent);
+    padding-left: var(--space-sm);
+  }
+
+  .lyric-section {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .lyric-line {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  /* Player section */
+  .player-section {
+    margin-bottom: var(--space-2xl);
+    max-width: 800px;
+  }
+
+  .track-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .track-note {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    margin-bottom: var(--space-xs);
+  }
+
+  .track iframe {
+    border-radius: 8px;
+    display: block;
+  }
+
+  .song-footer {
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border);
+  }
+
+  .back-link {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+  }
+</style>
