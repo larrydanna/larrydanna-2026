@@ -11,7 +11,7 @@ It started with a prompt to a local LLM — asking for a short story with a phil
 
 From there came the song. And from there came the real work — working it over, again and again, until nearly everything changed. Even the title shifted, from "The More You Take" to what it is now.
 
-The music leans on mandolin and dobro, which felt right for a story about old wisdom and threadbare clocks. Suno wanted to add a clapping section. It always does. Getting rid of it was its own lesson.
+The music leans on mandolin and dobro, which felt right for a story about life lessons and a fathers wisdom. Suno wanted to add a clapping section. It always does. Getting rid of it was its own lesson.
 
 Some of what I learned was technical. Some of it was the kind of thing you can't write on a checklist. The song's about letting go — which turns out to be harder to practice than to write about.
 
