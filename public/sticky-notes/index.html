@@ -916,7 +916,6 @@
       ta.value = note.text;
       ta.placeholder = 'Type a note…';
       ta.addEventListener('input', () => { note.text = ta.value; save(); });
-      ta.addEventListener('mousedown', e => e.stopPropagation());
 
       body.appendChild(ta);
 
@@ -937,23 +936,23 @@
       makeDraggable(el, header, note);
       makeResizable(el, grip, note);
 
-      // Click-and-hold drag from the note body (200ms hold activates drag)
+      // Click-and-hold drag from note body (including textarea) — 200ms activates drag
       let holdTimer = null;
       let holdOrigin = null;
 
-      el.addEventListener('mousedown', e => {
+      function startHold(e) {
+        if (holdTimer !== null) return; // guard against double-fire from event bubbling
         if (e.button !== 0) return;
-        if (e.target.closest('.note-header')) return; // header already handles drag
+        if (e.target.closest('.note-header')) return;
         if (e.target.classList.contains('note-grip')) return;
-        // textarea, dots, and delete button stop propagation — won't reach here
-
         holdOrigin = { x: e.clientX, y: e.clientY };
-
         holdTimer = setTimeout(() => {
           holdTimer = null;
           const ox = holdOrigin.x - note.x;
           const oy = holdOrigin.y - note.y;
           el.style.cursor = 'grabbing';
+          ta.style.cursor = 'grabbing';
+          ta.blur();
 
           function onMove(ev) {
             note.x = ev.clientX - ox;
@@ -963,6 +962,7 @@
           }
           function onUp() {
             el.style.cursor = '';
+            ta.style.cursor = '';
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
             save();
@@ -970,11 +970,15 @@
           document.addEventListener('mousemove', onMove);
           document.addEventListener('mouseup', onUp);
         }, 200);
-      });
+      }
 
-      el.addEventListener('mouseup', () => {
+      function cancelHold() {
         if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-      });
+      }
+
+      // Attach to el — catches body padding area and bubbled events from textarea
+      el.addEventListener('mousedown', startHold);
+      el.addEventListener('mouseup', cancelHold);
 
       return el;
     }
