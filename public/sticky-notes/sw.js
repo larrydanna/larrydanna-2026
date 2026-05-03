@@ -1,4 +1,4 @@
-const CACHE = 'sticky-notes-v1';
+const CACHE = 'sticky-notes-v2';
 
 const STATIC = [
   '/sticky-notes/',
@@ -39,18 +39,33 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Same-origin: cache-first, fall back to network and cache the result
-  if (url.origin === self.location.origin) {
+  if (url.origin !== self.location.origin) return;
+
+  // Navigation requests (the HTML): network-first so updates are always live.
+  // Falls back to cache only when offline.
+  if (request.mode === 'navigate') {
     e.respondWith(
-      caches.match(request).then(cached =>
-        cached || fetch(request).then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(request, clone));
-          }
+      fetch(request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(request, clone));
           return res;
         })
-      )
+        .catch(() => caches.match(request))
     );
+    return;
   }
+
+  // Static assets (icons, manifest): cache-first, populate on miss
+  e.respondWith(
+    caches.match(request).then(cached =>
+      cached || fetch(request).then(res => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(request, clone));
+        }
+        return res;
+      })
+    )
+  );
 });
