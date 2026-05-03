@@ -1,0 +1,25 @@
+{
+  "name": "Sticky Notes",
+  "short_name": "Sticky Notes",
+  "description": "A virtual corkboard for drag-and-drop notes, saved locally in your browser.",
+  "start_url": "/sticky-notes/",
+  "scope": "/sticky-notes/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#221A10",
+  "theme_color": "#221A10",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
