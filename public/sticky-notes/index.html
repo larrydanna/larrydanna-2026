@@ -418,6 +418,96 @@
       color: var(--help-muted);
       font-size: 12px;
     }
+
+    /* ── Trash overlay ─────────────────────────────────────── */
+    #trash {
+      position: fixed;
+      inset: 0;
+      background: var(--help-bg);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 80ms;
+    }
+    #trash.on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .trash-box {
+      background: var(--help-surface);
+      border: 1px solid var(--help-border);
+      border-radius: 8px;
+      padding: 32px 36px 28px;
+      max-width: 540px;
+      width: 92%;
+      color: var(--help-text);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .trash-box h2 {
+      font: 400 30px/1 'IBM Plex Sans', system-ui;
+      color: var(--help-accent);
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+
+    #trash-list {
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 16px;
+    }
+
+    .trash-empty {
+      color: var(--help-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    .trash-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--help-border);
+    }
+    .trash-item:last-child { border-bottom: none; }
+
+    .trash-item-info { flex: 1; min-width: 0; }
+
+    .trash-item-name {
+      font: 500 13px/1 'IBM Plex Sans', system-ui;
+      color: var(--help-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trash-item-meta {
+      font: 400 11px/1 'IBM Plex Sans', system-ui;
+      color: var(--help-muted);
+      margin-top: 4px;
+    }
+
+    .trash-item-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tbtn.danger {
+      color: #E07060;
+      border-color: #5A2E28;
+    }
+    .tbtn.danger:hover { background: #3A1C18; border-color: #7A3E38; }
   </style>
 </head>
 <body>
@@ -435,7 +525,9 @@
     <button class="tbtn" id="btn-reset">Reset</button>
     <button class="tbtn" id="btn-arrange" title="Tile all notes in a grid">Auto Arrange</button>
     <button class="tbtn" id="btn-wrangle" title="Move off-screen notes back into view">Wrangle</button>
+    <button class="tbtn" id="btn-rename">Rename Board</button>
     <button class="tbtn" id="btn-fullscreen">Full Screen</button>
+    <button class="tbtn" id="btn-trash">Trash</button>
     <div id="toolbar-spacer"></div>
     <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
     <button class="tbtn" id="btn-install" style="display:none">Install App</button>
@@ -451,6 +543,15 @@
 
   <!-- Desktop -->
   <div id="desktop"></div>
+
+  <!-- Trash overlay -->
+  <div id="trash">
+    <div class="trash-box">
+      <h2>Deleted Boards</h2>
+      <div id="trash-list"></div>
+      <p class="help-dismiss">Press <kbd>Esc</kbd> or click outside to close</p>
+    </div>
+  </div>
 
   <!-- Help overlay -->
   <div id="help">
@@ -478,7 +579,10 @@
           <kbd>Color dots</kbd>    <span class="kdesc">Change note color</span>
           <kbd>× button</kbd>      <span class="kdesc">Delete note</span>
           <kbd>Dbl-click tab</kbd> <span class="kdesc">Rename board</span>
+          <kbd>Rename Board btn</kbd> <span class="kdesc">Rename the active board</span>
           <kbd>Drag tab</kbd>      <span class="kdesc">Reorder boards</span>
+          <kbd>× on tab</kbd>      <span class="kdesc">Close board (saved to Trash)</span>
+          <kbd>Trash btn</kbd>     <span class="kdesc">Restore or permanently delete closed boards</span>
         </div>
       </div>
 
@@ -518,7 +622,7 @@
 
     // ── State ──────────────────────────────────────────────────────────
 
-    let state = { tabs: [], activeTab: null, fontSize: DEFAULT_FONT_SIZE };
+    let state = { tabs: [], activeTab: null, fontSize: DEFAULT_FONT_SIZE, deletedBoards: [] };
     let highZ = 1;
 
     function uid() {
@@ -543,6 +647,7 @@
           if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length) {
             state = parsed;
             if (state.fontSize == null) state.fontSize = DEFAULT_FONT_SIZE;
+            if (!Array.isArray(state.deletedBoards)) state.deletedBoards = [];
             if (!state.tabs.find(t => t.id === state.activeTab)) {
               state.activeTab = state.tabs[0].id;
             }
@@ -601,10 +706,11 @@
 
         el.append(nameEl, xEl);
 
-        // Switch
-        el.addEventListener('mousedown', e => {
+        // Switch — use click (not mousedown) so dblclick fires on the same element
+        el.addEventListener('click', e => {
           if (e.target === xEl) return;
-          if (e.target === nameEl && nameEl.contentEditable === 'true') return;
+          if (nameEl.contentEditable === 'true') return;
+          if (tab.id === state.activeTab) return; // already active, don't re-render
           switchTab(tab.id);
         });
 
@@ -685,12 +791,20 @@
 
     function removeTab(id) {
       if (state.tabs.length <= 1) {
-        // Keep the tab but clear notes
+        // Last board: clear notes but don't delete the board itself
         const t = activeTab();
         if (t) { t.notes = []; save(); renderNotes(); }
         return;
       }
       const idx = state.tabs.findIndex(t => t.id === id);
+      const tab = state.tabs[idx];
+      // Snapshot to trash before removing
+      state.deletedBoards.push({
+        id: tab.id,
+        name: tab.name,
+        notes: JSON.parse(JSON.stringify(tab.notes)),
+        deletedAt: new Date().toISOString(),
+      });
       state.tabs.splice(idx, 1);
       if (state.activeTab === id) {
         state.activeTab = state.tabs[Math.min(idx, state.tabs.length - 1)].id;
@@ -885,6 +999,7 @@
       state = {
         activeTab: id,
         fontSize: DEFAULT_FONT_SIZE,
+        deletedBoards: [],
         tabs: [{
           id,
           name: 'Board 1',
@@ -967,6 +1082,98 @@
       }
     }
 
+    // ── Rename active tab ──────────────────────────────────────────────
+
+    function renameActiveTab() {
+      const tabEl = tabbar.querySelector(`.tab[data-id="${state.activeTab}"]`);
+      if (!tabEl) return;
+      const nameEl = tabEl.querySelector('.tab-name');
+      if (!nameEl) return;
+      nameEl.contentEditable = 'true';
+      nameEl.focus();
+      const range = document.createRange();
+      range.selectNodeContents(nameEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    // ── Trash ──────────────────────────────────────────────────────────
+
+    function showTrash()   { trashEl.classList.add('on'); renderTrash(); }
+    function hideTrash()   { trashEl.classList.remove('on'); }
+
+    function renderTrash() {
+      trashList.innerHTML = '';
+      const boards = state.deletedBoards;
+      if (!boards.length) {
+        trashList.innerHTML = '<p class="trash-empty">No deleted boards.</p>';
+        return;
+      }
+      boards.slice().reverse().forEach(board => {
+        const item = document.createElement('div');
+        item.className = 'trash-item';
+
+        const info = document.createElement('div');
+        info.className = 'trash-item-info';
+
+        const name = document.createElement('div');
+        name.className = 'trash-item-name';
+        name.textContent = board.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'trash-item-meta';
+        const d = new Date(board.deletedAt);
+        const noteCount = board.notes.length;
+        meta.textContent = `${noteCount} note${noteCount !== 1 ? 's' : ''} · deleted ${d.toLocaleDateString()}`;
+
+        info.append(name, meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'trash-item-actions';
+
+        const restoreBtn = document.createElement('button');
+        restoreBtn.className = 'tbtn';
+        restoreBtn.textContent = 'Restore';
+        restoreBtn.addEventListener('click', () => restoreBoard(board.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'tbtn danger';
+        delBtn.textContent = 'Delete Forever';
+        delBtn.addEventListener('click', () => permanentDelete(board.id));
+
+        actions.append(restoreBtn, delBtn);
+        item.append(info, actions);
+        trashList.appendChild(item);
+      });
+    }
+
+    function restoreBoard(id) {
+      const idx = state.deletedBoards.findIndex(b => b.id === id);
+      if (idx < 0) return;
+      const board = state.deletedBoards[idx];
+      const newId = uid();
+      state.tabs.push({
+        id: newId,
+        name: board.name + ' (restored)',
+        notes: board.notes.map(n => ({ ...n, id: uid() })),
+      });
+      state.activeTab = newId;
+      state.deletedBoards.splice(idx, 1);
+      save();
+      render();
+      hideTrash();
+    }
+
+    function permanentDelete(id) {
+      const board = state.deletedBoards.find(b => b.id === id);
+      if (!board) return;
+      if (!confirm(`Permanently delete "${board.name}"?\n\nThis cannot be undone.`)) return;
+      state.deletedBoards = state.deletedBoards.filter(b => b.id !== id);
+      save();
+      renderTrash();
+    }
+
     // ── Full Screen ────────────────────────────────────────────────────
 
     function updateFullscreenBtn() {
@@ -1041,7 +1248,7 @@
       const typing = active?.tagName === 'TEXTAREA' || active?.tagName === 'INPUT'
                   || active?.contentEditable === 'true';
 
-      if (e.key === 'Escape')     { hideHelp(); active?.blur(); return; }
+      if (e.key === 'Escape')     { hideHelp(); hideTrash(); active?.blur(); return; }
 
       if (!typing && e.key === '?') { toggleHelp(); return; }
 
@@ -1063,16 +1270,21 @@
     const addTabBtn    = document.getElementById('btn-add-tab');
     const fontSlider   = document.getElementById('font-slider');
     const btnFullscreen = document.getElementById('btn-fullscreen');
+    const trashEl      = document.getElementById('trash');
+    const trashList    = document.getElementById('trash-list');
 
     document.getElementById('btn-new').addEventListener('click', createNote);
     document.getElementById('btn-help').addEventListener('click', toggleHelp);
+    document.getElementById('btn-rename').addEventListener('click', renameActiveTab);
     document.getElementById('btn-reset').addEventListener('click', resetToDefaults);
     document.getElementById('btn-arrange').addEventListener('click', autoArrange);
     document.getElementById('btn-wrangle').addEventListener('click', wrangleNotes);
+    document.getElementById('btn-trash').addEventListener('click', showTrash);
     document.getElementById('btn-export').addEventListener('click', exportJSON);
     document.getElementById('btn-import').addEventListener('click', importJSON);
     btnFullscreen.addEventListener('click', toggleFullscreen);
     addTabBtn.addEventListener('click', addTab);
+    trashEl.addEventListener('click', e => { if (e.target === trashEl) hideTrash(); });
 
     fontSlider.addEventListener('input', () => {
       const size = parseInt(fontSlider.value, 10);
