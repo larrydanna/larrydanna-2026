@@ -608,8 +608,9 @@
           switchTab(tab.id);
         });
 
-        // Rename on double-click
-        nameEl.addEventListener('dblclick', e => {
+        // Rename on double-click anywhere on the tab (except the × button)
+        el.addEventListener('dblclick', e => {
+          if (e.target === xEl) return;
           e.stopPropagation();
           nameEl.contentEditable = 'true';
           nameEl.focus();
