@@ -791,7 +791,7 @@
 
     function removeTab(id) {
       if (state.tabs.length <= 1) {
-        // Last board: snapshot to trash, then clear — the tab itself stays
+        // Last board: snapshot to trash, then replace with a fresh board
         const t = activeTab();
         if (t && t.notes.length) {
           state.deletedBoards.push({
@@ -800,10 +800,12 @@
             notes: JSON.parse(JSON.stringify(t.notes)),
             deletedAt: new Date().toISOString(),
           });
-          t.notes = [];
-          save();
-          renderNotes();
         }
+        const newId = uid();
+        state.tabs[0] = { id: newId, name: 'Board 1', notes: [] };
+        state.activeTab = newId;
+        save();
+        render();
         return;
       }
       const idx = state.tabs.findIndex(t => t.id === id);
