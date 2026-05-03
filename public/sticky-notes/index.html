@@ -531,7 +531,6 @@
       <input type="range" id="font-slider" min="11" max="36" value="15">
     </label>
     <div class="toolbar-divider"></div>
-    <button class="tbtn" id="btn-reset">Reset</button>
     <button class="tbtn" id="btn-arrange" title="Tile all notes in a grid">Auto Arrange</button>
     <button class="tbtn" id="btn-wrangle" title="Move off-screen notes back into view">Wrangle</button>
     <button class="tbtn" id="btn-rename">Rename Board</button>
@@ -543,7 +542,7 @@
     <button class="tbtn" id="btn-export">Export JSON</button>
     <button class="tbtn" id="btn-import">Import JSON</button>
     <input type="file" id="import-file" accept=".json" style="display:none">
-    <span id="app-version">v26.05.031039</span>
+    <span id="app-version">v26.05.031044</span>
   </div>
 
   <!-- Tab bar -->
@@ -602,7 +601,6 @@
           <kbd>Auto-save</kbd> <span class="kdesc">Notes saved to browser localStorage</span>
           <kbd>Export</kbd>    <span class="kdesc">Download all boards as JSON</span>
           <kbd>Import</kbd>    <span class="kdesc">Load JSON — replaces all boards</span>
-          <kbd>Reset</kbd>         <span class="kdesc">Restore the default welcome board</span>
           <kbd>Auto Arrange</kbd> <span class="kdesc">Tile all notes in a grid across the board</span>
           <kbd>Wrangle</kbd>      <span class="kdesc">Pull any off-screen notes back into view</span>
         </div>
@@ -1072,32 +1070,6 @@
       el?.querySelector('textarea')?.focus();
     }
 
-    // ── Reset ──────────────────────────────────────────────────────────
-
-    function resetToDefaults() {
-      if (!confirm('Reset all boards and restore the default welcome notes?\n\nThis cannot be undone.')) return;
-      localStorage.removeItem(STORE_KEY);
-      const id = uid();
-      state = {
-        activeTab: id,
-        fontSize: DEFAULT_FONT_SIZE,
-        deletedBoards: [],
-        tabs: [{
-          id,
-          name: 'Board 1',
-          notes: DEFAULTS.map((d, i) => ({
-            id: uid(), text: d.text,
-            x: d.x, y: d.y, w: d.w, h: d.h,
-            color: d.color, z: i + 1,
-          })),
-        }],
-      };
-      highZ = DEFAULTS.length;
-      fontSlider.value = DEFAULT_FONT_SIZE;
-      applyFontSize(DEFAULT_FONT_SIZE);
-      save();
-      render();
-    }
 
     // ── Auto Arrange ───────────────────────────────────────────────────
 
@@ -1358,7 +1330,6 @@
     document.getElementById('btn-new').addEventListener('click', createNote);
     document.getElementById('btn-help').addEventListener('click', toggleHelp);
     document.getElementById('btn-rename').addEventListener('click', renameActiveTab);
-    document.getElementById('btn-reset').addEventListener('click', resetToDefaults);
     document.getElementById('btn-arrange').addEventListener('click', autoArrange);
     document.getElementById('btn-wrangle').addEventListener('click', wrangleNotes);
     document.getElementById('btn-trash').addEventListener('click', showTrash);
