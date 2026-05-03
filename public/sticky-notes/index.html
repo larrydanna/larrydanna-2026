@@ -543,7 +543,7 @@
     <button class="tbtn" id="btn-export">Export JSON</button>
     <button class="tbtn" id="btn-import">Import JSON</button>
     <input type="file" id="import-file" accept=".json" style="display:none">
-    <span id="app-version">v26.05.031014</span>
+    <span id="app-version">v26.05.031033</span>
   </div>
 
   <!-- Tab bar -->
@@ -939,6 +939,7 @@
       // Click-and-hold drag from note body (including textarea) — 200ms activates drag
       let holdTimer = null;
       let holdOrigin = null;
+      let selectionGuard = null; // mousemove listener that cancels hold during text selection
 
       function startHold(e) {
         if (holdTimer !== null) return; // guard against double-fire from event bubbling
@@ -946,7 +947,19 @@
         if (e.target.closest('.note-header')) return;
         if (e.target.classList.contains('note-grip')) return;
         holdOrigin = { x: e.clientX, y: e.clientY };
+
+        // If mousedown is on the textarea, any movement before 200ms means the user
+        // is selecting text — cancel the hold so drag never interrupts selection.
+        if (e.target.tagName === 'TEXTAREA') {
+          selectionGuard = () => cancelHold();
+          document.addEventListener('mousemove', selectionGuard);
+        }
+
         holdTimer = setTimeout(() => {
+          if (selectionGuard) {
+            document.removeEventListener('mousemove', selectionGuard);
+            selectionGuard = null;
+          }
           holdTimer = null;
           const ox = holdOrigin.x - note.x;
           const oy = holdOrigin.y - note.y;
@@ -974,6 +987,10 @@
 
       function cancelHold() {
         if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+        if (selectionGuard) {
+          document.removeEventListener('mousemove', selectionGuard);
+          selectionGuard = null;
+        }
       }
 
       // Attach to el — catches body padding area and bubbled events from textarea
