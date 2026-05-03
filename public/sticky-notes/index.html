@@ -674,7 +674,7 @@
     <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
     <button class="tbtn" id="btn-install" style="display:none">Install App</button>
     <input type="file" id="import-file" accept=".json" style="display:none">
-    <span id="app-version">v26.05.031100</span>
+    <span id="app-version">v26.05.031123</span>
   </div>
 
   <!-- Tab bar -->
@@ -688,7 +688,7 @@
   <!-- Trash overlay -->
   <div id="trash">
     <div class="trash-box">
-      <h2>Deleted Boards</h2>
+      <h2>Restore</h2>
       <div id="trash-list"></div>
       <p class="help-dismiss">Press <kbd>Esc</kbd> or click outside to close</p>
     </div>
@@ -710,7 +710,7 @@
       <div class="settings-section">
         <h3>Data</h3>
         <div class="settings-data-actions">
-          <button class="tbtn" id="settings-btn-trash">Trash</button>
+          <button class="tbtn" id="settings-btn-trash">Restore</button>
           <button class="tbtn" id="settings-btn-export">Export JSON</button>
           <button class="tbtn" id="settings-btn-import">Import JSON</button>
         </div>
@@ -763,8 +763,8 @@
           <kbd>Dbl-click tab</kbd> <span class="kdesc">Rename board</span>
           <kbd>Rename Board btn</kbd> <span class="kdesc">Rename the active board</span>
           <kbd>Drag tab</kbd>      <span class="kdesc">Reorder boards</span>
-          <kbd>× on tab</kbd>      <span class="kdesc">Close board (saved to Trash)</span>
-          <kbd>Trash btn</kbd>     <span class="kdesc">Restore or permanently delete closed boards</span>
+          <kbd>× on tab</kbd>      <span class="kdesc">Close board (saved for restore)</span>
+          <kbd>Restore btn</kbd>   <span class="kdesc">Restore or permanently delete closed boards</span>
         </div>
       </div>
 
