@@ -1,6 +1,6 @@
 ---
 title: "Imposters"
-date: "2026-05-06"
+date: "2026-05-12"
 description: "Fortune dressed as loss, loss dressed as luck — an ancient parable, a business meeting, and the wisdom to say 'maybe so, my friend.'"
 tags: ["folk", "country", "philosophical", "Pretty Polygrass"]
 tracks:

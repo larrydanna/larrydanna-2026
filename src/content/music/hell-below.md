@@ -1,6 +1,6 @@
 ---
 title: "Hell Below"
-date: "2026-05-06"
+date: "2026-05-12"
 description: "Walking the Yellowstone boardwalks over a supervolcano — and what that quiet fragility says about every life lived over uncertain ground."
 tags: ["country", "folk", "Yellowstone", "faith"]
 tracks:

@@ -1,6 +1,6 @@
 ---
 title: "New Song: Hell Below"
-date: "2026-05-06"
+date: "2026-05-12"
 description: "Standing over a supervolcano in tennis shoes — and what Yellowstone's fragile ground has to say about the courage it takes just to live."
 tags: ["music", "songwriting", "folk", "Yellowstone"]
 ---

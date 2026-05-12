@@ -1,6 +1,6 @@
 ---
 title: "New Song: Imposters"
-date: "2026-05-06"
+date: "2026-05-12"
 description: "A business meeting, an ancient parable, and a song about the things that dress up as wins or losses — and how slowly the difference reveals itself."
 tags: ["music", "songwriting", "folk", "Pretty Polygrass"]
 ---
