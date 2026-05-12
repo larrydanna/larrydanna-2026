@@ -5,6 +5,10 @@ description: "Walking the Yellowstone boardwalks over a supervolcano — and wha
 tags: ["country", "folk", "Yellowstone", "faith"]
 tracks:
   - id: "10d437a9-2424-4a06-b932-a84e5c0ca830"
+  - id: "00025a4a-96b3-46b1-80f4-bb5793c63e44"
+    title: "Hell Below (Smashville Arena)"
+    note: "Alternate — Glam rock meets Nashville big stage, with a gospel choir finish"
+    backstory: "Same song, different universe. This one swapped the campfire for a concert hall — big hair energy, Bridgestone Arena lights, and a gospel choir that shows up at the end like it owns the place. Not what I set out to make, but hard to argue with. Let me know what you think on Facebook."
 lyrics: |
   [Verse 1]
   Driving through Yellowstone, the colors catch my eye
