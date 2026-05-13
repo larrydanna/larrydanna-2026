@@ -30,20 +30,24 @@ const [firstTrack, ...remainingTracks] = song.data.tracks;
         <span>{song.data.title}</span>
       </nav>
 
-      <header class="song-header">
-        <div class="song-meta">
-          <time>{song.data.date}</time>
-          {song.data.tags.map(tag => <span class="tag">{tag}</span>)}
+      <header class={`song-header${song.data.image ? ' has-photo' : ''}`}>
+        <div class="song-header-text">
+          <div class="song-meta">
+            <time>{song.data.date}</time>
+            {song.data.tags.map(tag => <span class="tag">{tag}</span>)}
+          </div>
+          <h1>{song.data.title}</h1>
+          <p class="song-description">{song.data.description}</p>
         </div>
-        <h1>{song.data.title}</h1>
-        <p class="song-description">{song.data.description}</p>
+        {song.data.image && (
+          <figure class="song-photo-inset">
+            <img src={song.data.image} alt={song.data.title} />
+            {song.data.photo_credit && (
+              <figcaption>Photo: {song.data.photo_credit}</figcaption>
+            )}
+          </figure>
+        )}
       </header>
-
-      {song.data.image && (
-        <div class="song-photo">
-          <img src={song.data.image} alt={song.data.title} />
-        </div>
-      )}
 
       {firstTrack && (
         <div class="primary-player">
@@ -130,21 +134,55 @@ const [firstTrack, ...remainingTracks] = song.data.tracks;
     color: var(--accent);
   }
 
-  .song-photo {
+  .song-header {
     max-width: 800px;
     margin-bottom: var(--space-xl);
   }
 
-  .song-photo img {
+  .song-header.has-photo {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  .song-header-text {
+    min-width: 0;
+  }
+
+  .song-photo-inset {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .song-photo-inset img {
     width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
     border-radius: 8px;
     display: block;
     border: 1px solid var(--border);
   }
 
-  .song-header {
-    max-width: 800px;
-    margin-bottom: var(--space-xl);
+  .song-photo-inset figcaption {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  @media (max-width: 640px) {
+    .song-header.has-photo {
+      grid-template-columns: 1fr;
+    }
+
+    .song-photo-inset {
+      order: -1;
+    }
+
+    .song-photo-inset img {
+      aspect-ratio: 16 / 9;
+    }
   }
 
   .song-meta {

@@ -30,6 +30,7 @@ const music = defineCollection({
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be ISO 8601 (YYYY-MM-DD)'),
     description: z.string(),
     image: z.string().optional(),
+    photo_credit: z.string().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
     lyrics: z.string().default(''),
