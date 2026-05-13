@@ -39,6 +39,12 @@ const [firstTrack, ...remainingTracks] = song.data.tracks;
         <p class="song-description">{song.data.description}</p>
       </header>
 
+      {song.data.image && (
+        <div class="song-photo">
+          <img src={song.data.image} alt={song.data.title} />
+        </div>
+      )}
+
       {firstTrack && (
         <div class="primary-player">
           {firstTrack.note && <span class="track-note">{firstTrack.title ?? song.data.title} — {firstTrack.note}</span>}
@@ -122,6 +128,18 @@ const [firstTrack, ...remainingTracks] = song.data.tracks;
 
   .breadcrumb a:hover {
     color: var(--accent);
+  }
+
+  .song-photo {
+    max-width: 800px;
+    margin-bottom: var(--space-xl);
+  }
+
+  .song-photo img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+    border: 1px solid var(--border);
   }
 
   .song-header {

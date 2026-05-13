@@ -3,6 +3,7 @@ title: "Farther on in the West"
 date: "2026-05-12"
 description: "Standing at the Oregon Trail wagon ruts in Guernsey, Wyoming — where the stone remembers what endurance looks like, and a song finally went deeper than the surface."
 tags: ["country", "folk", "Yellowstone", "Oregon Trail", "history"]
+image: "/images/music/farther-on-in-the-west.jpg"
 tracks:
   - id: "d7c5a33c-503f-4cc8-b77d-764d4bee8944"
     note: "Cinematic version"
