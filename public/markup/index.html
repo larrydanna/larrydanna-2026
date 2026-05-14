@@ -332,6 +332,20 @@ body {
   </div>
 
   <div class="tool-sep"></div>
+  <span class="tool-label">Outline</span>
+  <div class="tool-group">
+    <button class="tool-btn active" id="ol-light-btn" title="Light outline" data-ol="light">⬜</button>
+    <button class="tool-btn"        id="ol-dark-btn"  title="Dark outline"  data-ol="dark">⬛</button>
+  </div>
+
+  <div class="tool-sep"></div>
+  <span class="tool-label">Shadow</span>
+  <div class="tool-group">
+    <button class="tool-btn"        id="sh-light-btn" title="Light shadow" data-sh="light">☀</button>
+    <button class="tool-btn active" id="sh-dark-btn"  title="Dark shadow"  data-sh="dark">🌑</button>
+  </div>
+
+  <div class="tool-sep"></div>
   <button class="tool-btn" id="undo-btn" title="Undo (Ctrl+Z)" style="font-size:15px">↩</button>
   <button class="tool-btn" id="clear-btn" title="Clear annotations" style="font-size:13px">🗑</button>
 
@@ -385,6 +399,8 @@ const S = {
   textPending:    null,
   textSize:       24,
   textFont:       'system-ui, sans-serif',
+  outlineStyle:   'light',   // 'light' | 'dark'
+  shadowStyle:    'dark',    // 'dark'  | 'light'
 };
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -476,6 +492,22 @@ document.getElementById('undo-btn').addEventListener('click', undo);
 document.getElementById('clear-btn').addEventListener('click', clearAll);
 document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
 document.getElementById('download-btn').addEventListener('click', download);
+// ── Outline / Shadow toggles ─────────────────────────────────
+document.querySelectorAll('[data-ol]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    S.outlineStyle = btn.dataset.ol;
+    document.querySelectorAll('[data-ol]').forEach(b => b.classList.toggle('active', b === btn));
+    redraw();
+  });
+});
+document.querySelectorAll('[data-sh]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    S.shadowStyle = btn.dataset.sh;
+    document.querySelectorAll('[data-sh]').forEach(b => b.classList.toggle('active', b === btn));
+    redraw();
+  });
+});
+
 // ── Theme toggle ─────────────────────────────────────────────
 const themeBtn = document.getElementById('theme-btn');
 const applyTheme = (theme) => {
@@ -649,22 +681,22 @@ canvas.addEventListener('mouseup', e => {
       type: 'callout', x: rx, y: ry, w: rw, h: rh,
       tailX: rx + rw / 2,
       tailY: ry + rh + 50 / getScale(),
-      color: S.activeColor,
+      color: S.activeColor, outline: S.outlineStyle, shadow: S.shadowStyle,
     };
     canvas.style.cursor = 'cell';
     setStatus('Click to set the callout tail — or press Enter to accept');
     redraw();
   } else if (S.activeTool === 'arrow') {
     saveUndo();
-    S.shapes.push({ type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color: S.activeColor, thickness: S.thickness });
+    S.shapes.push({ type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
     redraw();
   } else if (S.activeTool === 'rect') {
     saveUndo();
-    S.shapes.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness });
+    S.shapes.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
     redraw();
   } else if (S.activeTool === 'circle') {
     saveUndo();
-    S.shapes.push({ type: 'circle', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness });
+    S.shapes.push({ type: 'circle', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
     redraw();
   }
 });
@@ -729,7 +761,7 @@ function commitText() {
   const val = textField.value.trim();
   if (val && S.textPending) {
     saveUndo();
-    S.shapes.push({ type: 'text', x: S.textPending.ix, y: S.textPending.iy, color: S.activeColor, text: val, textSize: S.textSize, textFont: S.textFont });
+    S.shapes.push({ type: 'text', x: S.textPending.ix, y: S.textPending.iy, color: S.activeColor, text: val, textSize: S.textSize, textFont: S.textFont, outline: S.outlineStyle, shadow: S.shadowStyle });
     redraw();
   }
   hideTextInput();
@@ -805,19 +837,24 @@ function redraw() {
 function buildPreview(tool, sx, sy, cx, cy, color) {
   const rx = Math.min(sx, cx), ry = Math.min(sy, cy);
   const rw = Math.abs(cx - sx), rh = Math.abs(cy - sy);
-  if (tool === 'callout') return { type: 'callout', x: rx, y: ry, w: rw, h: rh, tailX: rx + rw/2, tailY: ry + rh + 50/getScale(), color };
-  if (tool === 'arrow')   return { type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness };
-  if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness };
-  if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness };
+  const ol = S.outlineStyle, sh = S.shadowStyle;
+  if (tool === 'callout') return { type: 'callout', x: rx, y: ry, w: rw, h: rh, tailX: rx + rw/2, tailY: ry + rh + 50/getScale(), color, outline: ol, shadow: sh };
+  if (tool === 'arrow')   return { type: 'arrow',  x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness, outline: ol, shadow: sh };
+  if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh };
+  if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh };
   return null;
 }
 
-// Shared shadow — applied to all tools except text
-function setShadow(c, sc) {
-  c.shadowColor   = 'rgba(0,0,0,0.65)';
+// Shared shadow — shadowStyle is baked into the shape, not read from global S
+function setShadow(c, sc, shadowStyle) {
+  const dark = (shadowStyle || 'dark') === 'dark';
+  c.shadowColor   = dark ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)';
   c.shadowBlur    = Math.max(14, 20 * sc);
   c.shadowOffsetX = 0;
-  c.shadowOffsetY = Math.max(4, 7 * sc);
+  c.shadowOffsetY = dark ? Math.max(4, 7 * sc) : -Math.max(2, 4 * sc);
+}
+function outlineColor(style) {
+  return (style || 'light') === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)';
 }
 function clearShadow(c) {
   c.shadowColor = 'transparent';
@@ -828,13 +865,15 @@ function clearShadow(c) {
 // ── Shape rendering ───────────────────────────────────────────────────────────
 function drawShape(c, shape, sc) {
   c.save();
-  const x = shape.x * sc, y = shape.y * sc, w = shape.w * sc, h = shape.h * sc;
+  const x  = shape.x * sc, y = shape.y * sc, w = shape.w * sc, h = shape.h * sc;
+  const ol = shape.outline || 'light';
+  const sh = shape.shadow  || 'dark';
   switch (shape.type) {
     case 'callout': drawCallout(c, shape, sc); break;
-    case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3); break;
-    case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3); break;
-    case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3); break;
-    case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont); break;
+    case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3, ol, sh); break;
+    case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh); break;
+    case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh); break;
+    case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont, ol, sh); break;
   }
   c.restore();
 }
@@ -870,7 +909,7 @@ function drawCallout(c, sh, sc) {
   // ── 1. Semi-transparent fill + drop shadow ───────────────
   c.save();
   c.globalAlpha = 0.84;
-  setShadow(c, sc);
+  setShadow(c, sc, sh.shadow || 'dark');
   c.fillStyle = sh.color;
   c.beginPath();
   rrPath(c, x, y, w, h, r);
@@ -930,14 +969,15 @@ function drawCallout(c, sh, sc) {
   c.lineWidth   = Math.max(0.75, sc);
   c.stroke();
 
-  // ── 6. Outer border — glow halo then crisp edge ───────────
+  // ── 6. Outer border — glow halo then crisp edge (outline color) ──
+  const ol = outlineColor(sh.outline);
   c.beginPath(); rrPath(c, x, y, w, h, r);
-  c.strokeStyle = 'rgba(255,255,255,0.18)';
+  c.strokeStyle = ol.replace(/[\d.]+\)$/, '0.18)');
   c.lineWidth   = Math.max(10, 14 * sc);
   c.stroke();
 
   c.beginPath(); rrPath(c, x, y, w, h, r);
-  c.strokeStyle = 'rgba(255,255,255,0.70)';
+  c.strokeStyle = ol;
   c.lineWidth   = Math.max(4.5, 6 * sc);
   c.stroke();
 }
@@ -956,7 +996,7 @@ function rrPath(c, x, y, w, h, r) {
   c.closePath();
 }
 
-function drawArrow(c, x1, y1, x2, y2, color, sc, thickness) {
+function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow) {
   const len = Math.hypot(x2 - x1, y2 - y1);
   if (len < 8) return;
   const ang  = Math.atan2(y2 - y1, x2 - x1);
@@ -965,8 +1005,8 @@ function drawArrow(c, x1, y1, x2, y2, color, sc, thickness) {
   const shaftEx = x2 - Math.cos(ang) * head * 0.5;
   const shaftEy = y2 - Math.sin(ang) * head * 0.5;
 
-  // Dark halo for contrast
-  c.strokeStyle = 'rgba(0,0,0,0.30)';
+  // Outline halo — baked at draw time
+  c.strokeStyle = outlineColor(outline);
   c.lineWidth   = lw + 3 * sc;
   c.lineCap     = 'round';
   c.beginPath();
@@ -975,7 +1015,7 @@ function drawArrow(c, x1, y1, x2, y2, color, sc, thickness) {
   c.stroke();
 
   // Shaft + arrowhead with drop shadow
-  setShadow(c, sc);
+  setShadow(c, sc, shadow);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.beginPath();
@@ -1011,12 +1051,18 @@ function drawArrow(c, x1, y1, x2, y2, color, sc, thickness) {
   c.stroke();
 }
 
-function drawRect(c, x, y, w, h, color, sc, thickness) {
+function drawRect(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   const lw = thickness * sc;
   const r  = 4 * sc;
 
+  // Outline pass — wider path in outline color, drawn before the main stroke
+  c.strokeStyle = outlineColor(outline);
+  c.lineWidth   = lw + Math.max(2, lw * 0.4);
+  c.lineJoin    = 'round';
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
+
   // Drop shadow + main stroke
-  setShadow(c, sc);
+  setShadow(c, sc, shadow);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.lineJoin    = 'round';
@@ -1045,13 +1091,18 @@ function drawRect(c, x, y, w, h, color, sc, thickness) {
   c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
 }
 
-function drawCircle(c, x, y, w, h, color, sc, thickness) {
+function drawCircle(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   const lw = thickness * sc;
   const cx = x + w / 2, cy = y + h / 2;
   const rx = Math.abs(w / 2), ry = Math.abs(h / 2);
 
+  // Outline pass — wider ellipse in outline color, drawn before the main stroke
+  c.strokeStyle = outlineColor(outline);
+  c.lineWidth   = lw + Math.max(2, lw * 0.4);
+  c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
+
   // Drop shadow + main stroke
-  setShadow(c, sc);
+  setShadow(c, sc, shadow);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
@@ -1077,39 +1128,35 @@ function drawCircle(c, x, y, w, h, color, sc, thickness) {
   c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
 }
 
-function drawText(c, x, y, text, color, sc, textSize, textFont) {
+function drawText(c, x, y, text, color, sc, textSize, textFont, outline, shadow) {
   const fs   = (textSize || 24) * sc;
   const font = textFont || 'system-ui, sans-serif';
-  c.font         = `700 ${fs}px ${font}`;
+  c.font         = `900 ${fs}px ${font}`;
   c.textBaseline = 'top';
   c.textAlign    = 'left';
-  c.fillStyle    = color;
-
-  // Tighten letter-spacing for condensed/mono fonts at larger sizes
-  if ('letterSpacing' in c) {
-    if (font.includes('Impact'))                              c.letterSpacing = '0px';
-    else if (font.includes('Courier') || font.includes('monospace')) c.letterSpacing = `-${Math.max(0.3, fs * 0.01)}px`;
-    else                                                     c.letterSpacing = '0px';
-  }
-
-  // Outer glow — wide, soft, slight downward offset to ground the letters
-  c.shadowColor   = 'rgba(0,0,0,0.92)';
-  c.shadowBlur    = Math.max(10, 16 * sc);
-  c.shadowOffsetY = Math.max(1.5, 2.5 * sc);
-  c.fillText(text, x, y);
-
-  // Mid glow — tighter, denser
-  c.shadowBlur    = Math.max(5, 8 * sc);
-  c.shadowOffsetY = Math.max(0.75, 1.25 * sc);
-  c.fillText(text, x, y);
-
-  // Crisp pass — full color, no shadow
-  c.shadowBlur    = 0;
-  c.shadowOffsetY = 0;
-  c.shadowColor   = 'transparent';
-  c.fillText(text, x, y);
+  c.lineJoin     = 'round';
 
   if ('letterSpacing' in c) c.letterSpacing = '0px';
+
+  // Drop shadow — baked at draw time
+  const darkSh = (shadow || 'dark') === 'dark';
+  c.shadowColor   = darkSh ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)';
+  c.shadowBlur    = Math.max(6, 10 * sc);
+  c.shadowOffsetY = darkSh ? Math.max(2, 4 * sc) : -Math.max(1, 3 * sc);
+
+  // Outline stroke — baked at draw time, drawn first so fill covers the inner half
+  c.strokeStyle = outlineColor(outline);
+  c.lineWidth   = Math.max(2, fs * 0.11);
+  c.strokeText(text, x, y);
+
+  // Clear shadow before fill so it doesn't double up
+  c.shadowColor   = 'transparent';
+  c.shadowBlur    = 0;
+  c.shadowOffsetY = 0;
+
+  // Colored fill on top
+  c.fillStyle = color;
+  c.fillText(text, x, y);
 }
 
 // ── Resize ────────────────────────────────────────────────────────────────────
