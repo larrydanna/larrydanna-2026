@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markup — Screenshot Annotator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0F0D0A;
+  --surface: #1B1915;
+  --surface-2: #252118;
+  --text: #F2EDE2;
+  --muted: #9E9485;
+  --accent: #D4863A;
+  --border: #2E2A24;
+  --canvas-bg: #080706;
+  --field-bg: rgba(15, 13, 10, 0.92);
+}
+
+html[data-theme="light"] {
+  --bg: #F5F0E8;
+  --surface: #EDE8DF;
+  --surface-2: #E2DDD4;
+  --text: #1A1712;
+  --muted: #6E6558;
+  --accent: #B86E18;
+  --border: #CEC8BC;
+  --canvas-bg: #D8D3CB;
+  --field-bg: rgba(245, 240, 232, 0.96);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────── */
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tool-sep {
+  width: 1px;
+  height: 26px;
+  background: var(--border);
+  margin: 0 6px;
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.tool-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.tool-btn.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  color: var(--accent);
+}
+
+.tool-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+/* Color swatches */
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.color-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Thickness slider */
+#thickness-group {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+#thickness-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+#thickness-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+}
+
+#thickness-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--surface);
+}
+
+#thickness-val, #text-size-val {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text tool options */
+#text-opts-group {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+#font-picker {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+#font-picker:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.toolbar-spacer { flex: 1; min-width: 8px; }
+
+/* Action buttons */
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.action-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0F0D0A;
+  font-weight: 600;
+}
+
+.action-btn.primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+}
+
+/* ── Canvas area ─────────────────────────────────────────── */
+#canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas-bg);
+}
+
+#canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ── Drop overlay ────────────────────────────────────────── */
+#drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: none;
+}
+
+#drop-overlay.hidden { display: none; }
+
+.drop-icon { font-size: 52px; opacity: 0.25; }
+
+.drop-label { font-size: 1.125rem; color: var(--muted); }
+
+.drop-sub {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Text input overlay ──────────────────────────────────── */
+#text-overlay {
+  position: absolute;
+  display: none;
+  z-index: 20;
+}
+
+#text-field {
+  background: var(--field-bg);
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 5px 9px;
+  outline: none;
+  min-width: 140px;
+}
+
+/* ── Status bar ──────────────────────────────────────────── */
+#status {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 3px 10px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span class="tool-label">Tool</span>
+  <div class="tool-group">
+    <button class="tool-btn" data-tool="callout" title="Callout (C)">💬</button>
+    <button class="tool-btn" data-tool="arrow"   title="Arrow (A)">↗</button>
+    <button class="tool-btn" data-tool="rect"    title="Rectangle (R)">▭</button>
+    <button class="tool-btn" data-tool="circle"  title="Circle (O)">◯</button>
+    <button class="tool-btn" data-tool="text"    title="Text (T)" style="font-weight:700;font-size:14px">T</button>
+  </div>
+
+  <div class="tool-sep"></div>
+  <span class="tool-label">Color</span>
+  <div class="tool-group" id="swatches"></div>
+
+  <div class="tool-sep" id="thickness-sep" style="display:none"></div>
+  <span class="tool-label" id="thickness-label" style="display:none">Size</span>
+  <div id="thickness-group">
+    <input type="range" id="thickness-slider" min="1" max="24" value="3">
+    <span id="thickness-val">3</span>
+  </div>
+
+  <div class="tool-sep" id="text-opts-sep" style="display:none"></div>
+  <span class="tool-label" id="text-opts-label" style="display:none">Text</span>
+  <div id="text-opts-group">
+    <input type="range" id="text-size-slider" min="10" max="72" value="24" class="thickness-slider">
+    <span id="text-size-val">24</span>
+    <select id="font-picker">
+      <option value="system-ui, sans-serif">System</option>
+      <option value="Georgia, serif">Georgia</option>
+      <option value="'Courier New', monospace">Mono</option>
+      <option value="Impact, sans-serif">Impact</option>
+    </select>
+  </div>
+
+  <div class="tool-sep"></div>
+  <button class="tool-btn" id="undo-btn" title="Undo (Ctrl+Z)" style="font-size:15px">↩</button>
+  <button class="tool-btn" id="clear-btn" title="Clear annotations" style="font-size:13px">🗑</button>
+
+  <div class="toolbar-spacer"></div>
+  <button class="action-btn primary" id="copy-btn">⎘ Copy</button>
+  <button class="action-btn" id="download-btn">⬇ Download PNG</button>
+  <button class="action-btn" id="save-app-btn" title="Download this app as a single HTML file — run it locally with no internet required">⬇ Save App</button>
+  <button class="action-btn" id="theme-btn" title="Toggle light / dark mode">☀</button>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="canvas"></canvas>
+  <div id="drop-overlay">
+    <div class="drop-icon">📋</div>
+    <div class="drop-label">Paste a screenshot to get started</div>
+    <div class="drop-sub">Ctrl + V &nbsp;·&nbsp; or drag &amp; drop an image file</div>
+  </div>
+  <div id="text-overlay">
+    <input id="text-field" type="text" placeholder="Type label…" autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<div id="status">Paste or drop an image to begin</div>
+
+<script>
+// ── Palette ──────────────────────────────────────────────────────────────────
+const PALETTE = [
+  { hex: '#E63946', label: 'Red'    },
+  { hex: '#6DB884', label: 'Green'  },
+  { hex: '#4A90D9', label: 'Blue'   },
+  { hex: '#F4C842', label: 'Yellow' },
+  { hex: '#D4863A', label: 'Amber'  },
+  { hex: '#F2EDE2', label: 'White'  },
+  { hex: '#111111', label: 'Black'  },
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+const S = {
+  image:          null,
+  imageW:         0,
+  imageH:         0,
+  shapes:         [],
+  undoStack:      [],
+  activeTool:     'callout',
+  activeColor:    '#E63946',
+  thickness:      3,
+  drag:           { on: false, sx: 0, sy: 0, cx: 0, cy: 0 },
+  // Callout two-phase: body drawn first, then user places tail tip
+  pendingCallout: null,
+  // Text tool: where user clicked in image coords
+  textPending:    null,
+  textSize:       24,
+  textFont:       'system-ui, sans-serif',
+};
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const wrap       = document.getElementById('canvas-wrap');
+const canvas     = document.getElementById('canvas');
+const ctx        = canvas.getContext('2d');
+const dropOverlay= document.getElementById('drop-overlay');
+const statusEl   = document.getElementById('status');
+const textOverlay= document.getElementById('text-overlay');
+const textField  = document.getElementById('text-field');
+
+// ── Color swatches ───────────────────────────────────────────────────────────
+const swatchWrap = document.getElementById('swatches');
+PALETTE.forEach(c => {
+  const btn = document.createElement('button');
+  btn.className = 'color-swatch';
+  btn.style.background = c.hex;
+  btn.dataset.color = c.hex;
+  btn.title = c.label;
+  btn.addEventListener('click', () => setColor(c.hex));
+  swatchWrap.appendChild(btn);
+});
+
+function setColor(hex) {
+  S.activeColor = hex;
+  document.querySelectorAll('.color-swatch').forEach(b =>
+    b.classList.toggle('active', b.dataset.color === hex));
+  // Update text field color preview
+  textField.style.color = hex;
+}
+
+// ── Tool selection ───────────────────────────────────────────────────────────
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn =>
+  btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+
+const THICKNESS_TOOLS = new Set(['arrow', 'rect', 'circle']);
+
+const thicknessSep   = document.getElementById('thickness-sep');
+const thicknessLabel = document.getElementById('thickness-label');
+const thicknessGroup = document.getElementById('thickness-group');
+const thicknessSlider= document.getElementById('thickness-slider');
+const thicknessVal   = document.getElementById('thickness-val');
+
+thicknessSlider.addEventListener('input', () => {
+  S.thickness = parseInt(thicknessSlider.value);
+  thicknessVal.textContent = S.thickness;
+});
+
+const textOptsSep   = document.getElementById('text-opts-sep');
+const textOptsLabel = document.getElementById('text-opts-label');
+const textOptsGroup = document.getElementById('text-opts-group');
+const textSizeSlider= document.getElementById('text-size-slider');
+const textSizeVal   = document.getElementById('text-size-val');
+const fontPicker    = document.getElementById('font-picker');
+
+textSizeSlider.addEventListener('input', () => {
+  S.textSize = parseInt(textSizeSlider.value);
+  textSizeVal.textContent = S.textSize;
+});
+fontPicker.addEventListener('change', () => { S.textFont = fontPicker.value; });
+
+function setTool(tool) {
+  cancelPending();
+  S.activeTool = tool;
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(b =>
+    b.classList.toggle('active', b.dataset.tool === tool));
+  const showT  = THICKNESS_TOOLS.has(tool);
+  const showTx = tool === 'text';
+  thicknessSep.style.display   = showT  ? '' : 'none';
+  thicknessLabel.style.display = showT  ? '' : 'none';
+  thicknessGroup.style.display = showT  ? 'flex' : 'none';
+  textOptsSep.style.display    = showTx ? '' : 'none';
+  textOptsLabel.style.display  = showTx ? '' : 'none';
+  textOptsGroup.style.display  = showTx ? 'flex' : 'none';
+  updateCursor();
+  setStatus(HINTS[tool] || '');
+}
+
+const HINTS = {
+  callout: 'Drag to draw callout body · click to set tail · Enter to accept',
+  arrow:   'Drag to draw an arrow',
+  rect:    'Drag to draw a rectangle',
+  circle:  'Drag to draw a circle',
+  text:    'Click anywhere to place a text label',
+};
+
+// ── Undo / Clear / Download ──────────────────────────────────────────────────
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('clear-btn').addEventListener('click', clearAll);
+document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+document.getElementById('download-btn').addEventListener('click', download);
+// ── Theme toggle ─────────────────────────────────────────────
+const themeBtn = document.getElementById('theme-btn');
+const applyTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+  themeBtn.textContent = theme === 'light' ? '🌙' : '☀';
+  themeBtn.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+  localStorage.setItem('markup-theme', theme);
+};
+applyTheme(localStorage.getItem('markup-theme') || 'dark');
+themeBtn.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+});
+
+document.getElementById('save-app-btn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = window.location.href.split('?')[0]; // strip any query string
+  a.download = 'markup.html';
+  a.click();
+});
+
+function saveUndo() {
+  S.undoStack.push(JSON.parse(JSON.stringify(S.shapes)));
+  if (S.undoStack.length > 60) S.undoStack.shift();
+}
+
+function undo() {
+  if (!S.undoStack.length) return;
+  cancelPending();
+  S.shapes = S.undoStack.pop();
+  redraw();
+  setStatus('Undo');
+}
+
+function clearAll() {
+  if (!S.shapes.length && !S.pendingCallout) return;
+  saveUndo();
+  S.shapes = [];
+  cancelPending();
+  redraw();
+}
+
+function cancelPending() {
+  S.pendingCallout = null;
+  S.drag.on = false;
+  hideTextInput();
+  updateCursor();
+}
+
+// ── Image loading ────────────────────────────────────────────────────────────
+function loadImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    S.image  = img;
+    S.imageW = img.naturalWidth;
+    S.imageH = img.naturalHeight;
+    fitCanvas();
+    dropOverlay.classList.add('hidden');
+    updateCursor();
+    redraw();
+    setStatus(`${S.imageW}×${S.imageH}px — ${HINTS[S.activeTool]}`);
+  };
+  img.src = src;
+}
+
+function fitCanvas() {
+  const maxW = wrap.clientWidth  - 16;
+  const maxH = wrap.clientHeight - 16;
+  const scale = Math.min(1, maxW / S.imageW, maxH / S.imageH);
+  canvas.width  = Math.round(S.imageW * scale);
+  canvas.height = Math.round(S.imageH * scale);
+  canvas.dataset.scale = scale;
+}
+
+const getScale  = () => parseFloat(canvas.dataset.scale || '1');
+const toImg     = (cx, cy) => ({ x: cx / getScale(), y: cy / getScale() });
+const toCanvas  = (ix, iy) => ({ x: ix * getScale(), y: iy * getScale() });
+
+// ── Paste / Drop ─────────────────────────────────────────────────────────────
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      loadImage(URL.createObjectURL(item.getAsFile()));
+      e.preventDefault();
+      return;
+    }
+  }
+});
+
+wrap.addEventListener('dragover', e => e.preventDefault());
+wrap.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer?.files?.[0];
+  if (f?.type.startsWith('image/')) loadImage(URL.createObjectURL(f));
+});
+
+// ── Cursor ───────────────────────────────────────────────────────────────────
+function updateCursor() {
+  if (!S.image) { canvas.style.cursor = 'default'; return; }
+  if (S.pendingCallout) { canvas.style.cursor = 'cell'; return; }
+  const map = { callout: 'crosshair', arrow: 'crosshair', rect: 'crosshair', circle: 'crosshair', text: 'text' };
+  canvas.style.cursor = map[S.activeTool] || 'default';
+}
+
+// ── Canvas mouse ──────────────────────────────────────────────────────────────
+function canvasXY(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (!S.image) return;
+  const { x, y } = canvasXY(e);
+  const ip = toImg(x, y);
+
+  // Text tool
+  if (S.activeTool === 'text') {
+    hideTextInput();
+    S.textPending = { ix: ip.x, iy: ip.y, cx: x, cy: y };
+    showTextInput(x, y);
+    return;
+  }
+
+  // Callout: tail-placement click
+  if (S.pendingCallout) {
+    S.pendingCallout.tailX = ip.x;
+    S.pendingCallout.tailY = ip.y;
+    commitCallout();
+    return;
+  }
+
+  S.drag = { on: true, sx: ip.x, sy: ip.y, cx: ip.x, cy: ip.y };
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!S.image) return;
+  const { x, y } = canvasXY(e);
+  const ip = toImg(x, y);
+
+  if (S.pendingCallout) {
+    S.pendingCallout.tailX = ip.x;
+    S.pendingCallout.tailY = ip.y;
+    redraw();
+    return;
+  }
+
+  if (!S.drag.on) return;
+  S.drag.cx = ip.x;
+  S.drag.cy = ip.y;
+  redraw();
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (!S.image || !S.drag.on) return;
+  const { x, y } = canvasXY(e);
+  const ip = toImg(x, y);
+  S.drag.cx = ip.x;
+  S.drag.cy = ip.y;
+  S.drag.on = false;
+
+  const { sx, sy, cx, cy } = S.drag;
+  const minPx = 6 / getScale();
+  if (Math.abs(cx - sx) < minPx && Math.abs(cy - sy) < minPx) return;
+
+  const rx = Math.min(sx, cx), ry = Math.min(sy, cy);
+  const rw = Math.abs(cx - sx), rh = Math.abs(cy - sy);
+
+  if (S.activeTool === 'callout') {
+    S.pendingCallout = {
+      type: 'callout', x: rx, y: ry, w: rw, h: rh,
+      tailX: rx + rw / 2,
+      tailY: ry + rh + 50 / getScale(),
+      color: S.activeColor,
+    };
+    canvas.style.cursor = 'cell';
+    setStatus('Click to set the callout tail — or press Enter to accept');
+    redraw();
+  } else if (S.activeTool === 'arrow') {
+    saveUndo();
+    S.shapes.push({ type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color: S.activeColor, thickness: S.thickness });
+    redraw();
+  } else if (S.activeTool === 'rect') {
+    saveUndo();
+    S.shapes.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness });
+    redraw();
+  } else if (S.activeTool === 'circle') {
+    saveUndo();
+    S.shapes.push({ type: 'circle', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness });
+    redraw();
+  }
+});
+
+function commitCallout() {
+  saveUndo();
+  S.shapes.push({ ...S.pendingCallout });
+  S.pendingCallout = null;
+  updateCursor();
+  setStatus(HINTS.callout);
+  redraw();
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target === textField) return;
+
+  if (e.key === 'Escape')               { cancelPending(); redraw(); return; }
+  if (e.ctrlKey && e.key === 'z')       { e.preventDefault(); undo(); return; }
+  if (e.key === 'Enter' && S.pendingCallout) { commitCallout(); return; }
+
+  if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+    const map = { c: 'callout', a: 'arrow', r: 'rect', o: 'circle', t: 'text' };
+    if (map[e.key.toLowerCase()]) setTool(map[e.key.toLowerCase()]);
+  }
+});
+
+// ── Text input ───────────────────────────────────────────────────────────────
+let _textOutsideHandler = null;
+
+function showTextInput(cx, cy) {
+  const wrapR   = wrap.getBoundingClientRect();
+  const canvasR = canvas.getBoundingClientRect();
+  const ox = canvasR.left - wrapR.left;
+  const oy = canvasR.top  - wrapR.top;
+  textOverlay.style.display = 'block';
+  textOverlay.style.left    = (ox + cx) + 'px';
+  textOverlay.style.top     = (oy + cy - 20) + 'px';
+  textField.style.color     = S.activeColor;
+  textField.value = '';
+  // Defer focus so the current mousedown doesn't immediately steal it back,
+  // then register an outside-click listener to commit on click-away.
+  setTimeout(() => {
+    textField.focus();
+    _textOutsideHandler = e => {
+      if (!textOverlay.contains(e.target)) commitText();
+    };
+    document.addEventListener('pointerdown', _textOutsideHandler, true);
+  }, 0);
+}
+
+function hideTextInput() {
+  if (_textOutsideHandler) {
+    document.removeEventListener('pointerdown', _textOutsideHandler, true);
+    _textOutsideHandler = null;
+  }
+  textOverlay.style.display = 'none';
+  S.textPending = null;
+}
+
+function commitText() {
+  const val = textField.value.trim();
+  if (val && S.textPending) {
+    saveUndo();
+    S.shapes.push({ type: 'text', x: S.textPending.ix, y: S.textPending.iy, color: S.activeColor, text: val, textSize: S.textSize, textFont: S.textFont });
+    redraw();
+  }
+  hideTextInput();
+}
+
+textField.addEventListener('keydown', e => {
+  e.stopPropagation();
+  if (e.key === 'Enter')  { e.preventDefault(); commitText(); }
+  if (e.key === 'Escape') { hideTextInput(); }
+});
+
+// ── Copy to clipboard ─────────────────────────────────────────────────────────
+function copyToClipboard() {
+  if (!S.image) return;
+  const off = document.createElement('canvas');
+  off.width  = S.imageW;
+  off.height = S.imageH;
+  const oc = off.getContext('2d');
+  oc.drawImage(S.image, 0, 0);
+  S.shapes.forEach(s => drawShape(oc, s, 1));
+  off.toBlob(async blob => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setStatus('Copied to clipboard');
+    } catch {
+      setStatus('Copy failed — try downloading instead (browser may require HTTPS)');
+    }
+  }, 'image/png');
+}
+
+// ── Download ──────────────────────────────────────────────────────────────────
+function download() {
+  if (!S.image) return;
+  const off = document.createElement('canvas');
+  off.width  = S.imageW;
+  off.height = S.imageH;
+  const oc = off.getContext('2d');
+  oc.drawImage(S.image, 0, 0);
+  S.shapes.forEach(s => drawShape(oc, s, 1));
+  const a = document.createElement('a');
+  a.download = 'markup.png';
+  a.href = off.toDataURL('image/png');
+  a.click();
+}
+
+// ── Redraw ────────────────────────────────────────────────────────────────────
+function redraw() {
+  const sc = getScale();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (S.image) ctx.drawImage(S.image, 0, 0, canvas.width, canvas.height);
+  S.shapes.forEach(s => drawShape(ctx, s, sc));
+
+  if (S.pendingCallout) {
+    drawShape(ctx, S.pendingCallout, sc);
+    // tail knob
+    const kp = toCanvas(S.pendingCallout.tailX, S.pendingCallout.tailY);
+    ctx.beginPath();
+    ctx.arc(kp.x, kp.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fill();
+    ctx.strokeStyle = S.pendingCallout.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  if (S.drag.on) {
+    const { sx, sy, cx, cy } = S.drag;
+    const p = buildPreview(S.activeTool, sx, sy, cx, cy, S.activeColor);
+    if (p) drawShape(ctx, p, sc);
+  }
+}
+
+function buildPreview(tool, sx, sy, cx, cy, color) {
+  const rx = Math.min(sx, cx), ry = Math.min(sy, cy);
+  const rw = Math.abs(cx - sx), rh = Math.abs(cy - sy);
+  if (tool === 'callout') return { type: 'callout', x: rx, y: ry, w: rw, h: rh, tailX: rx + rw/2, tailY: ry + rh + 50/getScale(), color };
+  if (tool === 'arrow')   return { type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness };
+  if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness };
+  if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness };
+  return null;
+}
+
+// Shared shadow — applied to all tools except text
+function setShadow(c, sc) {
+  c.shadowColor   = 'rgba(0,0,0,0.65)';
+  c.shadowBlur    = Math.max(14, 20 * sc);
+  c.shadowOffsetX = 0;
+  c.shadowOffsetY = Math.max(4, 7 * sc);
+}
+function clearShadow(c) {
+  c.shadowColor = 'transparent';
+  c.shadowBlur  = 0;
+  c.shadowOffsetY = 0;
+}
+
+// ── Shape rendering ───────────────────────────────────────────────────────────
+function drawShape(c, shape, sc) {
+  c.save();
+  const x = shape.x * sc, y = shape.y * sc, w = shape.w * sc, h = shape.h * sc;
+  switch (shape.type) {
+    case 'callout': drawCallout(c, shape, sc); break;
+    case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3); break;
+    case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3); break;
+    case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3); break;
+    case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont); break;
+  }
+  c.restore();
+}
+
+// Callout: glass-effect rounded-rect body + tapered tail
+function drawCallout(c, sh, sc) {
+  const x = sh.x * sc, y = sh.y * sc, w = sh.w * sc, h = sh.h * sc;
+  const tx = sh.tailX * sc, ty = sh.tailY * sc;
+  const r  = Math.max(4, Math.min(14 * sc, w * 0.18, h * 0.18));
+  const lw = Math.max(1, 1.5 * sc);
+  const bw = Math.min(22 * sc, w * 0.35, 22);
+
+  // Determine exit edge based on tail angle from body center
+  const cx = x + w / 2, cy = y + h / 2;
+  const dx = tx - cx,   dy = ty - cy;
+  const ang = Math.atan2(dy, dx);
+  const toH = (w / 2) / (Math.abs(Math.cos(ang)) || 1e-9);
+  const toV = (h / 2) / (Math.abs(Math.sin(ang)) || 1e-9);
+
+  let ex, ey, px, py;
+  if (toV <= toH) {
+    ex = cx + Math.cos(ang) * toV;
+    ey = dy >= 0 ? y + h : y;
+    px = bw; py = 0;
+    ex = Math.max(x + r + bw, Math.min(x + w - r - bw, ex));
+  } else {
+    ex = dx >= 0 ? x + w : x;
+    ey = cy + Math.sin(ang) * toH;
+    px = 0; py = bw;
+    ey = Math.max(y + r + bw, Math.min(y + h - r - bw, ey));
+  }
+
+  // ── 1. Semi-transparent fill + drop shadow ───────────────
+  c.save();
+  c.globalAlpha = 0.84;
+  setShadow(c, sc);
+  c.fillStyle = sh.color;
+  c.beginPath();
+  rrPath(c, x, y, w, h, r);
+  c.fill();
+
+  // Tail shares the fill alpha but not the shadow (body shadow is enough)
+  clearShadow(c);
+  c.beginPath();
+  c.moveTo(ex - px, ey - py);
+  c.lineTo(tx, ty);
+  c.lineTo(ex + px, ey + py);
+  c.closePath();
+  c.fill();
+  c.restore();
+
+  // ── 2. Primary glass gradient — top-to-bottom fade ────────
+  const sheen = c.createLinearGradient(x, y, x, y + h);
+  sheen.addColorStop(0,    'rgba(255,255,255,0.55)');
+  sheen.addColorStop(0.35, 'rgba(255,255,255,0.18)');
+  sheen.addColorStop(0.65, 'rgba(255,255,255,0.04)');
+  sheen.addColorStop(1,    'rgba(255,255,255,0.00)');
+  c.fillStyle = sheen;
+  c.beginPath();
+  rrPath(c, x, y, w, h, r);
+  c.fill();
+
+  // ── 3. Specular glare spot — oval highlight upper-center ──
+  c.save();
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.clip();
+  const glare = c.createRadialGradient(
+    cx, y + h * 0.16, 0,
+    cx, y + h * 0.22, w * 0.42
+  );
+  glare.addColorStop(0,   'rgba(255,255,255,0.52)');
+  glare.addColorStop(0.45,'rgba(255,255,255,0.18)');
+  glare.addColorStop(1,   'rgba(255,255,255,0.00)');
+  c.fillStyle = glare;
+  c.fillRect(x, y, w, h);
+  c.restore();
+
+  // ── 4. Bottom inner reflection — light bouncing back up ───
+  c.save();
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.clip();
+  const refl = c.createLinearGradient(x, y + h * 0.72, x, y + h);
+  refl.addColorStop(0, 'rgba(255,255,255,0.00)');
+  refl.addColorStop(1, 'rgba(255,255,255,0.14)');
+  c.fillStyle = refl;
+  c.fillRect(x, y, w, h);
+  c.restore();
+
+  // ── 5. Inner rim — thin bright line just inside the edge ──
+  const inset = Math.max(1, 1.5 * sc);
+  const ri    = Math.max(1, r - inset);
+  c.beginPath();
+  rrPath(c, x + inset, y + inset, w - inset * 2, h - inset * 2, ri);
+  c.strokeStyle = 'rgba(255,255,255,0.40)';
+  c.lineWidth   = Math.max(0.75, sc);
+  c.stroke();
+
+  // ── 6. Outer border — glow halo then crisp edge ───────────
+  c.beginPath(); rrPath(c, x, y, w, h, r);
+  c.strokeStyle = 'rgba(255,255,255,0.18)';
+  c.lineWidth   = Math.max(10, 14 * sc);
+  c.stroke();
+
+  c.beginPath(); rrPath(c, x, y, w, h, r);
+  c.strokeStyle = 'rgba(255,255,255,0.70)';
+  c.lineWidth   = Math.max(4.5, 6 * sc);
+  c.stroke();
+}
+
+function rrPath(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.moveTo(x + r, y);
+  c.lineTo(x + w - r, y);
+  c.quadraticCurveTo(x + w, y,     x + w, y + r);
+  c.lineTo(x + w, y + h - r);
+  c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h);
+  c.quadraticCurveTo(x,     y + h, x,     y + h - r);
+  c.lineTo(x,     y + r);
+  c.quadraticCurveTo(x,     y,     x + r, y);
+  c.closePath();
+}
+
+function drawArrow(c, x1, y1, x2, y2, color, sc, thickness) {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  if (len < 8) return;
+  const ang  = Math.atan2(y2 - y1, x2 - x1);
+  const lw   = thickness * sc;
+  const head = Math.min(lw * 4 + 8 * sc, len * 0.45);
+  const shaftEx = x2 - Math.cos(ang) * head * 0.5;
+  const shaftEy = y2 - Math.sin(ang) * head * 0.5;
+
+  // Dark halo for contrast
+  c.strokeStyle = 'rgba(0,0,0,0.30)';
+  c.lineWidth   = lw + 3 * sc;
+  c.lineCap     = 'round';
+  c.beginPath();
+  c.moveTo(x1, y1);
+  c.lineTo(shaftEx, shaftEy);
+  c.stroke();
+
+  // Shaft + arrowhead with drop shadow
+  setShadow(c, sc);
+  c.strokeStyle = color;
+  c.lineWidth   = lw;
+  c.beginPath();
+  c.moveTo(x1, y1);
+  c.lineTo(shaftEx, shaftEy);
+  c.stroke();
+
+  c.fillStyle = color;
+  c.beginPath();
+  c.moveTo(x2, y2);
+  c.lineTo(x2 - Math.cos(ang - 0.38) * head, y2 - Math.sin(ang - 0.38) * head);
+  c.lineTo(x2 - Math.cos(ang + 0.38) * head, y2 - Math.sin(ang + 0.38) * head);
+  c.closePath();
+  c.fill();
+  clearShadow(c);
+
+  // Cross-shaft gradient — light on top edge, slight shadow on bottom (cylindrical)
+  const perp  = ang - Math.PI / 2;
+  const halfW = lw / 2;
+  const midX  = (x1 + shaftEx) / 2, midY = (y1 + shaftEy) / 2;
+  const gx1   = midX + Math.cos(perp) * halfW, gy1 = midY + Math.sin(perp) * halfW;
+  const gx2   = midX - Math.cos(perp) * halfW, gy2 = midY - Math.sin(perp) * halfW;
+  const shaftGrad = c.createLinearGradient(gx1, gy1, gx2, gy2);
+  shaftGrad.addColorStop(0,   'rgba(255,255,255,0.22)');
+  shaftGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+  shaftGrad.addColorStop(1,   'rgba(0,0,0,0.12)');
+  c.strokeStyle = shaftGrad;
+  c.lineWidth   = lw;
+  c.lineCap     = 'round';
+  c.beginPath();
+  c.moveTo(x1, y1);
+  c.lineTo(shaftEx, shaftEy);
+  c.stroke();
+}
+
+function drawRect(c, x, y, w, h, color, sc, thickness) {
+  const lw = thickness * sc;
+  const r  = 4 * sc;
+
+  // Drop shadow + main stroke
+  setShadow(c, sc);
+  c.strokeStyle = color;
+  c.lineWidth   = lw;
+  c.lineJoin    = 'round';
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
+  clearShadow(c);
+
+  // Inward color glow — softens the hard stroke edge
+  c.save();
+  const ig = Math.max(0.5, lw * 0.4);
+  c.strokeStyle  = color;
+  c.lineWidth    = Math.max(1, lw * 0.6);
+  c.globalAlpha  = 0.22;
+  c.shadowColor  = color;
+  c.shadowBlur   = lw * 2.5;
+  c.lineJoin     = 'round';
+  c.beginPath(); rrPath(c, x + ig, y + ig, w - ig * 2, h - ig * 2, Math.max(1, r - ig)); c.stroke();
+  c.restore();
+
+  // Top-to-bottom gradient highlight — fades naturally, no hard clip edge
+  const hiGrad = c.createLinearGradient(x, y, x, y + h);
+  hiGrad.addColorStop(0,    'rgba(255,255,255,0.32)');
+  hiGrad.addColorStop(0.45, 'rgba(255,255,255,0)');
+  c.strokeStyle = hiGrad;
+  c.lineWidth   = lw;
+  c.lineJoin    = 'round';
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
+}
+
+function drawCircle(c, x, y, w, h, color, sc, thickness) {
+  const lw = thickness * sc;
+  const cx = x + w / 2, cy = y + h / 2;
+  const rx = Math.abs(w / 2), ry = Math.abs(h / 2);
+
+  // Drop shadow + main stroke
+  setShadow(c, sc);
+  c.strokeStyle = color;
+  c.lineWidth   = lw;
+  c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
+  clearShadow(c);
+
+  // Inward color glow
+  c.save();
+  const ig = Math.max(0.5, lw * 0.4);
+  c.strokeStyle = color;
+  c.lineWidth   = Math.max(1, lw * 0.6);
+  c.globalAlpha = 0.22;
+  c.shadowColor = color;
+  c.shadowBlur  = lw * 2.5;
+  c.beginPath(); c.ellipse(cx, cy, Math.max(1, rx - ig), Math.max(1, ry - ig), 0, 0, Math.PI * 2); c.stroke();
+  c.restore();
+
+  // Top-left to bottom-right gradient highlight — fades naturally around the curve
+  const hiGrad = c.createLinearGradient(x, y, x + w, y + h);
+  hiGrad.addColorStop(0,    'rgba(255,255,255,0.32)');
+  hiGrad.addColorStop(0.42, 'rgba(255,255,255,0)');
+  c.strokeStyle = hiGrad;
+  c.lineWidth   = lw;
+  c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
+}
+
+function drawText(c, x, y, text, color, sc, textSize, textFont) {
+  const fs   = (textSize || 24) * sc;
+  const font = textFont || 'system-ui, sans-serif';
+  c.font         = `700 ${fs}px ${font}`;
+  c.textBaseline = 'top';
+  c.textAlign    = 'left';
+  c.fillStyle    = color;
+
+  // Tighten letter-spacing for condensed/mono fonts at larger sizes
+  if ('letterSpacing' in c) {
+    if (font.includes('Impact'))                              c.letterSpacing = '0px';
+    else if (font.includes('Courier') || font.includes('monospace')) c.letterSpacing = `-${Math.max(0.3, fs * 0.01)}px`;
+    else                                                     c.letterSpacing = '0px';
+  }
+
+  // Outer glow — wide, soft, slight downward offset to ground the letters
+  c.shadowColor   = 'rgba(0,0,0,0.92)';
+  c.shadowBlur    = Math.max(10, 16 * sc);
+  c.shadowOffsetY = Math.max(1.5, 2.5 * sc);
+  c.fillText(text, x, y);
+
+  // Mid glow — tighter, denser
+  c.shadowBlur    = Math.max(5, 8 * sc);
+  c.shadowOffsetY = Math.max(0.75, 1.25 * sc);
+  c.fillText(text, x, y);
+
+  // Crisp pass — full color, no shadow
+  c.shadowBlur    = 0;
+  c.shadowOffsetY = 0;
+  c.shadowColor   = 'transparent';
+  c.fillText(text, x, y);
+
+  if ('letterSpacing' in c) c.letterSpacing = '0px';
+}
+
+// ── Resize ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  if (S.image) { fitCanvas(); redraw(); }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+setColor('#E63946');
+setTool('callout');
+</script>
+</body>
+</html>
