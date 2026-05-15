@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Markup — Screenshot Annotator</title>
+<link rel="manifest" href="/markup/manifest.json">
+<meta name="theme-color" content="#D4863A">
+<link rel="icon" href="/markup/icon.svg" type="image/svg+xml">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -281,6 +284,148 @@ body {
   min-width: 140px;
 }
 
+/* ── Emoji grid ──────────────────────────────────────────── */
+#emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+#emoji-grid button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 3px;
+  text-align: center;
+}
+
+#emoji-grid button:hover { background: var(--border); }
+#emoji-grid button.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+
+/* ── Help modal ──────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-backdrop.hidden { display: none; }
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 340px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.modal-close:hover { color: var(--text); background: var(--border); }
+
+.modal-body {
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+}
+
+.shortcut-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.shortcut-table th {
+  text-align: left;
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 0 4px;
+}
+
+.shortcut-table td {
+  padding: 3px 0;
+  color: var(--muted);
+  vertical-align: middle;
+}
+
+.shortcut-table td:first-child {
+  width: 140px;
+  white-space: nowrap;
+}
+
+kbd {
+  display: inline-block;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.6875rem;
+  padding: 1px 5px;
+  color: var(--text);
+  margin: 0 1px;
+}
+
+/* ── Toast notification ──────────────────────────────────── */
+#toast {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 50;
+  white-space: nowrap;
+}
+
+#toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ── Status bar ──────────────────────────────────────────── */
 #status {
   font-size: 11px;
@@ -304,6 +449,9 @@ body {
     <button class="tool-btn" data-tool="arrow"   title="Arrow (A)">↗</button>
     <button class="tool-btn" data-tool="rect"    title="Rectangle (R)">▭</button>
     <button class="tool-btn" data-tool="circle"  title="Circle (O)">◯</button>
+    <button class="tool-btn" data-tool="mask"    title="Mask / Redact (M)">▮</button>
+    <button class="tool-btn" data-tool="stamp"   title="Emoji Stamp (S)" id="stamp-tool-btn">⭐</button>
+    <button class="tool-btn" data-tool="pixelate" title="Pixelate / Blur (P)">⊞</button>
     <button class="tool-btn" data-tool="text"    title="Text (T)" style="font-weight:700;font-size:14px">T</button>
   </div>
 
@@ -329,6 +477,27 @@ body {
       <option value="'Courier New', monospace">Mono</option>
       <option value="Impact, sans-serif">Impact</option>
     </select>
+    <input type="range" id="text-outline-slider" min="0" max="5" value="2" class="thickness-slider" title="Text outline thickness">
+    <span id="text-outline-val" title="Text outline thickness">2</span>
+  </div>
+
+  <div class="tool-sep" id="px-opts-sep" style="display:none"></div>
+  <span class="tool-label" id="px-opts-label" style="display:none">Grain</span>
+  <div id="px-opts-group" style="display:none; flex-direction:column; gap:4px">
+    <div style="display:flex; align-items:center; gap:4px">
+      <input type="range" id="px-grain-slider" min="4" max="48" value="10" class="thickness-slider" title="Pixel block size">
+      <span id="px-grain-val">10</span>
+    </div>
+  </div>
+
+  <div class="tool-sep" id="stamp-opts-sep" style="display:none"></div>
+  <span class="tool-label" id="stamp-opts-label" style="display:none">Stamp</span>
+  <div id="stamp-opts-group" style="display:none; flex-direction:column; gap:4px">
+    <div id="emoji-grid"></div>
+    <div style="display:flex; align-items:center; gap:4px; margin-top:2px">
+      <input type="range" id="stamp-size-slider" min="16" max="128" value="48" class="thickness-slider" title="Stamp size">
+      <span id="stamp-size-val">48</span>
+    </div>
   </div>
 
   <div class="tool-sep"></div>
@@ -344,6 +513,10 @@ body {
     <button class="tool-btn"        id="sh-light-btn" title="Light shadow" data-sh="light">☀</button>
     <button class="tool-btn active" id="sh-dark-btn"  title="Dark shadow"  data-sh="dark">🌑</button>
   </div>
+  <div class="tool-group" style="gap:4px">
+    <input type="range" id="shadow-blur-slider" min="0" max="5" value="3" class="thickness-slider" title="Shadow blur">
+    <span id="shadow-blur-val" title="Shadow blur">3</span>
+  </div>
 
   <div class="tool-sep"></div>
   <button class="tool-btn" id="undo-btn" title="Undo (Ctrl+Z)" style="font-size:15px">↩</button>
@@ -354,6 +527,7 @@ body {
   <button class="action-btn" id="download-btn">⬇ Download PNG</button>
   <button class="action-btn" id="save-app-btn" title="Download this app as a single HTML file — run it locally with no internet required">⬇ Save App</button>
   <button class="action-btn" id="theme-btn" title="Toggle light / dark mode">☀</button>
+  <button class="action-btn" id="help-btn" title="Keyboard shortcuts (?)">?</button>
 </div>
 
 <div id="canvas-wrap">
@@ -365,6 +539,40 @@ body {
   </div>
   <div id="text-overlay">
     <input id="text-field" type="text" placeholder="Type label…" autocomplete="off" spellcheck="false">
+  </div>
+  <div id="toast"></div>
+</div>
+
+<div id="help-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Keyboard Shortcuts</h2>
+      <button id="help-close" class="modal-close" title="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="shortcut-table">
+        <tbody>
+          <tr><th>Tools</th><td></td></tr>
+          <tr><td><kbd>C</kbd></td><td>Callout bubble</td></tr>
+          <tr><td><kbd>A</kbd></td><td>Arrow</td></tr>
+          <tr><td><kbd>R</kbd></td><td>Rectangle</td></tr>
+          <tr><td><kbd>O</kbd></td><td>Circle</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Mask / Redact</td></tr>
+          <tr><td><kbd>S</kbd></td><td>Emoji stamp</td></tr>
+          <tr><td><kbd>P</kbd></td><td>Pixelate region</td></tr>
+          <tr><td><kbd>T</kbd></td><td>Text label</td></tr>
+          <tr><th>Actions</th><td></td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Copy to clipboard</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Download PNG</td></tr>
+          <tr><td><kbd>Escape</kbd></td><td>Cancel in-progress shape</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>Confirm callout tail</td></tr>
+          <tr><th>Image input</th><td></td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Paste from clipboard</td></tr>
+          <tr><td colspan="2">Drag &amp; drop an image file</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -399,8 +607,13 @@ const S = {
   textPending:    null,
   textSize:       24,
   textFont:       'system-ui, sans-serif',
+  textOutlineW:   2,         // 0=none … 5=thick
   outlineStyle:   'light',   // 'light' | 'dark'
   shadowStyle:    'dark',    // 'dark'  | 'light'
+  shadowLevel:    3,         // 0=off … 5=max
+  activeEmoji:    '⭐',
+  stampSize:      48,
+  pixelGrain:     10,
 };
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -409,8 +622,17 @@ const canvas     = document.getElementById('canvas');
 const ctx        = canvas.getContext('2d');
 const dropOverlay= document.getElementById('drop-overlay');
 const statusEl   = document.getElementById('status');
+const toastEl    = document.getElementById('toast');
 const textOverlay= document.getElementById('text-overlay');
 const textField  = document.getElementById('text-field');
+
+let _toastTimer = null;
+function showToast(msg, ms = 1600) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('visible');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toastEl.classList.remove('visible'), ms);
+}
 
 // ── Color swatches ───────────────────────────────────────────────────────────
 const swatchWrap = document.getElementById('swatches');
@@ -428,8 +650,8 @@ function setColor(hex) {
   S.activeColor = hex;
   document.querySelectorAll('.color-swatch').forEach(b =>
     b.classList.toggle('active', b.dataset.color === hex));
-  // Update text field color preview
   textField.style.color = hex;
+  savePrefs();
 }
 
 // ── Tool selection ───────────────────────────────────────────────────────────
@@ -447,6 +669,7 @@ const thicknessVal   = document.getElementById('thickness-val');
 thicknessSlider.addEventListener('input', () => {
   S.thickness = parseInt(thicknessSlider.value);
   thicknessVal.textContent = S.thickness;
+  savePrefs();
 });
 
 const textOptsSep   = document.getElementById('text-opts-sep');
@@ -459,8 +682,64 @@ const fontPicker    = document.getElementById('font-picker');
 textSizeSlider.addEventListener('input', () => {
   S.textSize = parseInt(textSizeSlider.value);
   textSizeVal.textContent = S.textSize;
+  savePrefs();
 });
-fontPicker.addEventListener('change', () => { S.textFont = fontPicker.value; });
+fontPicker.addEventListener('change', () => { S.textFont = fontPicker.value; savePrefs(); });
+
+// ── Pixelate ─────────────────────────────────────────────────────────────────
+const pxOptsSep   = document.getElementById('px-opts-sep');
+const pxOptsLabel = document.getElementById('px-opts-label');
+const pxOptsGroup = document.getElementById('px-opts-group');
+const pxGrainSlider = document.getElementById('px-grain-slider');
+const pxGrainVal    = document.getElementById('px-grain-val');
+pxGrainSlider.addEventListener('input', () => {
+  S.pixelGrain = parseInt(pxGrainSlider.value);
+  pxGrainVal.textContent = S.pixelGrain;
+});
+
+// ── Emoji stamp ──────────────────────────────────────────────────────────────
+const EMOJIS = ['⭐','🔥','💡','⚠️','✅','❌','🎯','👍','👎','❓','❗','📌','➡️','⬆️','⬇️','⬅️','💥','✨','🎉','👀','💬','🏷️','🔍','😂'];
+const stampOptsSep   = document.getElementById('stamp-opts-sep');
+const stampOptsLabel = document.getElementById('stamp-opts-label');
+const stampOptsGroup = document.getElementById('stamp-opts-group');
+const emojiGrid      = document.getElementById('emoji-grid');
+const stampSizeSlider= document.getElementById('stamp-size-slider');
+const stampSizeVal   = document.getElementById('stamp-size-val');
+const stampToolBtn   = document.getElementById('stamp-tool-btn');
+
+EMOJIS.forEach(em => {
+  const btn = document.createElement('button');
+  btn.textContent = em;
+  btn.title = em;
+  btn.classList.toggle('active', em === S.activeEmoji);
+  btn.addEventListener('click', () => {
+    S.activeEmoji = em;
+    stampToolBtn.textContent = em;
+    emojiGrid.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.textContent === em));
+  });
+  emojiGrid.appendChild(btn);
+});
+
+stampSizeSlider.addEventListener('input', () => {
+  S.stampSize = parseInt(stampSizeSlider.value);
+  stampSizeVal.textContent = S.stampSize;
+});
+
+const textOutlineSlider = document.getElementById('text-outline-slider');
+const textOutlineVal    = document.getElementById('text-outline-val');
+textOutlineSlider.addEventListener('input', () => {
+  S.textOutlineW = parseInt(textOutlineSlider.value);
+  textOutlineVal.textContent = S.textOutlineW;
+  savePrefs();
+});
+
+const shadowBlurSlider = document.getElementById('shadow-blur-slider');
+const shadowBlurVal    = document.getElementById('shadow-blur-val');
+shadowBlurSlider.addEventListener('input', () => {
+  S.shadowLevel = parseInt(shadowBlurSlider.value);
+  shadowBlurVal.textContent = S.shadowLevel;
+  savePrefs();
+});
 
 function setTool(tool) {
   cancelPending();
@@ -469,14 +748,23 @@ function setTool(tool) {
     b.classList.toggle('active', b.dataset.tool === tool));
   const showT  = THICKNESS_TOOLS.has(tool);
   const showTx = tool === 'text';
+  const showSt = tool === 'stamp';
+  const showPx = tool === 'pixelate';
   thicknessSep.style.display   = showT  ? '' : 'none';
   thicknessLabel.style.display = showT  ? '' : 'none';
   thicknessGroup.style.display = showT  ? 'flex' : 'none';
   textOptsSep.style.display    = showTx ? '' : 'none';
   textOptsLabel.style.display  = showTx ? '' : 'none';
   textOptsGroup.style.display  = showTx ? 'flex' : 'none';
+  pxOptsSep.style.display      = showPx ? '' : 'none';
+  pxOptsLabel.style.display    = showPx ? '' : 'none';
+  pxOptsGroup.style.display    = showPx ? 'flex' : 'none';
+  stampOptsSep.style.display   = showSt ? '' : 'none';
+  stampOptsLabel.style.display = showSt ? '' : 'none';
+  stampOptsGroup.style.display = showSt ? 'flex' : 'none';
   updateCursor();
   setStatus(HINTS[tool] || '');
+  savePrefs();
 }
 
 const HINTS = {
@@ -484,6 +772,9 @@ const HINTS = {
   arrow:   'Drag to draw an arrow',
   rect:    'Drag to draw a rectangle',
   circle:  'Drag to draw a circle',
+  mask:    'Drag to draw a solid mask — redacts or covers content',
+  stamp:    'Click anywhere to drop an emoji stamp',
+  pixelate: 'Drag to pixelate a region — use the Grain slider to set block size',
   text:    'Click anywhere to place a text label',
 };
 
@@ -498,6 +789,7 @@ document.querySelectorAll('[data-ol]').forEach(btn => {
     S.outlineStyle = btn.dataset.ol;
     document.querySelectorAll('[data-ol]').forEach(b => b.classList.toggle('active', b === btn));
     redraw();
+    savePrefs();
   });
 });
 document.querySelectorAll('[data-sh]').forEach(btn => {
@@ -505,6 +797,7 @@ document.querySelectorAll('[data-sh]').forEach(btn => {
     S.shadowStyle = btn.dataset.sh;
     document.querySelectorAll('[data-sh]').forEach(b => b.classList.toggle('active', b === btn));
     redraw();
+    savePrefs();
   });
 });
 
@@ -520,6 +813,14 @@ applyTheme(localStorage.getItem('markup-theme') || 'dark');
 themeBtn.addEventListener('click', () => {
   applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
 });
+
+// ── Help modal ───────────────────────────────────────────────────────────────
+const helpModal = document.getElementById('help-modal');
+const openHelp  = () => helpModal.classList.remove('hidden');
+const closeHelp = () => helpModal.classList.add('hidden');
+document.getElementById('help-btn').addEventListener('click', openHelp);
+document.getElementById('help-close').addEventListener('click', closeHelp);
+helpModal.addEventListener('click', e => { if (e.target === helpModal) closeHelp(); });
 
 document.getElementById('save-app-btn').addEventListener('click', () => {
   const a = document.createElement('a');
@@ -624,6 +925,14 @@ canvas.addEventListener('mousedown', e => {
   const { x, y } = canvasXY(e);
   const ip = toImg(x, y);
 
+  // Stamp tool — click to place, no drag
+  if (S.activeTool === 'stamp') {
+    saveUndo();
+    S.shapes.push({ type: 'stamp', x: ip.x, y: ip.y, emoji: S.activeEmoji, stampSize: S.stampSize });
+    redraw();
+    return;
+  }
+
   // Text tool
   if (S.activeTool === 'text') {
     hideTextInput();
@@ -676,27 +985,36 @@ canvas.addEventListener('mouseup', e => {
   const rx = Math.min(sx, cx), ry = Math.min(sy, cy);
   const rw = Math.abs(cx - sx), rh = Math.abs(cy - sy);
 
+  const ol = S.outlineStyle, sh = S.shadowStyle, slv = S.shadowLevel;
   if (S.activeTool === 'callout') {
     S.pendingCallout = {
       type: 'callout', x: rx, y: ry, w: rw, h: rh,
       tailX: rx + rw / 2,
       tailY: ry + rh + 50 / getScale(),
-      color: S.activeColor, outline: S.outlineStyle, shadow: S.shadowStyle,
+      color: S.activeColor, outline: ol, shadow: sh, shadowLevel: slv,
     };
     canvas.style.cursor = 'cell';
     setStatus('Click to set the callout tail — or press Enter to accept');
     redraw();
   } else if (S.activeTool === 'arrow') {
     saveUndo();
-    S.shapes.push({ type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
+    S.shapes.push({ type: 'arrow', x: sx, y: sy, w: cx - sx, h: cy - sy, color: S.activeColor, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv });
     redraw();
   } else if (S.activeTool === 'rect') {
     saveUndo();
-    S.shapes.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
+    S.shapes.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv });
     redraw();
   } else if (S.activeTool === 'circle') {
     saveUndo();
-    S.shapes.push({ type: 'circle', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: S.outlineStyle, shadow: S.shadowStyle });
+    S.shapes.push({ type: 'circle', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv });
+    redraw();
+  } else if (S.activeTool === 'mask') {
+    saveUndo();
+    S.shapes.push({ type: 'mask', x: rx, y: ry, w: rw, h: rh, color: S.activeColor });
+    redraw();
+  } else if (S.activeTool === 'pixelate') {
+    saveUndo();
+    S.shapes.push({ type: 'pixelate', x: rx, y: ry, w: rw, h: rh, granularity: S.pixelGrain });
     redraw();
   }
 });
@@ -714,12 +1032,18 @@ function commitCallout() {
 document.addEventListener('keydown', e => {
   if (e.target === textField) return;
 
-  if (e.key === 'Escape')               { cancelPending(); redraw(); return; }
+  if (e.key === 'Escape') {
+    if (!helpModal.classList.contains('hidden')) { closeHelp(); return; }
+    cancelPending(); redraw(); return;
+  }
+  if (e.key === '?')                    { openHelp(); return; }
   if (e.ctrlKey && e.key === 'z')       { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey && e.key === 'c')       { e.preventDefault(); copyToClipboard(); return; }
+  if (e.ctrlKey && e.key === 's')       { e.preventDefault(); download(); return; }
   if (e.key === 'Enter' && S.pendingCallout) { commitCallout(); return; }
 
   if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-    const map = { c: 'callout', a: 'arrow', r: 'rect', o: 'circle', t: 'text' };
+    const map = { c: 'callout', a: 'arrow', r: 'rect', o: 'circle', m: 'mask', s: 'stamp', p: 'pixelate', t: 'text' };
     if (map[e.key.toLowerCase()]) setTool(map[e.key.toLowerCase()]);
   }
 });
@@ -761,7 +1085,7 @@ function commitText() {
   const val = textField.value.trim();
   if (val && S.textPending) {
     saveUndo();
-    S.shapes.push({ type: 'text', x: S.textPending.ix, y: S.textPending.iy, color: S.activeColor, text: val, textSize: S.textSize, textFont: S.textFont, outline: S.outlineStyle, shadow: S.shadowStyle });
+    S.shapes.push({ type: 'text', x: S.textPending.ix, y: S.textPending.iy, color: S.activeColor, text: val, textSize: S.textSize, textFont: S.textFont, outline: S.outlineStyle, shadow: S.shadowStyle, shadowLevel: S.shadowLevel, textOutlineW: S.textOutlineW });
     redraw();
   }
   hideTextInput();
@@ -785,8 +1109,10 @@ function copyToClipboard() {
   off.toBlob(async blob => {
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('Copied ✓');
       setStatus('Copied to clipboard');
     } catch {
+      showToast('Copy failed');
       setStatus('Copy failed — try downloading instead (browser may require HTTPS)');
     }
   }, 'image/png');
@@ -837,21 +1163,26 @@ function redraw() {
 function buildPreview(tool, sx, sy, cx, cy, color) {
   const rx = Math.min(sx, cx), ry = Math.min(sy, cy);
   const rw = Math.abs(cx - sx), rh = Math.abs(cy - sy);
-  const ol = S.outlineStyle, sh = S.shadowStyle;
-  if (tool === 'callout') return { type: 'callout', x: rx, y: ry, w: rw, h: rh, tailX: rx + rw/2, tailY: ry + rh + 50/getScale(), color, outline: ol, shadow: sh };
-  if (tool === 'arrow')   return { type: 'arrow',  x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness, outline: ol, shadow: sh };
-  if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh };
-  if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh };
+  const ol = S.outlineStyle, sh = S.shadowStyle, slv = S.shadowLevel;
+  if (tool === 'callout') return { type: 'callout', x: rx, y: ry, w: rw, h: rh, tailX: rx + rw/2, tailY: ry + rh + 50/getScale(), color, outline: ol, shadow: sh, shadowLevel: slv };
+  if (tool === 'arrow')   return { type: 'arrow',  x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
+  if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
+  if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
+  if (tool === 'mask')    return { type: 'mask',      x: rx, y: ry, w: rw, h: rh, color };
+  if (tool === 'pixelate') return { type: 'pixelate', x: rx, y: ry, w: rw, h: rh, granularity: S.pixelGrain };
   return null;
 }
 
-// Shared shadow — shadowStyle is baked into the shape, not read from global S
-function setShadow(c, sc, shadowStyle) {
+// Shared shadow — shadowStyle and shadowLevel are baked into the shape
+function setShadow(c, sc, shadowStyle, shadowLevel) {
+  const lvl  = (shadowLevel === undefined ? 3 : shadowLevel);
+  if (lvl === 0) { clearShadow(c); return; }
+  const mult = lvl / 3;
   const dark = (shadowStyle || 'dark') === 'dark';
   c.shadowColor   = dark ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)';
-  c.shadowBlur    = Math.max(14, 20 * sc);
+  c.shadowBlur    = Math.max(14, 20 * sc) * mult;
   c.shadowOffsetX = 0;
-  c.shadowOffsetY = dark ? Math.max(4, 7 * sc) : -Math.max(2, 4 * sc);
+  c.shadowOffsetY = (dark ? Math.max(4, 7 * sc) : -Math.max(2, 4 * sc)) * mult;
 }
 function outlineColor(style) {
   return (style || 'light') === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)';
@@ -866,14 +1197,18 @@ function clearShadow(c) {
 function drawShape(c, shape, sc) {
   c.save();
   const x  = shape.x * sc, y = shape.y * sc, w = shape.w * sc, h = shape.h * sc;
-  const ol = shape.outline || 'light';
-  const sh = shape.shadow  || 'dark';
+  const ol  = shape.outline     || 'light';
+  const sh  = shape.shadow      || 'dark';
+  const slv = shape.shadowLevel !== undefined ? shape.shadowLevel : 3;
   switch (shape.type) {
     case 'callout': drawCallout(c, shape, sc); break;
-    case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3, ol, sh); break;
-    case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh); break;
-    case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh); break;
-    case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont, ol, sh); break;
+    case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
+    case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
+    case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
+    case 'mask':    drawMask(c, x, y, w, h, shape.color); break;
+    case 'stamp':    drawStamp(c, shape.x * sc, shape.y * sc, shape.emoji, shape.stampSize, sc); break;
+    case 'pixelate': drawPixelate(c, shape, sc); break;
+    case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont, ol, sh, slv, shape.textOutlineW); break;
   }
   c.restore();
 }
@@ -909,7 +1244,7 @@ function drawCallout(c, sh, sc) {
   // ── 1. Semi-transparent fill + drop shadow ───────────────
   c.save();
   c.globalAlpha = 0.84;
-  setShadow(c, sc, sh.shadow || 'dark');
+  setShadow(c, sc, sh.shadow || 'dark', sh.shadowLevel);
   c.fillStyle = sh.color;
   c.beginPath();
   rrPath(c, x, y, w, h, r);
@@ -996,7 +1331,40 @@ function rrPath(c, x, y, w, h, r) {
   c.closePath();
 }
 
-function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow) {
+function drawPixelate(c, shape, sc) {
+  if (!S.image) return;
+  const x = shape.x * sc, y = shape.y * sc;
+  const w = shape.w * sc, h = shape.h * sc;
+  if (Math.abs(w) < 2 || Math.abs(h) < 2) return;
+  const grain = Math.max(1, shape.granularity || 10);
+  // Blocks in image space
+  const blockW = Math.max(1, Math.round(shape.w / grain));
+  const blockH = Math.max(1, Math.round(shape.h / grain));
+  const off = document.createElement('canvas');
+  off.width = blockW; off.height = blockH;
+  const oc = off.getContext('2d');
+  oc.imageSmoothingEnabled = false;
+  oc.drawImage(S.image, shape.x, shape.y, shape.w, shape.h, 0, 0, blockW, blockH);
+  c.imageSmoothingEnabled = false;
+  c.drawImage(off, 0, 0, blockW, blockH, x, y, w, h);
+  c.imageSmoothingEnabled = true;
+}
+
+function drawStamp(c, x, y, emoji, size, sc) {
+  const fs = (size || 48) * sc;
+  c.font         = `${fs}px serif`;
+  c.textBaseline = 'middle';
+  c.textAlign    = 'center';
+  c.fillText(emoji || '⭐', x, y);
+}
+
+function drawMask(c, x, y, w, h, color) {
+  c.fillStyle = color;
+  const r = Math.min(4, Math.abs(w) * 0.05, Math.abs(h) * 0.05);
+  c.beginPath(); rrPath(c, x, y, w, h, r); c.fill();
+}
+
+function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow, shadowLevel) {
   const len = Math.hypot(x2 - x1, y2 - y1);
   if (len < 8) return;
   const ang  = Math.atan2(y2 - y1, x2 - x1);
@@ -1015,7 +1383,7 @@ function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow) {
   c.stroke();
 
   // Shaft + arrowhead with drop shadow
-  setShadow(c, sc, shadow);
+  setShadow(c, sc, shadow, shadowLevel);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.beginPath();
@@ -1051,7 +1419,7 @@ function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow) {
   c.stroke();
 }
 
-function drawRect(c, x, y, w, h, color, sc, thickness, outline, shadow) {
+function drawRect(c, x, y, w, h, color, sc, thickness, outline, shadow, shadowLevel) {
   const lw = thickness * sc;
   const r  = 4 * sc;
 
@@ -1062,7 +1430,7 @@ function drawRect(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
 
   // Drop shadow + main stroke
-  setShadow(c, sc, shadow);
+  setShadow(c, sc, shadow, shadowLevel);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.lineJoin    = 'round';
@@ -1091,7 +1459,7 @@ function drawRect(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   c.beginPath(); rrPath(c, x, y, w, h, r); c.stroke();
 }
 
-function drawCircle(c, x, y, w, h, color, sc, thickness, outline, shadow) {
+function drawCircle(c, x, y, w, h, color, sc, thickness, outline, shadow, shadowLevel) {
   const lw = thickness * sc;
   const cx = x + w / 2, cy = y + h / 2;
   const rx = Math.abs(w / 2), ry = Math.abs(h / 2);
@@ -1102,7 +1470,7 @@ function drawCircle(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
 
   // Drop shadow + main stroke
-  setShadow(c, sc, shadow);
+  setShadow(c, sc, shadow, shadowLevel);
   c.strokeStyle = color;
   c.lineWidth   = lw;
   c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
@@ -1128,7 +1496,7 @@ function drawCircle(c, x, y, w, h, color, sc, thickness, outline, shadow) {
   c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.stroke();
 }
 
-function drawText(c, x, y, text, color, sc, textSize, textFont, outline, shadow) {
+function drawText(c, x, y, text, color, sc, textSize, textFont, outline, shadow, shadowLevel, textOutlineW) {
   const fs   = (textSize || 24) * sc;
   const font = textFont || 'system-ui, sans-serif';
   c.font         = `900 ${fs}px ${font}`;
@@ -1139,15 +1507,20 @@ function drawText(c, x, y, text, color, sc, textSize, textFont, outline, shadow)
   if ('letterSpacing' in c) c.letterSpacing = '0px';
 
   // Drop shadow — baked at draw time
+  const lvl    = shadowLevel !== undefined ? shadowLevel : 3;
+  const mult   = lvl / 3;
   const darkSh = (shadow || 'dark') === 'dark';
-  c.shadowColor   = darkSh ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)';
-  c.shadowBlur    = Math.max(6, 10 * sc);
-  c.shadowOffsetY = darkSh ? Math.max(2, 4 * sc) : -Math.max(1, 3 * sc);
+  if (lvl > 0) {
+    c.shadowColor   = darkSh ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.6)';
+    c.shadowBlur    = Math.max(6, 10 * sc) * mult;
+    c.shadowOffsetY = (darkSh ? Math.max(2, 4 * sc) : -Math.max(1, 3 * sc)) * mult;
+  }
 
   // Outline stroke — baked at draw time, drawn first so fill covers the inner half
+  const ow = textOutlineW !== undefined ? textOutlineW : 2;
   c.strokeStyle = outlineColor(outline);
-  c.lineWidth   = Math.max(2, fs * 0.11);
-  c.strokeText(text, x, y);
+  c.lineWidth   = ow === 0 ? 0 : Math.max(1, fs * 0.04 * ow);
+  if (ow > 0) c.strokeText(text, x, y);
 
   // Clear shadow before fill so it doesn't double up
   c.shadowColor   = 'transparent';
@@ -1164,9 +1537,63 @@ window.addEventListener('resize', () => {
   if (S.image) { fitCanvas(); redraw(); }
 });
 
+// ── Preferences (localStorage) ───────────────────────────────────────────────
+const PREF_KEY = 'markup-prefs';
+
+function savePrefs() {
+  const p = {
+    activeTool:   S.activeTool,
+    activeColor:  S.activeColor,
+    thickness:    S.thickness,
+    textSize:     S.textSize,
+    textFont:     S.textFont,
+    textOutlineW: S.textOutlineW,
+    outlineStyle: S.outlineStyle,
+    shadowStyle:  S.shadowStyle,
+    shadowLevel:  S.shadowLevel,
+  };
+  try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch {}
+}
+
+function loadPrefs() {
+  let p;
+  try { p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch { p = {}; }
+
+  if (p.activeColor)  S.activeColor  = p.activeColor;
+  if (p.thickness)    S.thickness    = p.thickness;
+  if (p.textSize)     S.textSize     = p.textSize;
+  if (p.textFont)     S.textFont     = p.textFont;
+  if (p.textOutlineW !== undefined) S.textOutlineW = p.textOutlineW;
+  if (p.outlineStyle) S.outlineStyle = p.outlineStyle;
+  if (p.shadowStyle)  S.shadowStyle  = p.shadowStyle;
+  if (p.shadowLevel !== undefined)  S.shadowLevel  = p.shadowLevel;
+
+  // Sync UI to loaded values
+  thicknessSlider.value    = S.thickness;
+  thicknessVal.textContent = S.thickness;
+  textSizeSlider.value     = S.textSize;
+  textSizeVal.textContent  = S.textSize;
+  fontPicker.value         = S.textFont;
+  textOutlineSlider.value  = S.textOutlineW;
+  textOutlineVal.textContent = S.textOutlineW;
+  shadowBlurSlider.value   = S.shadowLevel;
+  shadowBlurVal.textContent = S.shadowLevel;
+  document.querySelectorAll('[data-ol]').forEach(b =>
+    b.classList.toggle('active', b.dataset.ol === S.outlineStyle));
+  document.querySelectorAll('[data-sh]').forEach(b =>
+    b.classList.toggle('active', b.dataset.sh === S.shadowStyle));
+
+  setColor(S.activeColor);
+  setTool(p.activeTool || 'callout');
+}
+
+// ── Service worker ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/markup/sw.js').catch(() => {});
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
-setColor('#E63946');
-setTool('callout');
+loadPrefs();
 </script>
 </body>
 </html>

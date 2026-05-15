@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="24" fill="#1B1915"/>
+  <rect x="24" y="24" width="120" height="90" rx="8" fill="#2E2A24" stroke="#D4863A" stroke-width="3"/>
+  <line x1="36" y1="46" x2="108" y2="46" stroke="#D4863A" stroke-width="4" stroke-linecap="round"/>
+  <line x1="36" y1="62" x2="96" y2="62" stroke="#6B6560" stroke-width="3" stroke-linecap="round"/>
+  <line x1="36" y1="76" x2="102" y2="76" stroke="#6B6560" stroke-width="3" stroke-linecap="round"/>
+  <!-- callout bubble -->
+  <rect x="90" y="80" width="78" height="46" rx="8" fill="#D4863A"/>
+  <polygon points="116,126 128,126 122,142" fill="#D4863A"/>
+  <line x1="100" y1="98" x2="158" y2="98" stroke="#1B1915" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="112" x2="148" y2="112" stroke="#1B1915" stroke-width="3" stroke-linecap="round"/>
+</svg>

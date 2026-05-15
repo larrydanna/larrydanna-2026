@@ -1,0 +1,17 @@
+{
+  "name": "Markup — Screenshot Annotator",
+  "short_name": "Markup",
+  "description": "Paste a screenshot and annotate it with callouts, arrows, shapes, and text. Download as PNG.",
+  "start_url": "/markup/",
+  "display": "standalone",
+  "background_color": "#0F0D0A",
+  "theme_color": "#D4863A",
+  "icons": [
+    {
+      "src": "/markup/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
