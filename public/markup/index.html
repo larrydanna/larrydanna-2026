@@ -284,10 +284,21 @@ body {
   min-width: 140px;
 }
 
-/* ── Emoji grid ──────────────────────────────────────────── */
+/* ── Stamp floating panel ────────────────────────────────── */
+#stamp-panel {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  z-index: 200;
+  display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
 #emoji-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 2px;
 }
 
@@ -296,14 +307,23 @@ body {
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
-  padding: 3px;
+  padding: 4px 5px;
   text-align: center;
 }
 
 #emoji-grid button:hover { background: var(--border); }
 #emoji-grid button.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+
+#stamp-size-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
 
 /* ── Help modal ──────────────────────────────────────────── */
 .modal-backdrop {
@@ -449,7 +469,7 @@ kbd {
     <button class="tool-btn" data-tool="arrow"   title="Arrow (A)">↗</button>
     <button class="tool-btn" data-tool="rect"    title="Rectangle (R)">▭</button>
     <button class="tool-btn" data-tool="circle"  title="Circle (O)">◯</button>
-    <button class="tool-btn" data-tool="mask"    title="Mask / Redact (M)">▮</button>
+    <button class="tool-btn" data-tool="mask"    title="Spotlight / Focus (M)">◎</button>
     <button class="tool-btn" data-tool="stamp"   title="Emoji Stamp (S)" id="stamp-tool-btn">⭐</button>
     <button class="tool-btn" data-tool="pixelate" title="Pixelate / Blur (P)">⊞</button>
     <button class="tool-btn" data-tool="text"    title="Text (T)" style="font-weight:700;font-size:14px">T</button>
@@ -490,16 +510,6 @@ kbd {
     </div>
   </div>
 
-  <div class="tool-sep" id="stamp-opts-sep" style="display:none"></div>
-  <span class="tool-label" id="stamp-opts-label" style="display:none">Stamp</span>
-  <div id="stamp-opts-group" style="display:none; flex-direction:column; gap:4px">
-    <div id="emoji-grid"></div>
-    <div style="display:flex; align-items:center; gap:4px; margin-top:2px">
-      <input type="range" id="stamp-size-slider" min="16" max="128" value="48" class="thickness-slider" title="Stamp size">
-      <span id="stamp-size-val">48</span>
-    </div>
-  </div>
-
   <div class="tool-sep"></div>
   <span class="tool-label">Outline</span>
   <div class="tool-group">
@@ -530,6 +540,15 @@ kbd {
   <button class="action-btn" id="help-btn" title="Keyboard shortcuts (?)">?</button>
 </div>
 
+<div id="stamp-panel">
+  <div id="emoji-grid"></div>
+  <div id="stamp-size-row">
+    <span class="tool-label">Size</span>
+    <input type="range" id="stamp-size-slider" min="16" max="128" value="48">
+    <span id="stamp-size-val">48</span>
+  </div>
+</div>
+
 <div id="canvas-wrap">
   <canvas id="canvas"></canvas>
   <div id="drop-overlay">
@@ -557,7 +576,7 @@ kbd {
           <tr><td><kbd>A</kbd></td><td>Arrow</td></tr>
           <tr><td><kbd>R</kbd></td><td>Rectangle</td></tr>
           <tr><td><kbd>O</kbd></td><td>Circle</td></tr>
-          <tr><td><kbd>M</kbd></td><td>Mask / Redact</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Spotlight / Focus</td></tr>
           <tr><td><kbd>S</kbd></td><td>Emoji stamp</td></tr>
           <tr><td><kbd>P</kbd></td><td>Pixelate region</td></tr>
           <tr><td><kbd>T</kbd></td><td>Text label</td></tr>
@@ -617,6 +636,7 @@ const S = {
 };
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
+const setStatus  = msg => { statusEl.textContent = msg; };
 const wrap       = document.getElementById('canvas-wrap');
 const canvas     = document.getElementById('canvas');
 const ctx        = canvas.getContext('2d');
@@ -699,10 +719,19 @@ pxGrainSlider.addEventListener('input', () => {
 
 // ── Emoji stamp ──────────────────────────────────────────────────────────────
 const EMOJIS = ['⭐','🔥','💡','⚠️','✅','❌','🎯','👍','👎','❓','❗','📌','➡️','⬆️','⬇️','⬅️','💥','✨','🎉','👀','💬','🏷️','🔍','😂'];
-const stampOptsSep   = document.getElementById('stamp-opts-sep');
-const stampOptsLabel = document.getElementById('stamp-opts-label');
-const stampOptsGroup = document.getElementById('stamp-opts-group');
+const stampPanel     = document.getElementById('stamp-panel');
 const emojiGrid      = document.getElementById('emoji-grid');
+
+function updateStampPanel() {
+  if (S.activeTool === 'stamp') {
+    const r = stampToolBtn.getBoundingClientRect();
+    stampPanel.style.left    = r.left + 'px';
+    stampPanel.style.top     = (r.bottom + 4) + 'px';
+    stampPanel.style.display = 'block';
+  } else {
+    stampPanel.style.display = 'none';
+  }
+}
 const stampSizeSlider= document.getElementById('stamp-size-slider');
 const stampSizeVal   = document.getElementById('stamp-size-val');
 const stampToolBtn   = document.getElementById('stamp-tool-btn');
@@ -748,7 +777,6 @@ function setTool(tool) {
     b.classList.toggle('active', b.dataset.tool === tool));
   const showT  = THICKNESS_TOOLS.has(tool);
   const showTx = tool === 'text';
-  const showSt = tool === 'stamp';
   const showPx = tool === 'pixelate';
   thicknessSep.style.display   = showT  ? '' : 'none';
   thicknessLabel.style.display = showT  ? '' : 'none';
@@ -759,9 +787,7 @@ function setTool(tool) {
   pxOptsSep.style.display      = showPx ? '' : 'none';
   pxOptsLabel.style.display    = showPx ? '' : 'none';
   pxOptsGroup.style.display    = showPx ? 'flex' : 'none';
-  stampOptsSep.style.display   = showSt ? '' : 'none';
-  stampOptsLabel.style.display = showSt ? '' : 'none';
-  stampOptsGroup.style.display = showSt ? 'flex' : 'none';
+  updateStampPanel();
   updateCursor();
   setStatus(HINTS[tool] || '');
   savePrefs();
@@ -772,7 +798,7 @@ const HINTS = {
   arrow:   'Drag to draw an arrow',
   rect:    'Drag to draw a rectangle',
   circle:  'Drag to draw a circle',
-  mask:    'Drag to draw a solid mask — redacts or covers content',
+  mask:    'Drag to reveal a focus area — rest of image dims to draw the eye',
   stamp:    'Click anywhere to drop an emoji stamp',
   pixelate: 'Drag to pixelate a region — use the Grain slider to set block size',
   text:    'Click anywhere to place a text label',
@@ -928,7 +954,7 @@ canvas.addEventListener('mousedown', e => {
   // Stamp tool — click to place, no drag
   if (S.activeTool === 'stamp') {
     saveUndo();
-    S.shapes.push({ type: 'stamp', x: ip.x, y: ip.y, emoji: S.activeEmoji, stampSize: S.stampSize });
+    S.shapes.push({ type: 'stamp', x: ip.x, y: ip.y, emoji: S.activeEmoji, stampSize: S.stampSize, outline: S.outlineStyle, shadow: S.shadowStyle, shadowLevel: S.shadowLevel });
     redraw();
     return;
   }
@@ -1010,7 +1036,7 @@ canvas.addEventListener('mouseup', e => {
     redraw();
   } else if (S.activeTool === 'mask') {
     saveUndo();
-    S.shapes.push({ type: 'mask', x: rx, y: ry, w: rw, h: rh, color: S.activeColor });
+    S.shapes.push({ type: 'mask', x: rx, y: ry, w: rw, h: rh, color: S.activeColor, opacity: 0.55 });
     redraw();
   } else if (S.activeTool === 'pixelate') {
     saveUndo();
@@ -1106,16 +1132,12 @@ function copyToClipboard() {
   const oc = off.getContext('2d');
   oc.drawImage(S.image, 0, 0);
   S.shapes.forEach(s => drawShape(oc, s, 1));
-  off.toBlob(async blob => {
-    try {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Copied ✓');
-      setStatus('Copied to clipboard');
-    } catch {
-      showToast('Copy failed');
-      setStatus('Copy failed — try downloading instead (browser may require HTTPS)');
-    }
-  }, 'image/png');
+  // Lazy ClipboardItem: pass a Promise so the write is initiated within the
+  // click gesture context, avoiding "not within user gesture" rejections.
+  const blobPromise = new Promise(resolve => off.toBlob(resolve, 'image/png'));
+  navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })])
+    .then(() => { showToast('Copied ✓'); setStatus('Copied to clipboard'); })
+    .catch(() => { showToast('Copy failed'); setStatus('Copy failed — try downloading instead (browser may require HTTPS)'); });
 }
 
 // ── Download ──────────────────────────────────────────────────────────────────
@@ -1168,7 +1190,7 @@ function buildPreview(tool, sx, sy, cx, cy, color) {
   if (tool === 'arrow')   return { type: 'arrow',  x: sx, y: sy, w: cx - sx, h: cy - sy, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
   if (tool === 'rect')    return { type: 'rect',   x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
   if (tool === 'circle')  return { type: 'circle', x: rx, y: ry, w: rw, h: rh, color, thickness: S.thickness, outline: ol, shadow: sh, shadowLevel: slv };
-  if (tool === 'mask')    return { type: 'mask',      x: rx, y: ry, w: rw, h: rh, color };
+  if (tool === 'mask')    return { type: 'mask',      x: rx, y: ry, w: rw, h: rh, color, opacity: 0.55 };
   if (tool === 'pixelate') return { type: 'pixelate', x: rx, y: ry, w: rw, h: rh, granularity: S.pixelGrain };
   return null;
 }
@@ -1205,8 +1227,8 @@ function drawShape(c, shape, sc) {
     case 'arrow':   drawArrow(c, x, y, (shape.x + shape.w) * sc, (shape.y + shape.h) * sc, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
     case 'rect':    drawRect(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
     case 'circle':  drawCircle(c, x, y, w, h, shape.color, sc, shape.thickness || 3, ol, sh, slv); break;
-    case 'mask':    drawMask(c, x, y, w, h, shape.color); break;
-    case 'stamp':    drawStamp(c, shape.x * sc, shape.y * sc, shape.emoji, shape.stampSize, sc); break;
+    case 'mask':    drawMask(c, shape, sc); break;
+    case 'stamp':   drawStamp(c, shape, sc); break;
     case 'pixelate': drawPixelate(c, shape, sc); break;
     case 'text':    drawText(c, x, y, shape.text, shape.color, sc, shape.textSize, shape.textFont, ol, sh, slv, shape.textOutlineW); break;
   }
@@ -1350,18 +1372,41 @@ function drawPixelate(c, shape, sc) {
   c.imageSmoothingEnabled = true;
 }
 
-function drawStamp(c, x, y, emoji, size, sc) {
-  const fs = (size || 48) * sc;
+function drawStamp(c, shape, sc) {
+  const x  = shape.x * sc, y = shape.y * sc;
+  const fs = (shape.stampSize || 48) * sc;
+  const em = shape.emoji || '⭐';
   c.font         = `${fs}px serif`;
   c.textBaseline = 'middle';
   c.textAlign    = 'center';
-  c.fillText(emoji || '⭐', x, y);
+  // Outline pass: spread shadow in outline color creates a halo around the emoji
+  const ol = shape.outline || 'light';
+  c.save();
+  c.shadowColor   = outlineColor(ol);
+  c.shadowBlur    = Math.max(3, fs * 0.07);
+  c.shadowOffsetX = 0;
+  c.shadowOffsetY = 0;
+  c.fillText(em, x, y);
+  c.restore();
+  // Drop shadow pass
+  setShadow(c, sc, shape.shadow, shape.shadowLevel);
+  c.fillText(em, x, y);
+  clearShadow(c);
 }
 
-function drawMask(c, x, y, w, h, color) {
-  c.fillStyle = color;
-  const r = Math.min(4, Math.abs(w) * 0.05, Math.abs(h) * 0.05);
-  c.beginPath(); rrPath(c, x, y, w, h, r); c.fill();
+function drawMask(c, shape, sc) {
+  // Spotlight: dim entire canvas, punch out the dragged region as a clear window
+  const cw = c.canvas.width, ch = c.canvas.height;
+  const x  = shape.x * sc, y = shape.y * sc;
+  const w  = shape.w * sc, h = shape.h * sc;
+  c.save();
+  c.globalAlpha = shape.opacity !== undefined ? shape.opacity : 0.55;
+  c.fillStyle   = shape.color || '#000000';
+  c.beginPath();
+  c.rect(0, 0, cw, ch);  // full canvas
+  c.rect(x, y, w, h);    // clear window (evenodd punches hole)
+  c.fill('evenodd');
+  c.restore();
 }
 
 function drawArrow(c, x1, y1, x2, y2, color, sc, thickness, outline, shadow, shadowLevel) {
