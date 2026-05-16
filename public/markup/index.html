@@ -745,6 +745,7 @@ EMOJIS.forEach(em => {
     S.activeEmoji = em;
     stampToolBtn.textContent = em;
     emojiGrid.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.textContent === em));
+    stampPanel.style.display = 'none';
   });
   emojiGrid.appendChild(btn);
 });
@@ -1150,7 +1151,9 @@ function download() {
   oc.drawImage(S.image, 0, 0);
   S.shapes.forEach(s => drawShape(oc, s, 1));
   const a = document.createElement('a');
-  a.download = 'markup.png';
+  const _n = new Date(), _p = n => String(n).padStart(2,'0');
+  const _ts = `${String(_n.getFullYear()).slice(-2)}${_p(_n.getMonth()+1)}${_p(_n.getDate())}${_p(_n.getHours())}${_p(_n.getMinutes())}${_p(_n.getSeconds())}`;
+  a.download = `markup-${_ts}.png`;
   a.href = off.toDataURL('image/png');
   a.click();
 }
