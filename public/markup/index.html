@@ -238,6 +238,7 @@ body {
 #canvas {
   display: block;
   image-rendering: pixelated;
+  touch-action: none;
 }
 
 /* ── Drop overlay ────────────────────────────────────────── */
@@ -465,6 +466,7 @@ kbd {
 <div id="toolbar">
   <span class="tool-label">Tool</span>
   <div class="tool-group">
+    <button class="tool-btn" data-tool="select"  title="Select (V)"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" style="display:block"><path d="M2 1L2 11L5 8L7 13L9 12L7 7L11 7Z"/></svg></button>
     <button class="tool-btn" data-tool="callout" title="Callout (C)">💬</button>
     <button class="tool-btn" data-tool="arrow"   title="Arrow (A)">↗</button>
     <button class="tool-btn" data-tool="rect"    title="Rectangle (R)">▭</button>
@@ -572,6 +574,7 @@ kbd {
       <table class="shortcut-table">
         <tbody>
           <tr><th>Tools</th><td></td></tr>
+          <tr><td><kbd>V</kbd></td><td>Select a shape</td></tr>
           <tr><td><kbd>C</kbd></td><td>Callout bubble</td></tr>
           <tr><td><kbd>A</kbd></td><td>Arrow</td></tr>
           <tr><td><kbd>R</kbd></td><td>Rectangle</td></tr>
@@ -580,6 +583,8 @@ kbd {
           <tr><td><kbd>S</kbd></td><td>Emoji stamp</td></tr>
           <tr><td><kbd>P</kbd></td><td>Pixelate region</td></tr>
           <tr><td><kbd>T</kbd></td><td>Text label</td></tr>
+          <tr><td><kbd>Del</kbd> / <kbd>Backspace</kbd></td><td>Delete selected</td></tr>
+          <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>Reorder (back / forward)</td></tr>
           <tr><th>Actions</th><td></td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Copy to clipboard</td></tr>
@@ -633,6 +638,8 @@ const S = {
   activeEmoji:    '⭐',
   stampSize:      48,
   pixelGrain:     10,
+  selectedIdx:    null,
+  selectDrag:     { on: false, startIx: 0, startIy: 0, origShape: null, savedUndo: false },
 };
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
@@ -795,6 +802,7 @@ function setTool(tool) {
 }
 
 const HINTS = {
+  select:  'Click a shape to select it · Delete to remove · [ ] to reorder',
   callout: 'Drag to draw callout body · click to set tail · Enter to accept',
   arrow:   'Drag to draw an arrow',
   rect:    'Drag to draw a rectangle',
@@ -863,6 +871,7 @@ function saveUndo() {
 
 function undo() {
   if (!S.undoStack.length) return;
+  S.selectedIdx = null;
   cancelPending();
   S.shapes = S.undoStack.pop();
   redraw();
@@ -873,6 +882,7 @@ function clearAll() {
   if (!S.shapes.length && !S.pendingCallout) return;
   saveUndo();
   S.shapes = [];
+  S.selectedIdx = null;
   cancelPending();
   redraw();
 }
@@ -880,6 +890,7 @@ function clearAll() {
 function cancelPending() {
   S.pendingCallout = null;
   S.drag.on = false;
+  S.selectDrag.on = false;
   hideTextInput();
   updateCursor();
 }
@@ -913,6 +924,53 @@ const getScale  = () => parseFloat(canvas.dataset.scale || '1');
 const toImg     = (cx, cy) => ({ x: cx / getScale(), y: cy / getScale() });
 const toCanvas  = (ix, iy) => ({ x: ix * getScale(), y: iy * getScale() });
 
+function shapeBounds(s) {
+  if (s.type === 'arrow') {
+    return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h), w: Math.abs(s.w), h: Math.abs(s.h) };
+  }
+  if (s.type === 'stamp') {
+    const r = (s.stampSize || 48) * 0.6;
+    return { x: s.x - r, y: s.y - r, w: r * 2, h: r * 2 };
+  }
+  if (s.type === 'text') {
+    const fs = s.textSize || 24;
+    ctx.save();
+    ctx.font = `900 ${fs}px ${s.textFont || 'system-ui, sans-serif'}`;
+    const w = ctx.measureText(s.text || '').width;
+    ctx.restore();
+    return { x: s.x, y: s.y, w, h: fs * 1.3 };
+  }
+  return { x: s.x, y: s.y, w: s.w, h: s.h };
+}
+
+function hitTest(ix, iy) {
+  for (let i = S.shapes.length - 1; i >= 0; i--) {
+    const s = S.shapes[i];
+    if (s.type === 'arrow') {
+      const x1 = s.x, y1 = s.y, x2 = s.x + s.w, y2 = s.y + s.h;
+      const len2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+      if (len2 < 1) continue;
+      const t  = Math.max(0, Math.min(1, ((ix - x1) * (x2 - x1) + (iy - y1) * (y2 - y1)) / len2));
+      const dx = ix - (x1 + t * (x2 - x1));
+      const dy = iy - (y1 + t * (y2 - y1));
+      if (Math.hypot(dx, dy) < 12 / getScale()) return i;
+    } else if (s.type === 'circle') {
+      const cx = s.x + s.w / 2, cy = s.y + s.h / 2;
+      const rx = Math.abs(s.w / 2), ry = Math.abs(s.h / 2);
+      if (rx < 1 || ry < 1) continue;
+      const dx = (ix - cx) / rx, dy = (iy - cy) / ry;
+      if (dx * dx + dy * dy <= 1) return i;
+    } else if (s.type === 'stamp') {
+      const r = (s.stampSize || 48) * 0.6;
+      if (Math.hypot(ix - s.x, iy - s.y) < r) return i;
+    } else {
+      const b = shapeBounds(s);
+      if (ix >= b.x && ix <= b.x + b.w && iy >= b.y && iy <= b.y + b.h) return i;
+    }
+  }
+  return -1;
+}
+
 // ── Paste / Drop ─────────────────────────────────────────────────────────────
 document.addEventListener('paste', e => {
   const items = e.clipboardData?.items;
@@ -937,20 +995,49 @@ wrap.addEventListener('drop', e => {
 function updateCursor() {
   if (!S.image) { canvas.style.cursor = 'default'; return; }
   if (S.pendingCallout) { canvas.style.cursor = 'cell'; return; }
+  if (S.activeTool === 'select') {
+    canvas.style.cursor = S.selectDrag.on ? 'grabbing' : (S.selectedIdx !== null ? 'grab' : 'default');
+    return;
+  }
   const map = { callout: 'crosshair', arrow: 'crosshair', rect: 'crosshair', circle: 'crosshair', text: 'text' };
   canvas.style.cursor = map[S.activeTool] || 'default';
 }
 
-// ── Canvas mouse ──────────────────────────────────────────────────────────────
+function applyDragMove(shape, orig, dx, dy) {
+  shape.x = orig.x + dx;
+  shape.y = orig.y + dy;
+  if (shape.type === 'callout') {
+    shape.tailX = orig.tailX + dx;
+    shape.tailY = orig.tailY + dy;
+  }
+}
+
+// ── Canvas pointer (mouse + touch) ────────────────────────────────────────────
 function canvasXY(e) {
   const r = canvas.getBoundingClientRect();
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
-canvas.addEventListener('mousedown', e => {
+canvas.addEventListener('pointerdown', e => {
   if (!S.image) return;
+  canvas.setPointerCapture(e.pointerId);
   const { x, y } = canvasXY(e);
   const ip = toImg(x, y);
+
+  // Select tool — hit test then track for possible drag
+  if (S.activeTool === 'select') {
+    const hitIdx = hitTest(ip.x, ip.y);
+    S.selectedIdx = hitIdx >= 0 ? hitIdx : null;
+    S.selectDrag = hitIdx >= 0
+      ? { on: true, startIx: ip.x, startIy: ip.y, origShape: JSON.parse(JSON.stringify(S.shapes[hitIdx])), savedUndo: false }
+      : { on: false, startIx: 0, startIy: 0, origShape: null, savedUndo: false };
+    updateCursor();
+    redraw();
+    return;
+  }
+
+  // All drawing tools clear selection
+  S.selectedIdx = null;
 
   // Stamp tool — click to place, no drag
   if (S.activeTool === 'stamp') {
@@ -979,10 +1066,22 @@ canvas.addEventListener('mousedown', e => {
   S.drag = { on: true, sx: ip.x, sy: ip.y, cx: ip.x, cy: ip.y };
 });
 
-canvas.addEventListener('mousemove', e => {
+canvas.addEventListener('pointermove', e => {
   if (!S.image) return;
   const { x, y } = canvasXY(e);
   const ip = toImg(x, y);
+
+  // Select drag — move selected shape live
+  if (S.activeTool === 'select' && S.selectDrag.on && S.selectedIdx !== null) {
+    const dx = ip.x - S.selectDrag.startIx;
+    const dy = ip.y - S.selectDrag.startIy;
+    const minMove = 3 / getScale();
+    if (Math.abs(dx) < minMove && Math.abs(dy) < minMove) return;
+    if (!S.selectDrag.savedUndo) { saveUndo(); S.selectDrag.savedUndo = true; }
+    applyDragMove(S.shapes[S.selectedIdx], S.selectDrag.origShape, dx, dy);
+    redraw();
+    return;
+  }
 
   if (S.pendingCallout) {
     S.pendingCallout.tailX = ip.x;
@@ -997,8 +1096,17 @@ canvas.addEventListener('mousemove', e => {
   redraw();
 });
 
-canvas.addEventListener('mouseup', e => {
-  if (!S.image || !S.drag.on) return;
+canvas.addEventListener('pointerup', e => {
+  if (!S.image) return;
+
+  // Select drag — finalize move
+  if (S.activeTool === 'select' && S.selectDrag.on) {
+    S.selectDrag.on = false;
+    updateCursor();
+    return;
+  }
+
+  if (!S.drag.on) return;
   const { x, y } = canvasXY(e);
   const ip = toImg(x, y);
   S.drag.cx = ip.x;
@@ -1069,8 +1177,24 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 's')       { e.preventDefault(); download(); return; }
   if (e.key === 'Enter' && S.pendingCallout) { commitCallout(); return; }
 
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (S.selectedIdx !== null) {
+      saveUndo(); S.shapes.splice(S.selectedIdx, 1); S.selectedIdx = null; redraw(); return;
+    }
+  }
+
   if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-    const map = { c: 'callout', a: 'arrow', r: 'rect', o: 'circle', m: 'mask', s: 'stamp', p: 'pixelate', t: 'text' };
+    if (e.key === '[' && S.selectedIdx !== null && S.selectedIdx > 0) {
+      const i = S.selectedIdx;
+      [S.shapes[i - 1], S.shapes[i]] = [S.shapes[i], S.shapes[i - 1]];
+      S.selectedIdx--; redraw(); return;
+    }
+    if (e.key === ']' && S.selectedIdx !== null && S.selectedIdx < S.shapes.length - 1) {
+      const i = S.selectedIdx;
+      [S.shapes[i], S.shapes[i + 1]] = [S.shapes[i + 1], S.shapes[i]];
+      S.selectedIdx++; redraw(); return;
+    }
+    const map = { c: 'callout', a: 'arrow', r: 'rect', o: 'circle', m: 'mask', s: 'stamp', p: 'pixelate', t: 'text', v: 'select' };
     if (map[e.key.toLowerCase()]) setTool(map[e.key.toLowerCase()]);
   }
 });
@@ -1164,6 +1288,22 @@ function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (S.image) ctx.drawImage(S.image, 0, 0, canvas.width, canvas.height);
   S.shapes.forEach(s => drawShape(ctx, s, sc));
+
+  if (S.selectedIdx !== null && S.shapes[S.selectedIdx]) {
+    const b   = shapeBounds(S.shapes[S.selectedIdx]);
+    const sc2 = getScale();
+    const pad = 6 / sc2;
+    const bx  = (b.x - pad) * sc2, by = (b.y - pad) * sc2;
+    const bw  = (b.w + pad * 2) * sc2, bh = (b.h + pad * 2) * sc2;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.restore();
+  }
 
   if (S.pendingCallout) {
     drawShape(ctx, S.pendingCallout, sc);
