@@ -283,8 +283,21 @@
     }
     .note-dot.active { border-color: rgba(0,0,0,0.40); }
 
-    .note-del {
+    .note-move {
       margin-left: auto;
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.10);
+      color: rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font: 500 11px/1 'IBM Plex Sans', system-ui;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .note-move:hover { background: rgba(0,0,0,0.22); color: rgba(0,0,0,0.65); }
+
+    .note-del {
+      margin-left: 4px;
       width: 17px; height: 17px;
       border-radius: 50%;
       background: rgba(0,0,0,0.13);
@@ -295,6 +308,51 @@
       flex-shrink: 0;
     }
     .note-del:hover { background: rgba(0,0,0,0.28); color: rgba(0,0,0,0.75); }
+
+    /* ── Move-to-board popup ───────────────────────────────── */
+    .note-move-menu {
+      position: fixed;
+      z-index: 99999;
+      background: #2A2318;
+      border: 1px solid #3A3020;
+      border-radius: 6px;
+      min-width: 170px;
+      max-width: 240px;
+      padding: 4px 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    }
+    .move-menu-label {
+      padding: 5px 12px 4px;
+      font: 600 9px/1 'IBM Plex Sans', system-ui;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #5A5040;
+    }
+    .move-tab-item {
+      padding: 7px 12px;
+      font: 400 13px/1.2 'IBM Plex Sans', system-ui;
+      color: #C8C0B0;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .move-tab-item:hover { background: #3A3020; color: #F0E8D8; }
+    .move-menu-sep { height: 1px; background: #3A3020; margin: 4px 0; }
+    .move-new-row { padding: 5px 8px 7px; }
+    .move-new-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #1A1408;
+      border: 1px solid #3A3020;
+      border-radius: 4px;
+      color: #C8C0B0;
+      font: 400 12px/1 'IBM Plex Sans', system-ui;
+      padding: 5px 8px;
+      outline: none;
+    }
+    .move-new-input:focus { border-color: var(--accent); }
+    .move-new-input::placeholder { color: #5A5040; }
 
     .note-body {
       flex: 1;
@@ -674,7 +732,7 @@
     <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
     <button class="tbtn" id="btn-install" style="display:none">Install App</button>
     <input type="file" id="import-file" accept=".json" style="display:none">
-    <span id="app-version">v26.05.161354</span>
+    <span id="app-version">v26.05.161401</span>
   </div>
 
   <!-- Tab bar -->
@@ -1066,6 +1124,15 @@
         dots.appendChild(dot);
       });
 
+      const moveBtn = document.createElement('div');
+      moveBtn.className = 'note-move';
+      moveBtn.textContent = '→';
+      moveBtn.title = 'Send to board';
+      moveBtn.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        showMoveMenu(moveBtn, note.id);
+      });
+
       const delBtn = document.createElement('div');
       delBtn.className = 'note-del';
       delBtn.textContent = '×';
@@ -1075,7 +1142,7 @@
         confirmDeleteNote(note.id);
       });
 
-      header.append(dots, delBtn);
+      header.append(dots, moveBtn, delBtn);
 
       // Body
       const body = document.createElement('div');
@@ -1416,6 +1483,101 @@
 
     document.addEventListener('fullscreenchange', updateFullscreenBtn);
 
+    // ── Move note to board ─────────────────────────────────────────────
+
+    let activeMoveMenu = null;
+
+    function closeMoveMenu() {
+      if (activeMoveMenu) { activeMoveMenu.remove(); activeMoveMenu = null; }
+    }
+
+    function showMoveMenu(anchor, noteId) {
+      closeMoveMenu();
+
+      const menu = document.createElement('div');
+      menu.className = 'note-move-menu';
+      activeMoveMenu = menu;
+
+      const otherTabs = state.tabs.filter(t => t.id !== state.activeTab);
+
+      if (otherTabs.length > 0) {
+        const lbl = document.createElement('div');
+        lbl.className = 'move-menu-label';
+        lbl.textContent = 'Send to board';
+        menu.appendChild(lbl);
+
+        otherTabs.forEach(t => {
+          const item = document.createElement('div');
+          item.className = 'move-tab-item';
+          item.textContent = t.name;
+          item.addEventListener('mousedown', e => {
+            e.stopPropagation();
+            moveNote(noteId, t.id);
+            closeMoveMenu();
+          });
+          menu.appendChild(item);
+        });
+
+        const sep = document.createElement('div');
+        sep.className = 'move-menu-sep';
+        menu.appendChild(sep);
+      }
+
+      const newRow = document.createElement('div');
+      newRow.className = 'move-new-row';
+      const newInput = document.createElement('input');
+      newInput.className = 'move-new-input';
+      newInput.placeholder = 'New board name… (Enter)';
+      newInput.addEventListener('mousedown', e => e.stopPropagation());
+      newInput.addEventListener('keydown', e => {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          const name = newInput.value.trim();
+          if (!name) return;
+          const newId = uid();
+          state.tabs.push({ id: newId, name, notes: [] });
+          moveNote(noteId, newId);
+          renderTabs();
+          closeMoveMenu();
+        }
+        if (e.key === 'Escape') { closeMoveMenu(); }
+      });
+      newRow.appendChild(newInput);
+      menu.appendChild(newRow);
+
+      // Position below the anchor button
+      document.body.appendChild(menu);
+      const rect = anchor.getBoundingClientRect();
+      const menuW = menu.offsetWidth;
+      const menuH = menu.offsetHeight;
+      let top = rect.bottom + 4;
+      let left = rect.left;
+      if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+      if (top + menuH > window.innerHeight - 8) top = rect.top - menuH - 4;
+      menu.style.top  = top  + 'px';
+      menu.style.left = left + 'px';
+
+      newInput.focus();
+
+      // Close on any outside click
+      setTimeout(() => {
+        document.addEventListener('mousedown', closeMoveMenu, { once: true });
+      }, 0);
+    }
+
+    function moveNote(noteId, destTabId) {
+      const src = activeTab();
+      if (!src) return;
+      const idx = src.notes.findIndex(n => n.id === noteId);
+      if (idx < 0) return;
+      const [note] = src.notes.splice(idx, 1);
+      const dest = state.tabs.find(t => t.id === destTabId);
+      if (!dest) return;
+      dest.notes.push(note);
+      save();
+      renderNotes();
+    }
+
     // ── Confirm delete note ────────────────────────────────────────────
 
     const confirmDeleteEl  = document.getElementById('confirm-delete');
@@ -1533,7 +1695,7 @@
       const typing = active?.tagName === 'TEXTAREA' || active?.tagName === 'INPUT'
                   || active?.contentEditable === 'true';
 
-      if (e.key === 'Escape')     { hideHelp(); hideTrash(); hideSettings(); confirmDeleteEl.classList.remove('on'); pendingDeleteId = null; active?.blur(); return; }
+      if (e.key === 'Escape')     { hideHelp(); hideTrash(); hideSettings(); closeMoveMenu(); confirmDeleteEl.classList.remove('on'); pendingDeleteId = null; active?.blur(); return; }
 
       if (!typing && e.key === '?') { toggleHelp(); return; }
 
