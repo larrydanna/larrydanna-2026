@@ -674,7 +674,7 @@
     <span id="toolbar-hint">Just close the window&hellip; your notes will be here when you return.</span>
     <button class="tbtn" id="btn-install" style="display:none">Install App</button>
     <input type="file" id="import-file" accept=".json" style="display:none">
-    <span id="app-version">v26.05.031123</span>
+    <span id="app-version">v26.05.161354</span>
   </div>
 
   <!-- Tab bar -->
@@ -1545,7 +1545,7 @@
         if (k === 'w') { e.preventDefault(); removeTab(state.activeTab); return; }
       }
 
-      if (!typing && (e.key === 'n' || e.key === 'N')) { createNote(); return; }
+      if (!typing && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); createNote(); return; }
     });
 
     // ── DOM refs & button wiring ───────────────────────────────────────
