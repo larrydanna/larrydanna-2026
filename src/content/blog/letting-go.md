@@ -1,6 +1,6 @@
 ---
 title: "New Song: Letting Go"
-date: "2026-05-12"
+date: "2026-05-18"
 description: "Written from long nights beside a friend's dying brother — and the memory of standing beside my own father's bed years before."
 tags: ["music", "songwriting", "folk", "Pretty Polygrass"]
 ---
