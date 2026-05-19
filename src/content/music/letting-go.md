@@ -64,11 +64,11 @@ lyrics: |
   That I have to let you go.
 ---
 
-In January, I sat for several long nights beside a dear friend and her dying brother. The room, the exhaustion, the helplessness… it all brought me sharply back to the days when my own Dad passed away many years ago.
+More than a year ago, I sat for several long nights beside a dear friend and her dying brother. The room, the exhaustion, the helplessness… it all brought me sharply back to the days when my own Dad passed away many years ago.
 
-He was my hero. Still is.
+My Dad was my hero. Still is.
 
-Watching him die felt impossible to reconcile with the laws of the universe. I remember standing beside his bed thinking:
+Watching him die felt impossible to reconcile with the laws of the universe. I remember standing beside Dad's bed thinking:
 
 *How can the strongest man I've ever known simply… die?*
 
