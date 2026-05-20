@@ -321,9 +321,13 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--border);
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+#stamp-size-row input[type="range"] {
+  flex: 1;
 }
 
 /* ── Help modal ──────────────────────────────────────────── */
@@ -543,12 +547,12 @@ kbd {
 </div>
 
 <div id="stamp-panel">
-  <div id="emoji-grid"></div>
   <div id="stamp-size-row">
     <span class="tool-label">Size</span>
     <input type="range" id="stamp-size-slider" min="16" max="128" value="48">
     <span id="stamp-size-val">48</span>
   </div>
+  <div id="emoji-grid"></div>
 </div>
 
 <div id="canvas-wrap">
@@ -739,6 +743,13 @@ function updateStampPanel() {
     stampPanel.style.display = 'none';
   }
 }
+
+document.addEventListener('pointerdown', e => {
+  if (stampPanel.style.display === 'none') return;
+  if (!stampPanel.contains(e.target) && e.target !== stampToolBtn) {
+    stampPanel.style.display = 'none';
+  }
+}, true);
 const stampSizeSlider= document.getElementById('stamp-size-slider');
 const stampSizeVal   = document.getElementById('stamp-size-val');
 const stampToolBtn   = document.getElementById('stamp-tool-btn');
