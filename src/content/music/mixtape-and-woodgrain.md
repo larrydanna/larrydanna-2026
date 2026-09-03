@@ -14,15 +14,17 @@ lyrics: |
   and the hardest choice was one from the mall.
 
   Tuck the receiver to my shoulder,
-  Fightin' the court just to turn the page.
+  Fightin' the cord just to turn the page.
   Now everything is wireless and colder,
   And the future don't ask our age.
+
 
   [Chorus]
   Take me back, to the days of mix tapes and wood grain
   When hope, was a spark in the static and rain.
-  Time rolls on, and it don't rewind.
+  Time rolls on, but it don't rewind.
   I'd like to go back, sometimes.
+
 
   [Verse]
   I want the cracker to lean on the barrel,
@@ -35,11 +37,13 @@ lyrics: |
   Freedom was where my feet could take me,
   and it started at the driveways end at last.
 
+
   [Chorus]
   Take me back, to the days of mix tapes and wood grain
   When hope, was a spark in the static and rain.
-  Time rolls on, and it don't rewind.
+  Time rolls on, but it don't rewind.
   I'd like to go back, sometimes.
+
 
   [Pre Chorus]
   All those snapshots in my dresser drawer,
@@ -47,11 +51,13 @@ lyrics: |
   We thought forever was on our side,
   Now it's just memories, we're hitchin' a ride.
 
+
   [Chorus]
   Take me back, to the days of mix tapes and wood grain
   When hope, was a spark in the static and rain.
   Time rolls on, but it don't rewind.
   I'd like to go back, sometimes.
+
 
   [Post Chorus]
   Just to see dad's boots on the floor,
