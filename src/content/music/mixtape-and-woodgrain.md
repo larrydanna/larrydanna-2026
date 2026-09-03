@@ -74,7 +74,7 @@ I woke up one morning after hearing the news that Cracker Barrel was changing it
 
 It struck a nerve.
 
-Not because a logo is terribly important in the grand scheme of things. It was because it represented something familiar. Something that had been sitting in the landscape of my life for as long as I could remember. And suddenly, even that was changing.
+Not because a logo is terribly important in the grand scheme of things. It was because it represented something familiar. Something that had been sitting in the landscape of my life for so long. And suddenly, even that was changing.
 
 Then I started thinking about all the other things that had quietly slipped away.
 
@@ -94,9 +94,7 @@ And underneath all those memories was something much deeper.
 
 The people.
 
-Dad's boots on the floor.
-
-Mom fussing as she came through the door.
+Dad's work boots on the floor.
 
 The sound of a house that was full of people who, at the time, I assumed would always be there.
 
@@ -104,7 +102,7 @@ That's where the song eventually took me.
 
 I know the song leans hard into campy nostalgia. There are brand names and old images and things that may seem almost silly when you put them all together. But I think that's part of the point. Memory doesn't preserve our lives in neat historical categories. It preserves fragments.
 
-A cereal box.
+A lable.
 
 A bicycle.
 
@@ -132,7 +130,7 @@ To hear it.
 
 To feel it.
 
-To stand in an ordinary room on an ordinary morning and experience something I didn't understand was precious until it was gone.
+To stand in an ordinary room on an ordinary morning and experience something I didn't know was precious until it was "a long time gone".
 
 Maybe I'd even crawl down beside the couch and find a few pennies under the cushion.
 
